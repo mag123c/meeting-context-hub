@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "terms": {
+    "PRD": {
+      "full": "Product Requirements Document",
+      "description": "제품 요구사항 문서. 본 프로젝트에서는 problem, goal, scope, requirements 4가지 섹션으로 구성",
+      "format": {
+        "problem": "해결하려는 문제",
+        "goal": "달성하려는 목표",
+        "scope": "범위 및 포함/제외 항목",
+        "requirements": "구체적 요구사항 목록"
+      }
+    },
+    "Action Items": {
+      "description": "회의에서 도출된 실행 항목",
+      "format": {
+        "assignee": "담당자",
+        "task": "할 일",
+        "deadline": "기한 (optional)"
+      }
+    },
+    "Context": {
+      "description": "프로젝트 관련 정보 조각. 슬랙 대화, 노션 문서, 수동 입력 등 다양한 출처에서 수집",
+      "sources": ["slack", "notion", "manual", "meeting"]
+    },
+    "Tag": {
+      "description": "컨텍스트와 회의록을 그룹핑하는 키워드. 프로젝트명, 기능명, 팀명 등",
+      "examples": ["프로젝트-알파", "백엔드", "긴급", "Q1-목표"]
+    },
+    "Obsidian Vault": {
+      "description": "옵시디언 저장소. 마크다운 파일 기반 지식 관리 시스템",
+      "path": "OBSIDIAN_VAULT_PATH 환경변수로 설정"
+    }
+  }
+}
