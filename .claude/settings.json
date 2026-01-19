@@ -1,0 +1,36 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/clarify-prompt.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Meeting Context Hub 컨벤션 검증:\n\n1. **Clean Architecture**: Repository 인터페이스 → Storage 구현체 분리?\n2. **네이밍**: {entity}.repository.ts, {entity}.supabase.ts, use{Name}.ts?\n3. **타입**: Zod 스키마 정의? types/ 폴더 구조?\n4. **RSC 보안**: Server Action 민감 데이터 반환 금지?\n5. **프롬프트 파일**: version 필드 포함?\n\n위반 항목이 있으면 'deny: [이유]' 반환. 모두 준수하면 'allow'."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "작업 완료 검증:\n\n1. /verify 실행됨? (빌드/린트/테스트 통과)\n2. 관련 CLAUDE.md 업데이트됨?\n3. ai-context JSON 업데이트 필요?\n\n미완료 항목 있으면 'block: [이유]'. 모두 완료면 'approve'."
+          }
+        ]
+      }
+    ]
+  }
+}

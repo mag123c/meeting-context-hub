@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "integration": {
+    "name": "Obsidian",
+    "type": "local_storage",
+    "description": "로컬 Obsidian Vault에 마크다운 파일 저장"
+  },
+  "config": {
+    "vault_path": {
+      "env": "OBSIDIAN_VAULT_PATH",
+      "default": "/Users/jaehojang/Documents"
+    },
+    "folders": {
+      "meetings": "meetings/",
+      "contexts": "contexts/"
+    }
+  },
+  "file_format": {
+    "meetings": {
+      "naming": "YYYY-MM-DD-{slug(title)}.md",
+      "frontmatter": ["tags", "date", "type", "meeting_id"],
+      "sections": ["PRD Summary", "Action Items"]
+    },
+    "contexts": {
+      "naming": "YYYY-MM-DD-{source}-{short_id}.md",
+      "frontmatter": ["tags", "date", "type", "source", "context_id"],
+      "sections": ["Content"]
+    }
+  },
+  "operations": {
+    "write": {
+      "description": "마크다운 파일 생성/덮어쓰기",
+      "implementation": "storage/obsidian/obsidian.storage.ts"
+    },
+    "read": {
+      "description": "마크다운 파일 읽기",
+      "implementation": "storage/obsidian/obsidian.storage.ts"
+    },
+    "list": {
+      "description": "폴더 내 파일 목록",
+      "implementation": "storage/obsidian/obsidian.storage.ts"
+    }
+  }
+}
