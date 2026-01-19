@@ -139,9 +139,11 @@ docs: README 업데이트
 ```
 src/
 ├── app/                  # Next.js App Router
+│   ├── api/              # API Routes
+│   └── sprints/          # 스프린트 페이지
 ├── components/
 │   ├── ui/               # shadcn/ui 기본 컴포넌트
-│   ├── features/         # 도메인별 컴포넌트 (meeting, context, search)
+│   ├── features/         # 도메인별 컴포넌트 (meeting, context, search, sprint, tag)
 │   ├── layout/           # 레이아웃 컴포넌트 (Navbar)
 │   └── providers/        # Context Providers (ThemeProvider)
 ├── hooks/                # 커스텀 React Hooks
@@ -150,11 +152,45 @@ src/
 ├── storage/              # Infrastructure (구현체)
 │   ├── supabase/         # Supabase 구현
 │   └── obsidian/         # Obsidian 저장
-├── application/          # UseCase
+├── application/          # UseCase + Factory
 └── lib/
     ├── ai/               # Claude SDK + 프롬프트
     └── external/         # Slack, Notion API
 ```
+
+## Pages
+
+| 경로 | 설명 |
+|------|------|
+| `/` | 대시보드 (회의록/컨텍스트 목록) |
+| `/meeting` | 회의록 입력 |
+| `/meeting/[id]` | 회의록 상세 |
+| `/context` | 컨텍스트 입력 |
+| `/context/[id]` | 컨텍스트 상세 |
+| `/search` | Q&A 검색 |
+| `/sprints` | 스프린트 목록 |
+| `/sprints/new` | 스프린트 생성 |
+| `/sprints/[id]` | 스프린트 상세 (액션아이템 포함) |
+| `/settings` | 설정 (Slack/Notion 연동) |
+| `/login` | 로그인 |
+
+## API Routes
+
+| 경로 | 메서드 | 설명 |
+|------|--------|------|
+| `/api/meeting` | GET, POST | 회의록 목록/생성 |
+| `/api/meeting/[id]` | GET, PATCH, DELETE | 회의록 조회/수정/삭제 |
+| `/api/context` | GET, POST | 컨텍스트 목록/생성 |
+| `/api/context/[id]` | GET, DELETE | 컨텍스트 조회/삭제 |
+| `/api/sprint` | GET, POST | 스프린트 목록/생성 |
+| `/api/sprint/[id]` | GET, PATCH, DELETE | 스프린트 조회/수정/삭제 |
+| `/api/action-item` | GET, POST | 액션아이템 목록/생성 |
+| `/api/action-item/[id]` | GET, PATCH, DELETE | 액션아이템 조회/수정/삭제 |
+| `/api/tag` | GET, POST | 태그 목록/생성 |
+| `/api/search` | POST | Q&A 검색 |
+| `/api/sync/slack` | POST | Slack 동기화 |
+| `/api/sync/notion` | POST | Notion 동기화 |
+
 
 ---
 
