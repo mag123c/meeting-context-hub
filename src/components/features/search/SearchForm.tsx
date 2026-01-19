@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, AlertCircle, CheckCircle, HelpCircle } from "lucide-react";
+import { Loader2, Search, AlertCircle, CheckCircle, HelpCircle, ExternalLink } from "lucide-react";
 import type { SearchResult } from "@/application/search-context.usecase";
 
 const confidenceConfig = {
@@ -47,6 +48,10 @@ export function SearchForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getSourceLink = (source: { type: "meeting" | "context"; id: string }) => {
+    return source.type === "meeting" ? "/meeting/" + source.id : "/context/" + source.id;
   };
 
   return (
@@ -93,7 +98,7 @@ export function SearchForm() {
                   const Icon = config.icon;
                   return (
                     <>
-                      <Icon className={`h-3 w-3 ${config.color}`} />
+                      <Icon className={"h-3 w-3 " + config.color} />
                       신뢰도: {config.label}
                     </>
                   );
@@ -111,13 +116,19 @@ export function SearchForm() {
                 </h4>
                 <ul className="space-y-2">
                   {result.sources.map((source, i) => (
-                    <li key={i} className="text-sm flex items-start gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {source.type === "meeting" ? "회의록" : "컨텍스트"}
-                      </Badge>
-                      <span className="text-muted-foreground">
-                        {source.relevance}
-                      </span>
+                    <li key={i} className="text-sm">
+                      <Link
+                        href={getSourceLink(source)}
+                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-accent/50 transition-colors group"
+                      >
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          {source.type === "meeting" ? "회의록" : "컨텍스트"}
+                        </Badge>
+                        <span className="text-muted-foreground flex-1">
+                          {source.relevance}
+                        </span>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </Link>
                     </li>
                   ))}
                 </ul>
