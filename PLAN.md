@@ -666,6 +666,57 @@ CREATE TABLE meeting_tags (
 2. ✅ Q&A 검색 기능 (Claude 활용)
 3. ✅ 대시보드 UI
 
+---
+
+## 전면 재설계 (2026-01)
+
+### 재설계 Phase 1: 도메인 모델 ✅ 완료
+1. ✅ 신규 엔티티 Zod 스키마 (Sprint, Project, Squad, ActionItem)
+2. ✅ Repository 인터페이스 정의
+3. ✅ Supabase 구현체 작성
+4. ✅ 기존 엔티티 확장 (Meeting, Context, Tag에 FK 추가)
+
+### 재설계 Phase 2: 아키텍처 개선 ✅ 완료
+1. ✅ UseCase Factory 패턴 도입 (`src/application/factories.ts`)
+2. ✅ Custom Hooks 구현 (useMeetings, useContexts, useSprints, useActionItems)
+3. ✅ Repository/UseCase 통합 export 정리
+
+### 재설계 Phase 3: 기능 완성 ✅ 완료
+**P0 (핵심)**
+1. ✅ 회의록 수정/삭제 UI (Dialog + AlertDialog)
+2. ✅ PATCH API 메서드 추가
+3. ✅ 태그 편집 기능 (TagSelector 컴포넌트)
+
+**P1 (중요)**
+1. ✅ 검색 결과 출처 클릭 → 상세 페이지 이동
+2. ✅ URL 기반 페이지네이션 (대시보드)
+3. ✅ Skeleton 로딩 (meeting, sprint 상세 페이지)
+
+**스프린트 관리**
+1. ✅ 스프린트 목록/생성/상세 페이지
+2. ✅ 액션아이템 상태 관리 (체크박스)
+3. ✅ 스프린트 상태 변경 (planning → active → completed)
+
+### 재설계 Phase 4: DB 마이그레이션 ✅ 완료
+1. ✅ squads 테이블 생성
+2. ✅ projects 테이블 생성
+3. ✅ sprints 테이블 생성
+4. ✅ action_items 테이블 생성
+5. ✅ meetings 테이블 확장 (sprint_id, project_id, meeting_type 등)
+6. ✅ contexts 테이블 확장 (sprint_id, context_type, importance 등)
+7. ✅ tags 테이블 확장 (tag_type, scope, scope_id 등)
+8. ✅ 인덱스 생성 (idx_*_sprint, idx_*_project 등)
+9. ✅ RLS 활성화
+
+### 재설계 Phase 5: 문서 최신화 ✅ 완료
+1. ✅ glossary.json 업데이트 (신규 용어)
+2. ✅ entities.json 상세화 (DB 스키마 반영)
+3. ✅ rules.json 워크플로우 추가 (project/squad/action_item lifecycle)
+4. ✅ src/repositories/CLAUDE.md 메서드 문서화
+5. ✅ PLAN.md 완료 상태 업데이트
+
+---
+
 ## 핵심 파일
 
 | 파일 | 역할 |

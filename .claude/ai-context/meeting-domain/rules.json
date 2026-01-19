@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "rules": {
     "meeting_summary": {
       "description": "회의록 요약 규칙",
@@ -70,6 +70,73 @@
         "액션아이템 체크로 완료 처리",
         "회의록/컨텍스트를 스프린트에 연결"
       ]
+    },
+    "project_management": {
+      "description": "프로젝트 관리 워크플로우",
+      "api_endpoints": {
+        "list": "GET /api/project",
+        "create": "POST /api/project",
+        "get": "GET /api/project/[id]",
+        "update": "PATCH /api/project/[id]",
+        "delete": "DELETE /api/project/[id]"
+      },
+      "status_flow": ["ideation", "active", "paused", "completed", "archived"],
+      "steps": [
+        "스쿼드 선택 (optional) → 프로젝트 생성",
+        "프로젝트 내 스프린트 생성",
+        "회의록/컨텍스트를 프로젝트에 직접 연결 또는 스프린트 통해 연결",
+        "프로젝트 완료 시 archived로 변경"
+      ]
+    },
+    "squad_management": {
+      "description": "스쿼드 관리 워크플로우",
+      "api_endpoints": {
+        "list": "GET /api/squad",
+        "create": "POST /api/squad",
+        "get": "GET /api/squad/[id]",
+        "update": "PATCH /api/squad/[id]",
+        "delete": "DELETE /api/squad/[id]"
+      },
+      "steps": [
+        "사용자별 스쿼드 생성 (user_id 기준 소유)",
+        "Slack 채널 / Notion 워크스페이스 연동 (optional)",
+        "스쿼드 내 프로젝트 생성/관리"
+      ],
+      "constraints": [
+        "스쿼드 삭제 시 하위 프로젝트/스프린트 연결 해제 (cascade X)",
+        "user_id 기준 RLS 적용"
+      ]
+    },
+    "action_item_lifecycle": {
+      "description": "액션아이템 생명주기",
+      "status_flow": ["pending", "in_progress", "completed", "cancelled"],
+      "transitions": {
+        "pending": ["in_progress", "cancelled"],
+        "in_progress": ["completed", "cancelled", "pending"],
+        "completed": ["pending"],
+        "cancelled": ["pending"]
+      },
+      "auto_actions": {
+        "completed": "completed_at = NOW()"
+      },
+      "ui_components": {
+        "checkbox": "클릭 시 pending ↔ completed 토글",
+        "ActionItemsSection": "스프린트 상세 페이지 체크리스트"
+      }
+    },
+    "data_hierarchy_filtering": {
+      "description": "데이터 계층별 필터링 규칙",
+      "hierarchy": "Squad → Project → Sprint → Meeting/Context/ActionItem",
+      "filter_patterns": {
+        "by_squad": "project.squad_id = ? 로 프로젝트 필터 후 조인",
+        "by_project": "sprint.project_id = ? 또는 meeting.project_id = ?",
+        "by_sprint": "meeting.sprint_id = ? 또는 action_item.sprint_id = ?"
+      },
+      "dashboard_views": {
+        "all": "user_id 기준 전체 조회",
+        "sprint_filtered": "특정 스프린트의 회의록/컨텍스트/액션아이템",
+        "project_filtered": "특정 프로젝트의 모든 데이터"
+      }
     },
     "context_tagging": {
       "description": "컨텍스트 태깅 규칙",
