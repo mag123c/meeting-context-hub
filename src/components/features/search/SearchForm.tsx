@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Search, AlertCircle, CheckCircle, HelpCircle } from "lucide-react";
+import { Loader2, Search, AlertCircle, CheckCircle, HelpCircle, ExternalLink } from "lucide-react";
 import type { SearchResult } from "@/application/search-context.usecase";
 
 const confidenceConfig = {
-  high: { icon: CheckCircle, color: "text-green-500", label: "높음" },
-  medium: { icon: AlertCircle, color: "text-yellow-500", label: "보통" },
-  low: { icon: HelpCircle, color: "text-red-500", label: "낮음" },
+  high: { icon: CheckCircle, color: "text-success", label: "높음" },
+  medium: { icon: AlertCircle, color: "text-warning", label: "보통" },
+  low: { icon: HelpCircle, color: "text-destructive", label: "낮음" },
 };
 
 export function SearchForm() {
@@ -49,6 +50,10 @@ export function SearchForm() {
     }
   };
 
+  const getSourceLink = (source: { type: "meeting" | "context"; id: string }) => {
+    return source.type === "meeting" ? "/meeting/" + source.id : "/context/" + source.id;
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -75,9 +80,9 @@ export function SearchForm() {
       </Card>
 
       {error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-destructive/50 bg-destructive/10">
           <CardContent className="pt-6">
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -93,7 +98,7 @@ export function SearchForm() {
                   const Icon = config.icon;
                   return (
                     <>
-                      <Icon className={`h-3 w-3 ${config.color}`} />
+                      <Icon className={"h-3 w-3 " + config.color} />
                       신뢰도: {config.label}
                     </>
                   );
@@ -102,22 +107,28 @@ export function SearchForm() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm whitespace-pre-wrap">{result.answer}</p>
+            <p className="text-sm whitespace-pre-wrap text-foreground">{result.answer}</p>
 
             {result.sources.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                <h4 className="text-sm font-semibold text-primary mb-2">
                   출처
                 </h4>
                 <ul className="space-y-2">
                   {result.sources.map((source, i) => (
-                    <li key={i} className="text-sm flex items-start gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {source.type === "meeting" ? "회의록" : "컨텍스트"}
-                      </Badge>
-                      <span className="text-muted-foreground">
-                        {source.relevance}
-                      </span>
+                    <li key={i} className="text-sm">
+                      <Link
+                        href={getSourceLink(source)}
+                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-accent/50 transition-colors group"
+                      >
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          {source.type === "meeting" ? "회의록" : "컨텍스트"}
+                        </Badge>
+                        <span className="text-muted-foreground flex-1">
+                          {source.relevance}
+                        </span>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </Link>
                     </li>
                   ))}
                 </ul>

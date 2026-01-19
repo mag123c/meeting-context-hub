@@ -140,8 +140,10 @@ docs: README 업데이트
 src/
 ├── app/                  # Next.js App Router
 ├── components/
-│   ├── ui/               # shadcn/ui 컴포넌트
-│   └── features/         # 도메인별 컴포넌트
+│   ├── ui/               # shadcn/ui 기본 컴포넌트
+│   ├── features/         # 도메인별 컴포넌트 (meeting, context, search)
+│   ├── layout/           # 레이아웃 컴포넌트 (Navbar)
+│   └── providers/        # Context Providers (ThemeProvider)
 ├── hooks/                # 커스텀 React Hooks
 ├── repositories/         # Domain Layer (인터페이스)
 │   └── types/            # 엔티티 타입

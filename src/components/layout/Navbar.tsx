@@ -29,9 +29,9 @@ export function Navbar() {
   const initial = user.email?.slice(0, 2).toUpperCase() || "U";
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="container flex h-14 items-center">
-        <Link href="/" className="font-bold text-lg mr-8">
+        <Link href="/" className="font-bold text-lg mr-8 text-foreground">
           MCH
         </Link>
 
@@ -83,7 +83,9 @@ export function Navbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>{initial}</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {initial}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -91,7 +93,7 @@ export function Navbar() {
               <DropdownMenuItem className="text-sm text-muted-foreground">
                 {user.email}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={signOut} className="text-red-600">
+              <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="h-4 w-4 mr-2" />
                 로그아웃
               </DropdownMenuItem>

@@ -1,47 +1,155 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "entities": {
+    "Squad": {
+      "description": "스쿼드 엔티티 - 팀/조직 단위",
+      "table": "squads",
+      "fields": {
+        "id": { "type": "UUID", "primary": true },
+        "user_id": { "type": "UUID", "fk": "auth.users", "description": "소유자" },
+        "name": { "type": "VARCHAR(100)", "required": true },
+        "description": { "type": "TEXT", "nullable": true },
+        "slack_channel_id": { "type": "VARCHAR(100)", "nullable": true },
+        "notion_workspace_id": { "type": "VARCHAR(100)", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" }
+      },
+      "relations": { "projects": "one-to-many" },
+      "rls": true
+    },
+    "Project": {
+      "description": "프로젝트 엔티티",
+      "table": "projects",
+      "fields": {
+        "id": { "type": "UUID", "primary": true },
+        "squad_id": { "type": "UUID", "fk": "squads", "nullable": true },
+        "name": { "type": "VARCHAR(100)", "required": true },
+        "description": { "type": "TEXT", "nullable": true },
+        "status": { "type": "VARCHAR(20)", "enum": ["ideation", "active", "paused", "completed", "archived"], "default": "ideation" },
+        "goal": { "type": "TEXT", "nullable": true },
+        "start_date": { "type": "DATE", "nullable": true },
+        "target_date": { "type": "DATE", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" },
+        "updated_at": { "type": "TIMESTAMPTZ", "default": "now()" }
+      },
+      "relations": { "squad": "many-to-one", "sprints": "one-to-many" },
+      "indexes": ["idx_projects_squad", "idx_projects_status"],
+      "rls": true
+    },
+    "Sprint": {
+      "description": "스프린트 엔티티 - 작업 주기",
+      "table": "sprints",
+      "fields": {
+        "id": { "type": "UUID", "primary": true },
+        "project_id": { "type": "UUID", "fk": "projects", "required": true },
+        "name": { "type": "VARCHAR(100)", "required": true },
+        "goal": { "type": "TEXT", "nullable": true },
+        "status": { "type": "VARCHAR(20)", "enum": ["planning", "active", "completed", "cancelled"], "default": "planning" },
+        "start_date": { "type": "DATE", "required": true },
+        "end_date": { "type": "DATE", "required": true },
+        "retrospective": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" },
+        "updated_at": { "type": "TIMESTAMPTZ", "default": "now()" }
+      },
+      "relations": { "project": "many-to-one", "meetings": "one-to-many", "contexts": "one-to-many", "action_items": "one-to-many" },
+      "indexes": ["idx_sprints_project", "idx_sprints_status", "idx_sprints_dates"],
+      "rls": true
+    },
+    "ActionItem": {
+      "description": "액션아이템 엔티티 (독립 테이블)",
+      "table": "action_items",
+      "fields": {
+        "id": { "type": "UUID", "primary": true },
+        "sprint_id": { "type": "UUID", "fk": "sprints", "nullable": true },
+        "meeting_id": { "type": "UUID", "fk": "meetings", "nullable": true },
+        "assignee_name": { "type": "VARCHAR(100)", "required": true },
+        "task": { "type": "TEXT", "required": true },
+        "status": { "type": "VARCHAR(20)", "enum": ["pending", "in_progress", "completed", "cancelled"], "default": "pending" },
+        "priority": { "type": "VARCHAR(20)", "enum": ["low", "medium", "high", "urgent"], "default": "medium" },
+        "deadline": { "type": "DATE", "nullable": true },
+        "completed_at": { "type": "TIMESTAMPTZ", "nullable": true },
+        "notes": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" },
+        "updated_at": { "type": "TIMESTAMPTZ", "default": "now()" }
+      },
+      "relations": { "sprint": "many-to-one (optional)", "meeting": "many-to-one (optional)" },
+      "indexes": ["idx_action_items_sprint", "idx_action_items_meeting", "idx_action_items_status", "idx_action_items_priority", "idx_action_items_assignee"],
+      "rls": true
+    },
     "Meeting": {
       "description": "회의록 엔티티",
+      "table": "meetings",
       "fields": {
-        "id": "UUID",
-        "user_id": "UUID (auth.users 참조)",
-        "title": "회의 제목",
-        "raw_content": "원본 회의록 텍스트",
-        "prd_summary": "PRD 형식 요약 (problem, goal, scope, requirements)",
-        "action_items": "액션 아이템 배열 (assignee, task, deadline)",
-        "obsidian_path": "옵시디언 저장 경로",
-        "created_at": "생성 시간"
+        "id": { "type": "UUID", "primary": true },
+        "user_id": { "type": "UUID", "fk": "auth.users" },
+        "title": { "type": "TEXT", "required": true },
+        "raw_content": { "type": "TEXT", "required": true },
+        "prd_summary": { "type": "JSONB", "nullable": true, "description": "PRD 형식 요약" },
+        "action_items": { "type": "JSONB", "nullable": true, "description": "임베디드 액션 아이템 (레거시)" },
+        "obsidian_path": { "type": "TEXT", "nullable": true },
+        "sprint_id": { "type": "UUID", "fk": "sprints", "nullable": true },
+        "project_id": { "type": "UUID", "fk": "projects", "nullable": true },
+        "meeting_type": { "type": "VARCHAR(20)", "enum": ["standup", "planning", "retrospective", "review", "brainstorm", "decision", "other"], "default": "other" },
+        "meeting_date": { "type": "TIMESTAMPTZ", "nullable": true },
+        "participants": { "type": "TEXT[]", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" },
+        "updated_at": { "type": "TIMESTAMPTZ", "default": "now()" }
       },
-      "relations": {
-        "tags": "many-to-many via meeting_tags"
-      }
+      "relations": { "tags": "many-to-many (meeting_tags)", "sprint": "many-to-one (optional)", "project": "many-to-one (optional)" },
+      "indexes": ["idx_meetings_sprint", "idx_meetings_project", "idx_meetings_type", "idx_meetings_user_id", "idx_meetings_created_at"],
+      "rls": true
     },
     "Context": {
       "description": "컨텍스트 정보 엔티티",
+      "table": "contexts",
       "fields": {
-        "id": "UUID",
-        "user_id": "UUID (auth.users 참조)",
-        "source": "출처 (slack, notion, manual, meeting)",
-        "source_id": "원본 ID (슬랙 메시지 ID 등)",
-        "content": "컨텍스트 내용",
-        "obsidian_path": "옵시디언 저장 경로",
-        "created_at": "생성 시간"
+        "id": { "type": "UUID", "primary": true },
+        "user_id": { "type": "UUID", "fk": "auth.users" },
+        "source": { "type": "TEXT", "enum": ["slack", "notion", "manual", "meeting"], "required": true },
+        "source_id": { "type": "TEXT", "nullable": true },
+        "content": { "type": "TEXT", "required": true },
+        "obsidian_path": { "type": "TEXT", "nullable": true },
+        "sprint_id": { "type": "UUID", "fk": "sprints", "nullable": true },
+        "project_id": { "type": "UUID", "fk": "projects", "nullable": true },
+        "title": { "type": "VARCHAR(200)", "nullable": true },
+        "context_type": { "type": "VARCHAR(20)", "enum": ["decision", "reference", "discussion", "blocker", "update", "idea", "other"], "default": "other" },
+        "importance": { "type": "VARCHAR(20)", "enum": ["low", "medium", "high"], "default": "medium" },
+        "source_url": { "type": "TEXT", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" },
+        "updated_at": { "type": "TIMESTAMPTZ", "default": "now()" }
       },
-      "relations": {
-        "tags": "many-to-many via context_tags"
-      }
+      "relations": { "tags": "many-to-many (context_tags)", "sprint": "many-to-one (optional)", "project": "many-to-one (optional)" },
+      "indexes": ["idx_contexts_sprint", "idx_contexts_project", "idx_contexts_type", "idx_contexts_importance", "idx_contexts_source", "idx_contexts_user_id", "idx_contexts_created_at"],
+      "rls": true
     },
     "Tag": {
       "description": "태그 엔티티",
+      "table": "tags",
       "fields": {
-        "id": "UUID",
-        "name": "태그명 (unique)",
-        "description": "태그 설명",
-        "created_at": "생성 시간"
+        "id": { "type": "UUID", "primary": true },
+        "name": { "type": "TEXT", "unique": true, "required": true },
+        "description": { "type": "TEXT", "nullable": true },
+        "tag_type": { "type": "VARCHAR(20)", "enum": ["category", "status", "priority", "custom"], "default": "custom" },
+        "scope": { "type": "VARCHAR(20)", "enum": ["global", "squad", "project"], "default": "global" },
+        "scope_id": { "type": "UUID", "nullable": true, "description": "squad_id or project_id when scope is not global" },
+        "color": { "type": "VARCHAR(20)", "nullable": true },
+        "icon": { "type": "VARCHAR(50)", "nullable": true },
+        "created_at": { "type": "TIMESTAMPTZ", "default": "now()" }
       },
-      "usage": "회의록과 컨텍스트에 공유 적용"
+      "usage": "회의록(meeting_tags)과 컨텍스트(context_tags)에 many-to-many 적용",
+      "indexes": ["idx_tags_name", "idx_tags_scope", "idx_tags_type"],
+      "rls": true
     }
-  }
+  },
+  "junction_tables": {
+    "meeting_tags": {
+      "columns": ["meeting_id (FK meetings)", "tag_id (FK tags)"],
+      "primary_key": ["meeting_id", "tag_id"]
+    },
+    "context_tags": {
+      "columns": ["context_id (FK contexts)", "tag_id (FK tags)"],
+      "primary_key": ["context_id", "tag_id"]
+    }
+  },
+  "hierarchy": "Squad → Project → Sprint → Meeting/Context/ActionItem"
 }

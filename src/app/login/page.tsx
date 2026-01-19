@@ -67,7 +67,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Meeting Context Hub</CardTitle>
@@ -104,7 +104,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-500">{error}</p>
+                  <p className="text-sm text-destructive">{error}</p>
                 )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "로그인 중..." : "로그인"}
@@ -138,7 +138,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-500">{error}</p>
+                  <p className="text-sm text-destructive">{error}</p>
                 )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "처리 중..." : "회원가입"}
