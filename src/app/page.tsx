@@ -61,9 +61,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <Navbar />
 
       <main className="container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">대시보드</h1>
-        </div>
+        <header className="mb-8">
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">대시보드</h1>
+          <p className="text-muted-foreground mt-1">회의록과 컨텍스트를 한눈에 관리하세요</p>
+        </header>
 
         <Tabs defaultValue={currentTab} className="space-y-6">
           <TabsList>
@@ -71,7 +72,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <Link href={buildPageUrl(1, "meetings")} className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 회의록
-                <span className="ml-1 text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   ({meetingsResult.total})
                 </span>
               </Link>
@@ -80,7 +81,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <Link href={buildPageUrl(1, "contexts")} className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4" />
                 컨텍스트
-                <span className="ml-1 text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   ({contextsResult.total})
                 </span>
               </Link>
@@ -89,10 +90,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
           <TabsContent value="meetings" className="space-y-4">
             {meetingsResult.data.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">회의록이 없습니다</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-16">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="font-serif text-lg font-medium mb-2">회의록이 없습니다</h3>
+                <p className="text-sm text-muted-foreground mb-6">
                   첫 번째 회의록을 등록하고 AI 요약을 받아보세요
                 </p>
                 <Link href="/meeting">
@@ -123,10 +124,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
           <TabsContent value="contexts" className="space-y-4">
             {contextsResult.data.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">컨텍스트가 없습니다</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className="text-center py-16">
+                <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <h3 className="font-serif text-lg font-medium mb-2">컨텍스트가 없습니다</h3>
+                <p className="text-sm text-muted-foreground mb-6">
                   프로젝트 관련 정보를 등록하고 자동 태깅을 받아보세요
                 </p>
                 <Link href="/context">
@@ -168,7 +169,6 @@ interface PaginationNavProps {
 }
 
 function PaginationNav({ currentPage, totalPages, tab, buildPageUrl }: PaginationNavProps) {
-  // Generate visible page numbers
   const getPageNumbers = () => {
     const pages: number[] = [];
     const maxVisible = 5;
@@ -188,7 +188,7 @@ function PaginationNav({ currentPage, totalPages, tab, buildPageUrl }: Paginatio
   };
 
   return (
-    <Pagination>
+    <Pagination className="mt-8">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious

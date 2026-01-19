@@ -22,7 +22,6 @@ export default async function SprintsPage() {
   const sprintRepo = new SupabaseSprintRepository(supabase);
   const projectRepo = new SupabaseProjectRepository(supabase);
 
-  // Get active sprints and user's projects
   const [activeSprints, projectsResult] = await Promise.all([
     sprintRepo.listActive(user.id),
     projectRepo.listByUser(user.id, { page: 1, limit: 50 }),
@@ -35,8 +34,11 @@ export default async function SprintsPage() {
       <Navbar />
 
       <main className="container py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">스프린트</h1>
+        <header className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-serif text-3xl font-semibold tracking-tight">스프린트</h1>
+            <p className="text-muted-foreground mt-1">팀의 작업 주기를 관리하세요</p>
+          </div>
           {hasProjects && (
             <Link href="/sprints/new">
               <Button>
@@ -45,14 +47,14 @@ export default async function SprintsPage() {
               </Button>
             </Link>
           )}
-        </div>
+        </header>
 
         {!hasProjects ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-16">
             <CardContent>
-              <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">프로젝트가 없습니다</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="font-serif text-lg font-medium mb-2">프로젝트가 없습니다</h3>
+              <p className="text-sm text-muted-foreground mb-6">
                 스프린트를 생성하려면 먼저 프로젝트를 만들어야 합니다
               </p>
               <Link href="/projects/new">
@@ -64,11 +66,11 @@ export default async function SprintsPage() {
             </CardContent>
           </Card>
         ) : activeSprints.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-16">
             <CardContent>
-              <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">활성 스프린트가 없습니다</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <Zap className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="font-serif text-lg font-medium mb-2">활성 스프린트가 없습니다</h3>
+              <p className="text-sm text-muted-foreground mb-6">
                 새 스프린트를 생성하여 작업을 시작하세요
               </p>
               <Link href="/sprints/new">
@@ -80,19 +82,17 @@ export default async function SprintsPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Zap className="h-5 w-5 text-primary" />
-                진행 중인 스프린트
-              </h2>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {activeSprints.map((sprint) => (
-                  <SprintCard key={sprint.id} sprint={sprint} />
-                ))}
-              </div>
+          <section>
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Zap className="h-4 w-4 text-primary" />
+              진행 중인 스프린트
+            </h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {activeSprints.map((sprint) => (
+                <SprintCard key={sprint.id} sprint={sprint} />
+              ))}
             </div>
-          </div>
+          </section>
         )}
       </main>
     </div>

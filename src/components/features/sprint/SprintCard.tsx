@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Sprint } from "@/repositories/types";
 import { Calendar, Target, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface SprintCardProps {
   sprint: Sprint;
