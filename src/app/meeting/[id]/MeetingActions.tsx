@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MeetingWithTags } from "@/repositories/types/meeting.types";
+import { Tag } from "@/repositories/types/tag.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { TagSelector } from "@/components/features/tag";
 import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,6 +44,7 @@ export function MeetingActions({ meeting }: MeetingActionsProps) {
 
   const [title, setTitle] = useState(meeting.title);
   const [rawContent, setRawContent] = useState(meeting.raw_content);
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(meeting.tags);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -76,6 +79,7 @@ export function MeetingActions({ meeting }: MeetingActionsProps) {
         body: JSON.stringify({
           title: title.trim(),
           raw_content: rawContent,
+          tag_ids: selectedTags.map((t) => t.id),
         }),
       });
 
@@ -93,10 +97,20 @@ export function MeetingActions({ meeting }: MeetingActionsProps) {
     }
   };
 
+  const handleDialogOpenChange = (open: boolean) => {
+    setEditDialogOpen(open);
+    if (open) {
+      // Reset form state when opening
+      setTitle(meeting.title);
+      setRawContent(meeting.raw_content);
+      setSelectedTags(meeting.tags);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      <Dialog open={editDialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogTrigger asChild>
           <Button variant="outline" size="sm">
             <Pencil className="h-4 w-4 mr-2" />
@@ -107,7 +121,7 @@ export function MeetingActions({ meeting }: MeetingActionsProps) {
           <DialogHeader>
             <DialogTitle>회의록 수정</DialogTitle>
             <DialogDescription>
-              회의록 제목과 내용을 수정할 수 있습니다.
+              회의록 제목, 내용, 태그를 수정할 수 있습니다.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -118,6 +132,14 @@ export function MeetingActions({ meeting }: MeetingActionsProps) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="회의록 제목"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>태그</Label>
+              <TagSelector
+                selectedTags={selectedTags}
+                onTagsChange={setSelectedTags}
+                disabled={isEditing}
               />
             </div>
             <div className="space-y-2">
