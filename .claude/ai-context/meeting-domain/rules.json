@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "rules": {
     "meeting_summary": {
       "description": "회의록 요약 규칙",
@@ -8,14 +8,135 @@
         "원본 회의록 텍스트 입력",
         "Claude API로 PRD 형식 요약 추출",
         "Claude API로 Action Items 추출",
+        "Claude API로 suggestedTags 추출",
         "Supabase에 저장",
         "Obsidian 마크다운 파일 생성"
       ],
       "constraints": [
         "PRD는 반드시 4개 섹션 포함: problem, goal, scope, requirements",
         "Action Items는 최소 assignee, task 필드 필수",
-        "deadline은 optional이지만 가능하면 추출"
+        "deadline은 optional이지만 가능하면 추출",
+        "suggestedTags는 3-5개 자동 추천"
       ]
+    },
+    "meeting_edit": {
+      "description": "회의록 수정/삭제 워크플로우",
+      "components": {
+        "MeetingActions": "수정/삭제 버튼 컴포넌트",
+        "Dialog": "제목/내용/태그 수정 폼",
+        "AlertDialog": "삭제 확인"
+      },
+      "steps": [
+        "수정 버튼 클릭 → Dialog 열림",
+        "제목, 내용, 태그 수정 (TagSelector 사용)",
+        "저장 → PATCH /api/meeting/[id]",
+        "삭제 → AlertDialog 확인 → DELETE /api/meeting/[id]"
+      ]
+    },
+    "tag_editing": {
+      "description": "태그 편집 워크플로우",
+      "components": {
+        "TagSelector": "태그 선택/생성 컴포넌트 (Command + Popover)"
+      },
+      "steps": [
+        "TagSelector 열기 → GET /api/tag로 태그 목록 조회",
+        "검색어 입력 → 필터링",
+        "기존 태그 선택/해제 (체크박스 스타일)",
+        "새 태그 생성 (검색어가 기존 태그와 불일치 시) → POST /api/tag",
+        "선택된 태그 Badge로 표시",
+        "부모 컴포넌트에 onTagsChange 콜백"
+      ],
+      "constraints": [
+        "태그명 중복 방지 (API에서 처리)",
+        "태그 생성 시 이름만 필수, description은 optional"
+      ]
+    },
+    "sprint_management": {
+      "description": "스프린트 관리 워크플로우",
+      "components": {
+        "SprintCard": "스프린트 목록 카드",
+        "SprintForm": "스프린트 생성 폼",
+        "SprintStatusControl": "상태 변경 드롭다운",
+        "ActionItemsSection": "액션아이템 체크리스트"
+      },
+      "pages": {
+        "/sprints": "스프린트 목록",
+        "/sprints/new": "새 스프린트 생성",
+        "/sprints/[id]": "스프린트 상세 (통계, 액션아이템, 회의록)"
+      },
+      "steps": [
+        "프로젝트 선택 → 스프린트 생성",
+        "스프린트 상태 변경 (planning → active → completed)",
+        "액션아이템 체크로 완료 처리",
+        "회의록/컨텍스트를 스프린트에 연결"
+      ]
+    },
+    "project_management": {
+      "description": "프로젝트 관리 워크플로우",
+      "api_endpoints": {
+        "list": "GET /api/project",
+        "create": "POST /api/project",
+        "get": "GET /api/project/[id]",
+        "update": "PATCH /api/project/[id]",
+        "delete": "DELETE /api/project/[id]"
+      },
+      "status_flow": ["ideation", "active", "paused", "completed", "archived"],
+      "steps": [
+        "스쿼드 선택 (optional) → 프로젝트 생성",
+        "프로젝트 내 스프린트 생성",
+        "회의록/컨텍스트를 프로젝트에 직접 연결 또는 스프린트 통해 연결",
+        "프로젝트 완료 시 archived로 변경"
+      ]
+    },
+    "squad_management": {
+      "description": "스쿼드 관리 워크플로우",
+      "api_endpoints": {
+        "list": "GET /api/squad",
+        "create": "POST /api/squad",
+        "get": "GET /api/squad/[id]",
+        "update": "PATCH /api/squad/[id]",
+        "delete": "DELETE /api/squad/[id]"
+      },
+      "steps": [
+        "사용자별 스쿼드 생성 (user_id 기준 소유)",
+        "Slack 채널 / Notion 워크스페이스 연동 (optional)",
+        "스쿼드 내 프로젝트 생성/관리"
+      ],
+      "constraints": [
+        "스쿼드 삭제 시 하위 프로젝트/스프린트 연결 해제 (cascade X)",
+        "user_id 기준 RLS 적용"
+      ]
+    },
+    "action_item_lifecycle": {
+      "description": "액션아이템 생명주기",
+      "status_flow": ["pending", "in_progress", "completed", "cancelled"],
+      "transitions": {
+        "pending": ["in_progress", "cancelled"],
+        "in_progress": ["completed", "cancelled", "pending"],
+        "completed": ["pending"],
+        "cancelled": ["pending"]
+      },
+      "auto_actions": {
+        "completed": "completed_at = NOW()"
+      },
+      "ui_components": {
+        "checkbox": "클릭 시 pending ↔ completed 토글",
+        "ActionItemsSection": "스프린트 상세 페이지 체크리스트"
+      }
+    },
+    "data_hierarchy_filtering": {
+      "description": "데이터 계층별 필터링 규칙",
+      "hierarchy": "Squad → Project → Sprint → Meeting/Context/ActionItem",
+      "filter_patterns": {
+        "by_squad": "project.squad_id = ? 로 프로젝트 필터 후 조인",
+        "by_project": "sprint.project_id = ? 또는 meeting.project_id = ?",
+        "by_sprint": "meeting.sprint_id = ? 또는 action_item.sprint_id = ?"
+      },
+      "dashboard_views": {
+        "all": "user_id 기준 전체 조회",
+        "sprint_filtered": "특정 스프린트의 회의록/컨텍스트/액션아이템",
+        "project_filtered": "특정 프로젝트의 모든 데이터"
+      }
     },
     "context_tagging": {
       "description": "컨텍스트 태깅 규칙",
@@ -32,6 +153,25 @@
         "새 태그 생성 시 description 필수",
         "태그명은 한글 가능, 공백 대신 하이픈 사용"
       ]
+    },
+    "sync_process": {
+      "description": "외부 서비스 동기화 규칙",
+      "steps": [
+        "외부 서비스(Slack/Notion)에서 데이터 가져오기",
+        "데이터 포맷팅 (메시지 → 텍스트)",
+        "ExtractTagsUseCase 재사용",
+        "Context로 저장 + Obsidian 파일 생성"
+      ],
+      "slack": {
+        "source": "slack",
+        "source_id": "channelId",
+        "format": "[사용자명] 메시지 내용"
+      },
+      "notion": {
+        "source": "notion",
+        "source_id": "pageId",
+        "format": "# 페이지제목\n\n블록 내용"
+      }
     },
     "obsidian_format": {
       "description": "옵시디언 파일 형식",

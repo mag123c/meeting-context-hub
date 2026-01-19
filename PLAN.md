@@ -629,42 +629,93 @@ CREATE TABLE meeting_tags (
 
 ## 구현 단계
 
-### Phase 1: 프로젝트 셋업
-1. Next.js 프로젝트 생성 (App Router)
-2. Supabase 프로젝트 연결
-3. 환경변수 설정
-4. DB 마이그레이션 적용
-5. 인증 (Supabase Auth) 구현
+### Phase 1: 프로젝트 셋업 ✅ 완료
+1. ✅ Next.js 프로젝트 생성 (App Router)
+2. ✅ Supabase 프로젝트 연결
+3. ✅ 환경변수 설정
+4. ✅ DB 마이그레이션 적용
+5. ✅ 인증 (Supabase Auth) 구현
 
-### Phase 2: 핵심 인프라
-1. Claude SDK 래퍼 구현
-2. 저장소 인터페이스 정의 (추상화 레이어)
-3. 옵시디언 저장소 구현체
-4. Supabase 저장소 구현체
+### Phase 2: 핵심 인프라 ✅ 완료
+1. ✅ Claude SDK 래퍼 구현
+2. ✅ 저장소 인터페이스 정의 (추상화 레이어)
+3. ✅ 옵시디언 저장소 구현체
+4. ✅ Supabase 저장소 구현체
 
-### Phase 3: 회의록 요약 기능
-1. 회의록 입력 UI
-2. PRD 추출 프롬프트 및 API
-3. Action Items 추출 프롬프트 및 API
-4. 옵시디언 마크다운 생성/저장
-5. DB 저장
+### Phase 3: 회의록 요약 기능 ✅ 완료
+1. ✅ 회의록 입력 UI
+2. ✅ PRD 추출 프롬프트 및 API
+3. ✅ Action Items 추출 프롬프트 및 API
+4. ✅ 옵시디언 마크다운 생성/저장
+5. ✅ DB 저장
 
-### Phase 4: 컨텍스트 그룹핑 기능
-1. 컨텍스트 입력 UI (수동)
-2. 자동 태깅 프롬프트 및 API
-3. 태그 생성/재활용 로직
-4. 옵시디언 저장 (frontmatter 포함)
-5. DB 저장
+### Phase 4: 컨텍스트 그룹핑 기능 ✅ 완료
+1. ✅ 컨텍스트 입력 UI (수동)
+2. ✅ 자동 태깅 프롬프트 및 API
+3. ✅ 태그 생성/재활용 로직
+4. ✅ 옵시디언 저장 (frontmatter 포함)
+5. ✅ DB 저장
 
-### Phase 5: 외부 연동
-1. Slack API 연동 (메시지 읽기)
-2. Notion API 연동 (페이지 읽기)
-3. 연동 설정 UI
+### Phase 5: 외부 연동 ✅ 완료
+1. ✅ Slack API 연동 (메시지 읽기)
+2. ✅ Notion API 연동 (페이지 읽기)
+3. ✅ 연동 설정 UI (`/settings` 페이지)
 
-### Phase 6: 검색/트래킹
-1. 프로젝트별 진행 상황 조회 UI
-2. Q&A 검색 기능 (Claude 활용)
-3. 대시보드 UI
+### Phase 6: 검색/트래킹 ✅ 완료
+1. ✅ 프로젝트별 진행 상황 조회 UI
+2. ✅ Q&A 검색 기능 (Claude 활용)
+3. ✅ 대시보드 UI
+
+---
+
+## 전면 재설계 (2026-01)
+
+### 재설계 Phase 1: 도메인 모델 ✅ 완료
+1. ✅ 신규 엔티티 Zod 스키마 (Sprint, Project, Squad, ActionItem)
+2. ✅ Repository 인터페이스 정의
+3. ✅ Supabase 구현체 작성
+4. ✅ 기존 엔티티 확장 (Meeting, Context, Tag에 FK 추가)
+
+### 재설계 Phase 2: 아키텍처 개선 ✅ 완료
+1. ✅ UseCase Factory 패턴 도입 (`src/application/factories.ts`)
+2. ✅ Custom Hooks 구현 (useMeetings, useContexts, useSprints, useActionItems)
+3. ✅ Repository/UseCase 통합 export 정리
+
+### 재설계 Phase 3: 기능 완성 ✅ 완료
+**P0 (핵심)**
+1. ✅ 회의록 수정/삭제 UI (Dialog + AlertDialog)
+2. ✅ PATCH API 메서드 추가
+3. ✅ 태그 편집 기능 (TagSelector 컴포넌트)
+
+**P1 (중요)**
+1. ✅ 검색 결과 출처 클릭 → 상세 페이지 이동
+2. ✅ URL 기반 페이지네이션 (대시보드)
+3. ✅ Skeleton 로딩 (meeting, sprint 상세 페이지)
+
+**스프린트 관리**
+1. ✅ 스프린트 목록/생성/상세 페이지
+2. ✅ 액션아이템 상태 관리 (체크박스)
+3. ✅ 스프린트 상태 변경 (planning → active → completed)
+
+### 재설계 Phase 4: DB 마이그레이션 ✅ 완료
+1. ✅ squads 테이블 생성
+2. ✅ projects 테이블 생성
+3. ✅ sprints 테이블 생성
+4. ✅ action_items 테이블 생성
+5. ✅ meetings 테이블 확장 (sprint_id, project_id, meeting_type 등)
+6. ✅ contexts 테이블 확장 (sprint_id, context_type, importance 등)
+7. ✅ tags 테이블 확장 (tag_type, scope, scope_id 등)
+8. ✅ 인덱스 생성 (idx_*_sprint, idx_*_project 등)
+9. ✅ RLS 활성화
+
+### 재설계 Phase 5: 문서 최신화 ✅ 완료
+1. ✅ glossary.json 업데이트 (신규 용어)
+2. ✅ entities.json 상세화 (DB 스키마 반영)
+3. ✅ rules.json 워크플로우 추가 (project/squad/action_item lifecycle)
+4. ✅ src/repositories/CLAUDE.md 메서드 문서화
+5. ✅ PLAN.md 완료 상태 업데이트
+
+---
 
 ## 핵심 파일
 

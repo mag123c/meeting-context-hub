@@ -66,7 +66,7 @@ pnpm dev  # localhost:3000
 | 버그 수정 | `fix/` | 버그 수정 |
 | 리팩토링 | `refactor/` | 코드 개선 (기능 변경 없음) |
 | 문서 | `docs/` | 문서 작성/수정 |
-| 스타일 | `style/` | 코드 포맷팅 |
+| 스타일 | `style/` | 코드 포맷팅/UI 스타일 |
 | 테스트 | `test/` | 테스트 추가/수정 |
 
 ```bash
@@ -85,6 +85,7 @@ feat: 회의록 요약 API 구현
 fix: 태그 중복 생성 버그 수정
 refactor: Claude SDK 래퍼 정리
 docs: README 업데이트
+style: Editorial Notion 디자인 적용
 ```
 
 **규칙**:
@@ -134,25 +135,73 @@ docs: README 업데이트
 └─────────────────────────────────────────────────────────────┘
 ```
 
+### Design System Integration
+
+디자인 시스템은 Presentation Layer에 통합:
+
+| 구성 요소 | 위치 | 설명 |
+|-----------|------|------|
+| Colors | `globals.css` | CSS 변수 (Notion Dark 팔레트) |
+| Typography | `globals.css` + `layout.tsx` | Lora, Inter, JetBrains Mono |
+| Components | `components/ui/` | shadcn/ui + Editorial 스타일 |
+
 ## Structure
 
 ```
 src/
 ├── app/                  # Next.js App Router
+│   ├── api/              # API Routes
+│   └── sprints/          # 스프린트 페이지
 ├── components/
-│   ├── ui/               # shadcn/ui 컴포넌트
-│   └── features/         # 도메인별 컴포넌트
+│   ├── ui/               # shadcn/ui 기본 컴포넌트
+│   ├── features/         # 도메인별 컴포넌트 (meeting, context, search, sprint, tag)
+│   ├── layout/           # 레이아웃 컴포넌트 (Navbar)
+│   └── providers/        # Context Providers (ThemeProvider)
 ├── hooks/                # 커스텀 React Hooks
 ├── repositories/         # Domain Layer (인터페이스)
 │   └── types/            # 엔티티 타입
 ├── storage/              # Infrastructure (구현체)
 │   ├── supabase/         # Supabase 구현
 │   └── obsidian/         # Obsidian 저장
-├── application/          # UseCase
+├── application/          # UseCase + Factory
 └── lib/
     ├── ai/               # Claude SDK + 프롬프트
     └── external/         # Slack, Notion API
 ```
+
+## Pages
+
+| 경로 | 설명 |
+|------|------|
+| `/` | 대시보드 (회의록/컨텍스트 목록) |
+| `/meeting` | 회의록 입력 |
+| `/meeting/[id]` | 회의록 상세 |
+| `/context` | 컨텍스트 입력 |
+| `/context/[id]` | 컨텍스트 상세 |
+| `/search` | Q&A 검색 |
+| `/sprints` | 스프린트 목록 |
+| `/sprints/new` | 스프린트 생성 |
+| `/sprints/[id]` | 스프린트 상세 (액션아이템 포함) |
+| `/settings` | 설정 (Slack/Notion 연동) |
+| `/login` | 로그인 |
+
+## API Routes
+
+| 경로 | 메서드 | 설명 |
+|------|--------|------|
+| `/api/meeting` | GET, POST | 회의록 목록/생성 |
+| `/api/meeting/[id]` | GET, PATCH, DELETE | 회의록 조회/수정/삭제 |
+| `/api/context` | GET, POST | 컨텍스트 목록/생성 |
+| `/api/context/[id]` | GET, DELETE | 컨텍스트 조회/삭제 |
+| `/api/sprint` | GET, POST | 스프린트 목록/생성 |
+| `/api/sprint/[id]` | GET, PATCH, DELETE | 스프린트 조회/수정/삭제 |
+| `/api/action-item` | GET, POST | 액션아이템 목록/생성 |
+| `/api/action-item/[id]` | GET, PATCH, DELETE | 액션아이템 조회/수정/삭제 |
+| `/api/tag` | GET, POST | 태그 목록/생성 |
+| `/api/search` | POST | Q&A 검색 |
+| `/api/sync/slack` | POST | Slack 동기화 |
+| `/api/sync/notion` | POST | Notion 동기화 |
+
 
 ---
 
@@ -168,6 +217,14 @@ src/
 | 프롬프트 | `{purpose}.prompt.ts` | `meeting-summary.prompt.ts` |
 | 타입 | `{entity}.types.ts` | `meeting.types.ts` |
 
+### Design System Naming
+
+| 구분 | 패턴 | 예시 |
+|------|------|------|
+| 컬러 변수 | `--{role}` | `--primary`, `--accent` |
+| 폰트 변수 | `--font-{type}` | `--font-serif`, `--font-mono` |
+| 유틸리티 클래스 | Tailwind 기본 | `font-serif`, `text-muted-foreground` |
+
 ---
 
 ## Core Rules
@@ -177,6 +234,7 @@ src/
 3. **Zod 스키마**: 모든 API 응답/입력 검증
 4. **RSC 보안**: Server Action에서 민감 데이터 반환 금지
 5. **디렉토리 문서화**: 새 디렉토리 생성 시 `CLAUDE.md` 작성
+6. **디자인 일관성**: CSS 변수 사용, 하드코딩 금지 (상세: `components/CLAUDE.md`)
 
 ---
 
@@ -211,3 +269,4 @@ pnpm lint --fix   # 린트 자동 수정
 | 비즈니스 규칙 | `.claude/ai-context/meeting-domain/rules.json` |
 | 통합 설정 | `.claude/ai-context/integrations/*.json` |
 | 모듈/규칙 | `CLAUDE.md` |
+| 디자인 시스템 | `src/components/CLAUDE.md` |

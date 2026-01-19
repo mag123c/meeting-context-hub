@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/storage/supabase/server";
 import { SupabaseContextRepository } from "@/storage/supabase/context.supabase";
+import { Navbar } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,50 +55,56 @@ export default async function ContextDetailPage({ params }: ContextDetailPagePro
   const SourceIcon = sourceIcons[context.source];
 
   return (
-    <div className="container max-w-4xl py-8">
-      <Link href="/">
-        <Button variant="ghost" className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          목록으로
-        </Button>
-      </Link>
-
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
-            <SourceIcon className="h-6 w-6" />
-            {sourceLabels[context.source]} 컨텍스트
-          </h1>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              {date}
-            </span>
-            {context.obsidian_path && (
-              <span className="flex items-center gap-1">
-                <FileText className="h-4 w-4" />
-                {context.obsidian_path}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            {context.tags.map((tag) => (
-              <Badge key={tag.id} variant="secondary">
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
+    <div className="min-h-screen">
+      <Navbar />
+      <main className="container max-w-3xl py-8">
+        <div className="flex items-center justify-between mb-6">
+          <Link href="/">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              목록으로
+            </Button>
+          </Link>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>내용</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{context.content}</p>
-          </CardContent>
-        </Card>
-      </div>
+        <article className="space-y-8">
+          <header>
+            <div className="flex items-center gap-2 mb-2">
+              <SourceIcon className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">{sourceLabels[context.source]}</span>
+            </div>
+            <h1 className="font-serif text-2xl font-semibold tracking-tight mb-3">컨텍스트</h1>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" />
+                {date}
+              </span>
+              {context.obsidian_path && (
+                <span className="flex items-center gap-1.5">
+                  <FileText className="h-4 w-4" />
+                  {context.obsidian_path}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1.5 mt-4">
+              {context.tags.map((tag) => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          </header>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>내용</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{context.content}</p>
+            </CardContent>
+          </Card>
+        </article>
+      </main>
     </div>
   );
 }

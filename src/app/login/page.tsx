@@ -67,21 +67,25 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Meeting Context Hub</CardTitle>
-          <CardDescription>회의록 요약 및 컨텍스트 관리</CardDescription>
+        <CardHeader className="text-center space-y-2">
+          <CardTitle className="font-serif text-2xl font-semibold tracking-tight">
+            Meeting Hub
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            회의록 요약 및 컨텍스트 관리
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login">로그인</TabsTrigger>
               <TabsTrigger value="signup">회원가입</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 mt-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">이메일</Label>
                   <Input
@@ -104,7 +108,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-500">{error}</p>
+                  <p className="text-sm text-destructive">{error}</p>
                 )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "로그인 중..." : "로그인"}
@@ -113,7 +117,7 @@ export default function LoginPage() {
             </TabsContent>
 
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4 mt-4">
+              <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">이메일</Label>
                   <Input
@@ -138,7 +142,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {error && (
-                  <p className="text-sm text-red-500">{error}</p>
+                  <p className="text-sm text-destructive">{error}</p>
                 )}
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "처리 중..." : "회원가입"}
