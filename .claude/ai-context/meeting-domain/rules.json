@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "rules": {
     "meeting_summary": {
       "description": "회의록 요약 규칙",
@@ -8,13 +8,15 @@
         "원본 회의록 텍스트 입력",
         "Claude API로 PRD 형식 요약 추출",
         "Claude API로 Action Items 추출",
+        "Claude API로 suggestedTags 추출",
         "Supabase에 저장",
         "Obsidian 마크다운 파일 생성"
       ],
       "constraints": [
         "PRD는 반드시 4개 섹션 포함: problem, goal, scope, requirements",
         "Action Items는 최소 assignee, task 필드 필수",
-        "deadline은 optional이지만 가능하면 추출"
+        "deadline은 optional이지만 가능하면 추출",
+        "suggestedTags는 3-5개 자동 추천"
       ]
     },
     "context_tagging": {
@@ -32,6 +34,25 @@
         "새 태그 생성 시 description 필수",
         "태그명은 한글 가능, 공백 대신 하이픈 사용"
       ]
+    },
+    "sync_process": {
+      "description": "외부 서비스 동기화 규칙",
+      "steps": [
+        "외부 서비스(Slack/Notion)에서 데이터 가져오기",
+        "데이터 포맷팅 (메시지 → 텍스트)",
+        "ExtractTagsUseCase 재사용",
+        "Context로 저장 + Obsidian 파일 생성"
+      ],
+      "slack": {
+        "source": "slack",
+        "source_id": "channelId",
+        "format": "[사용자명] 메시지 내용"
+      },
+      "notion": {
+        "source": "notion",
+        "source_id": "pageId",
+        "format": "# 페이지제목\n\n블록 내용"
+      }
     },
     "obsidian_format": {
       "description": "옵시디언 파일 형식",

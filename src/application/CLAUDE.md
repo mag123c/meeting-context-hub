@@ -14,10 +14,11 @@ Application Layer - 비즈니스 로직 및 유스케이스
 
 | 파일 | 역할 |
 |------|------|
-| `summarize-meeting.usecase.ts` | 회의록 요약 (PRD + Action Items) |
-| `extract-tags.usecase.ts` | 컨텍스트 태그 추출 |
+| `summarize-meeting.usecase.ts` | 회의록 요약 (PRD + Action Items + Obsidian 저장) |
+| `extract-tags.usecase.ts` | 컨텍스트 태그 추출 (Obsidian 저장 포함) |
 | `search-context.usecase.ts` | Q&A 검색 |
-| `sync-obsidian.usecase.ts` | Obsidian 동기화 |
+
+> 참고: Obsidian 저장은 각 UseCase 내에서 직접 처리
 
 ## 규칙
 

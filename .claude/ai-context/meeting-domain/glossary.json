@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "terms": {
     "PRD": {
       "full": "Product Requirements Document",
@@ -31,6 +31,23 @@
     "Obsidian Vault": {
       "description": "옵시디언 저장소. 마크다운 파일 기반 지식 관리 시스템",
       "path": "OBSIDIAN_VAULT_PATH 환경변수로 설정"
+    },
+    "Sync API": {
+      "description": "외부 서비스(Slack, Notion) 데이터를 Context로 동기화하는 API",
+      "endpoints": ["/api/sync/slack", "/api/sync/notion"],
+      "process": "외부 데이터 → ExtractTagsUseCase → Context 저장"
+    },
+    "Settings": {
+      "description": "외부 서비스 연동 설정 페이지",
+      "path": "/settings",
+      "features": ["Slack 채널 선택", "Notion 페이지 검색", "동기화 실행"]
+    },
+    "Pagination": {
+      "description": "목록 조회 시 페이지네이션 파라미터",
+      "format": {
+        "page": "현재 페이지 번호 (1부터 시작)",
+        "limit": "페이지당 항목 수"
+      }
     }
   }
 }
