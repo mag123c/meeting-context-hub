@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "integration": {
+    "name": "Notion",
+    "type": "external_api",
+    "description": "Notion 페이지/데이터베이스에서 컨텍스트 수집"
+  },
+  "config": {
+    "token": {
+      "env": "NOTION_API_KEY"
+    },
+    "api_version": "2022-06-28"
+  },
+  "operations": {
+    "get_page": {
+      "description": "페이지 내용 가져오기",
+      "api": "pages/{page_id}",
+      "method": "GET"
+    },
+    "get_blocks": {
+      "description": "페이지 블록 내용 가져오기",
+      "api": "blocks/{block_id}/children",
+      "method": "GET"
+    },
+    "search": {
+      "description": "워크스페이스 검색",
+      "api": "search",
+      "method": "POST",
+      "params": ["query", "filter", "sort"]
+    }
+  },
+  "context_extraction": {
+    "source": "notion",
+    "source_id_format": "{page_id}",
+    "content_format": "블록 텍스트 연결"
+  },
+  "future_storage": {
+    "description": "향후 Notion DB를 주 저장소로 전환 가능",
+    "migration_path": [
+      "repositories/ 인터페이스 유지",
+      "storage/notion/ 구현체 추가",
+      "DI로 구현체 교체"
+    ]
+  },
+  "sync_api": {
+    "endpoint": "/api/sync/notion",
+    "methods": {
+      "GET": {
+        "description": "페이지 검색",
+        "params": "query"
+      },
+      "POST": {
+        "description": "페이지를 Context로 동기화",
+        "params": "pageId"
+      }
+    }
+  }
+}
