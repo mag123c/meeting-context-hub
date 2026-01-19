@@ -22,16 +22,16 @@ export function ActionItemList({ items }: ActionItemListProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4">
+        <ul className="space-y-3">
           {items.map((item, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+            <li key={i} className="flex items-start gap-3 p-2 -mx-2 rounded hover:bg-accent/30 transition-colors">
+              <Avatar className="h-7 w-7 mt-0.5">
+                <AvatarFallback>
                   {item.assignee.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium text-sm text-foreground">{item.assignee}</span>
                   {item.deadline && (
                     <Badge variant="outline" className="text-xs">
@@ -40,7 +40,7 @@ export function ActionItemList({ items }: ActionItemListProps) {
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">{item.task}</p>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{item.task}</p>
               </div>
             </li>
           ))}

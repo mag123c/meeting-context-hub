@@ -17,24 +17,26 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
 
   return (
     <Link href={`/meeting/${meeting.id}`}>
-      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+      <Card className="hover:bg-accent/50 transition-colors cursor-pointer group">
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <CardTitle className="text-lg line-clamp-1">{meeting.title}</CardTitle>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4 mr-1" />
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+              {meeting.title}
+            </CardTitle>
+            <div className="flex items-center text-xs text-muted-foreground shrink-0">
+              <Calendar className="h-3.5 w-3.5 mr-1" />
               {date}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {meeting.prd_summary && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            <p className="text-sm text-muted-foreground line-clamp-2">
               {meeting.prd_summary.problem}
             </p>
           )}
 
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {meeting.tags.map((tag) => (
               <Badge key={tag.id} variant="secondary">
                 {tag.name}
