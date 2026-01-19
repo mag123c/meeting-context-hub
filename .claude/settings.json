@@ -20,17 +20,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "작업 완료 검증:\n\n1. /verify 실행됨? (빌드/린트/테스트 통과)\n2. 관련 CLAUDE.md 업데이트됨?\n3. ai-context JSON 업데이트 필요?\n\n미완료 항목 있으면 'block: [이유]'. 모두 완료면 'approve'."
-          }
-        ]
-      }
     ]
   }
 }
