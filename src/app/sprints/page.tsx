@@ -1,0 +1,100 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/storage/supabase/server";
+import { SupabaseSprintRepository } from "@/storage/supabase/sprint.supabase";
+import { SupabaseProjectRepository } from "@/storage/supabase/project.supabase";
+import { SprintCard } from "@/components/features/sprint";
+import { Navbar } from "@/components/layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Zap, FolderKanban } from "lucide-react";
+
+export default async function SprintsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const sprintRepo = new SupabaseSprintRepository(supabase);
+  const projectRepo = new SupabaseProjectRepository(supabase);
+
+  // Get active sprints and user's projects
+  const [activeSprints, projectsResult] = await Promise.all([
+    sprintRepo.listActive(user.id),
+    projectRepo.listByUser(user.id, { page: 1, limit: 50 }),
+  ]);
+
+  const hasProjects = projectsResult.data.length > 0;
+
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+
+      <main className="container py-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">스프린트</h1>
+          {hasProjects && (
+            <Link href="/sprints/new">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                새 스프린트
+              </Button>
+            </Link>
+          )}
+        </div>
+
+        {!hasProjects ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">프로젝트가 없습니다</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                스프린트를 생성하려면 먼저 프로젝트를 만들어야 합니다
+              </p>
+              <Link href="/projects/new">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  프로젝트 만들기
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : activeSprints.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <Zap className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">활성 스프린트가 없습니다</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                새 스프린트를 생성하여 작업을 시작하세요
+              </p>
+              <Link href="/sprints/new">
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  스프린트 생성
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                진행 중인 스프린트
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {activeSprints.map((sprint) => (
+                  <SprintCard key={sprint.id} sprint={sprint} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
