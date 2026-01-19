@@ -17,7 +17,7 @@ export function MeetingCard({ meeting }: MeetingCardProps) {
 
   return (
     <Link href={`/meeting/${meeting.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
             <CardTitle className="text-lg line-clamp-1">{meeting.title}</CardTitle>

@@ -33,7 +33,7 @@ export function ContextCard({ context }: ContextCardProps) {
 
   return (
     <Link href={`/context/${context.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
             <CardTitle className="text-lg flex items-center gap-2">

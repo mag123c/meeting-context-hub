@@ -9,9 +9,9 @@ import { Loader2, Search, AlertCircle, CheckCircle, HelpCircle } from "lucide-re
 import type { SearchResult } from "@/application/search-context.usecase";
 
 const confidenceConfig = {
-  high: { icon: CheckCircle, color: "text-green-500", label: "높음" },
-  medium: { icon: AlertCircle, color: "text-yellow-500", label: "보통" },
-  low: { icon: HelpCircle, color: "text-red-500", label: "낮음" },
+  high: { icon: CheckCircle, color: "text-success", label: "높음" },
+  medium: { icon: AlertCircle, color: "text-warning", label: "보통" },
+  low: { icon: HelpCircle, color: "text-destructive", label: "낮음" },
 };
 
 export function SearchForm() {
@@ -75,9 +75,9 @@ export function SearchForm() {
       </Card>
 
       {error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-destructive/50 bg-destructive/10">
           <CardContent className="pt-6">
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -102,11 +102,11 @@ export function SearchForm() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm whitespace-pre-wrap">{result.answer}</p>
+            <p className="text-sm whitespace-pre-wrap text-foreground">{result.answer}</p>
 
             {result.sources.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                <h4 className="text-sm font-semibold text-primary mb-2">
                   출처
                 </h4>
                 <ul className="space-y-2">

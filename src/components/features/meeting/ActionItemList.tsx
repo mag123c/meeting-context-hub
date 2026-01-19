@@ -26,13 +26,13 @@ export function ActionItemList({ items }: ActionItemListProps) {
           {items.map((item, i) => (
             <li key={i} className="flex items-start gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="text-xs">
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
                   {item.assignee.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{item.assignee}</span>
+                  <span className="font-medium text-sm text-foreground">{item.assignee}</span>
                   {item.deadline && (
                     <Badge variant="outline" className="text-xs">
                       <Calendar className="h-3 w-3 mr-1" />
