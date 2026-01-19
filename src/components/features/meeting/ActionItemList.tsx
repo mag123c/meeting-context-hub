@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import type { ActionItem } from "@/repositories/types";
+import type { EmbeddedActionItem } from "@/repositories/types";
 import { Calendar } from "lucide-react";
 
 interface ActionItemListProps {
-  items: ActionItem[];
+  items: EmbeddedActionItem[];
 }
 
 export function ActionItemList({ items }: ActionItemListProps) {
