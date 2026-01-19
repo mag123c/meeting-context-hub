@@ -629,42 +629,42 @@ CREATE TABLE meeting_tags (
 
 ## 구현 단계
 
-### Phase 1: 프로젝트 셋업
-1. Next.js 프로젝트 생성 (App Router)
-2. Supabase 프로젝트 연결
-3. 환경변수 설정
-4. DB 마이그레이션 적용
-5. 인증 (Supabase Auth) 구현
+### Phase 1: 프로젝트 셋업 ✅ 완료
+1. ✅ Next.js 프로젝트 생성 (App Router)
+2. ✅ Supabase 프로젝트 연결
+3. ✅ 환경변수 설정
+4. ✅ DB 마이그레이션 적용
+5. ✅ 인증 (Supabase Auth) 구현
 
-### Phase 2: 핵심 인프라
-1. Claude SDK 래퍼 구현
-2. 저장소 인터페이스 정의 (추상화 레이어)
-3. 옵시디언 저장소 구현체
-4. Supabase 저장소 구현체
+### Phase 2: 핵심 인프라 ✅ 완료
+1. ✅ Claude SDK 래퍼 구현
+2. ✅ 저장소 인터페이스 정의 (추상화 레이어)
+3. ✅ 옵시디언 저장소 구현체
+4. ✅ Supabase 저장소 구현체
 
-### Phase 3: 회의록 요약 기능
-1. 회의록 입력 UI
-2. PRD 추출 프롬프트 및 API
-3. Action Items 추출 프롬프트 및 API
-4. 옵시디언 마크다운 생성/저장
-5. DB 저장
+### Phase 3: 회의록 요약 기능 ✅ 완료
+1. ✅ 회의록 입력 UI
+2. ✅ PRD 추출 프롬프트 및 API
+3. ✅ Action Items 추출 프롬프트 및 API
+4. ✅ 옵시디언 마크다운 생성/저장
+5. ✅ DB 저장
 
-### Phase 4: 컨텍스트 그룹핑 기능
-1. 컨텍스트 입력 UI (수동)
-2. 자동 태깅 프롬프트 및 API
-3. 태그 생성/재활용 로직
-4. 옵시디언 저장 (frontmatter 포함)
-5. DB 저장
+### Phase 4: 컨텍스트 그룹핑 기능 ✅ 완료
+1. ✅ 컨텍스트 입력 UI (수동)
+2. ✅ 자동 태깅 프롬프트 및 API
+3. ✅ 태그 생성/재활용 로직
+4. ✅ 옵시디언 저장 (frontmatter 포함)
+5. ✅ DB 저장
 
-### Phase 5: 외부 연동
-1. Slack API 연동 (메시지 읽기)
-2. Notion API 연동 (페이지 읽기)
-3. 연동 설정 UI
+### Phase 5: 외부 연동 ✅ 완료
+1. ✅ Slack API 연동 (메시지 읽기)
+2. ✅ Notion API 연동 (페이지 읽기)
+3. ✅ 연동 설정 UI (`/settings` 페이지)
 
-### Phase 6: 검색/트래킹
-1. 프로젝트별 진행 상황 조회 UI
-2. Q&A 검색 기능 (Claude 활용)
-3. 대시보드 UI
+### Phase 6: 검색/트래킹 ✅ 완료
+1. ✅ 프로젝트별 진행 상황 조회 UI
+2. ✅ Q&A 검색 기능 (Claude 활용)
+3. ✅ 대시보드 UI
 
 ## 핵심 파일
 
