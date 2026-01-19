@@ -66,7 +66,7 @@ pnpm dev  # localhost:3000
 | 버그 수정 | `fix/` | 버그 수정 |
 | 리팩토링 | `refactor/` | 코드 개선 (기능 변경 없음) |
 | 문서 | `docs/` | 문서 작성/수정 |
-| 스타일 | `style/` | 코드 포맷팅 |
+| 스타일 | `style/` | 코드 포맷팅/UI 스타일 |
 | 테스트 | `test/` | 테스트 추가/수정 |
 
 ```bash
@@ -85,6 +85,7 @@ feat: 회의록 요약 API 구현
 fix: 태그 중복 생성 버그 수정
 refactor: Claude SDK 래퍼 정리
 docs: README 업데이트
+style: Editorial Notion 디자인 적용
 ```
 
 **규칙**:
@@ -133,6 +134,16 @@ docs: README 업데이트
 │   storage/ (Supabase/Obsidian 구현체) + lib/ (외부 SDK)      │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### Design System Integration
+
+디자인 시스템은 Presentation Layer에 통합:
+
+| 구성 요소 | 위치 | 설명 |
+|-----------|------|------|
+| Colors | `globals.css` | CSS 변수 (Notion Dark 팔레트) |
+| Typography | `globals.css` + `layout.tsx` | Lora, Inter, JetBrains Mono |
+| Components | `components/ui/` | shadcn/ui + Editorial 스타일 |
 
 ## Structure
 
@@ -206,6 +217,14 @@ src/
 | 프롬프트 | `{purpose}.prompt.ts` | `meeting-summary.prompt.ts` |
 | 타입 | `{entity}.types.ts` | `meeting.types.ts` |
 
+### Design System Naming
+
+| 구분 | 패턴 | 예시 |
+|------|------|------|
+| 컬러 변수 | `--{role}` | `--primary`, `--accent` |
+| 폰트 변수 | `--font-{type}` | `--font-serif`, `--font-mono` |
+| 유틸리티 클래스 | Tailwind 기본 | `font-serif`, `text-muted-foreground` |
+
 ---
 
 ## Core Rules
@@ -215,6 +234,7 @@ src/
 3. **Zod 스키마**: 모든 API 응답/입력 검증
 4. **RSC 보안**: Server Action에서 민감 데이터 반환 금지
 5. **디렉토리 문서화**: 새 디렉토리 생성 시 `CLAUDE.md` 작성
+6. **디자인 일관성**: CSS 변수 사용, 하드코딩 금지 (상세: `components/CLAUDE.md`)
 
 ---
 
@@ -249,3 +269,4 @@ pnpm lint --fix   # 린트 자동 수정
 | 비즈니스 규칙 | `.claude/ai-context/meeting-domain/rules.json` |
 | 통합 설정 | `.claude/ai-context/integrations/*.json` |
 | 모듈/규칙 | `CLAUDE.md` |
+| 디자인 시스템 | `src/components/CLAUDE.md` |
