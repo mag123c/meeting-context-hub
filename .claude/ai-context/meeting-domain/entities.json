@@ -1,7 +1,41 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "entities": {
+    "Squad": {
+      "description": "스쿼드 엔티티 - 팀/조직 단위",
+      "fields": {
+        "id": "UUID",
+        "user_id": "UUID (소유자)",
+        "name": "스쿼드명",
+        "slack_channel_id": "연동된 Slack 채널",
+        "notion_workspace_id": "연동된 Notion 워크스페이스"
+      },
+      "relations": { "projects": "one-to-many" }
+    },
+    "Project": {
+      "description": "프로젝트 엔티티",
+      "fields": {
+        "id": "UUID",
+        "squad_id": "스쿼드 참조 (nullable)",
+        "name": "프로젝트명",
+        "status": "상태 (ideation, active, paused, completed, archived)",
+        "goal": "프로젝트 목표"
+      },
+      "relations": { "squad": "many-to-one", "sprints": "one-to-many" }
+    },
+    "Sprint": {
+      "description": "스프린트 엔티티 - 작업 주기",
+      "fields": {
+        "id": "UUID",
+        "project_id": "프로젝트 참조",
+        "name": "스프린트명",
+        "status": "상태 (planning, active, completed, cancelled)",
+        "start_date": "시작일",
+        "end_date": "종료일"
+      },
+      "relations": { "project": "many-to-one", "meetings": "one-to-many", "action_items": "one-to-many" }
+    },
     "Meeting": {
       "description": "회의록 엔티티",
       "fields": {
@@ -9,14 +43,12 @@
         "user_id": "UUID (auth.users 참조)",
         "title": "회의 제목",
         "raw_content": "원본 회의록 텍스트",
-        "prd_summary": "PRD 형식 요약 (problem, goal, scope, requirements)",
-        "action_items": "액션 아이템 배열 (assignee, task, deadline)",
-        "obsidian_path": "옵시디언 저장 경로",
-        "created_at": "생성 시간"
+        "prd_summary": "PRD 형식 요약",
+        "action_items": "임베디드 액션 아이템 (JSONB)",
+        "sprint_id": "스프린트 참조 (nullable)",
+        "meeting_type": "회의 유형 (standup, planning, retrospective 등)"
       },
-      "relations": {
-        "tags": "many-to-many via meeting_tags"
-      }
+      "relations": { "tags": "many-to-many", "sprint": "many-to-one (optional)" }
     },
     "Context": {
       "description": "컨텍스트 정보 엔티티",
@@ -24,13 +56,23 @@
         "id": "UUID",
         "user_id": "UUID (auth.users 참조)",
         "source": "출처 (slack, notion, manual, meeting)",
-        "source_id": "원본 ID (슬랙 메시지 ID 등)",
         "content": "컨텍스트 내용",
-        "obsidian_path": "옵시디언 저장 경로",
-        "created_at": "생성 시간"
+        "sprint_id": "스프린트 참조 (nullable)",
+        "context_type": "유형 (decision, reference, blocker 등)",
+        "importance": "중요도 (low, medium, high)"
       },
-      "relations": {
-        "tags": "many-to-many via context_tags"
+      "relations": { "tags": "many-to-many", "sprint": "many-to-one (optional)" }
+    },
+    "ActionItem": {
+      "description": "액션아이템 엔티티 (독립 테이블)",
+      "fields": {
+        "id": "UUID",
+        "sprint_id": "스프린트 참조 (nullable)",
+        "meeting_id": "회의록 참조 (nullable)",
+        "assignee_name": "담당자",
+        "task": "할 일",
+        "status": "상태 (pending, in_progress, completed, cancelled)",
+        "priority": "우선순위 (low, medium, high, urgent)"
       }
     },
     "Tag": {
@@ -38,8 +80,9 @@
       "fields": {
         "id": "UUID",
         "name": "태그명 (unique)",
-        "description": "태그 설명",
-        "created_at": "생성 시간"
+        "tag_type": "유형 (category, status, priority, custom)",
+        "scope": "범위 (global, squad, project)",
+        "color": "태그 색상"
       },
       "usage": "회의록과 컨텍스트에 공유 적용"
     }
