@@ -18,6 +18,8 @@ Presentation Layer - UI 컴포넌트
 | `features/meeting/` | 회의록 관련 컴포넌트 |
 | `features/context/` | 컨텍스트 관련 컴포넌트 |
 | `features/search/` | 검색 관련 컴포넌트 |
+| `features/sprint/` | 스프린트 관련 컴포넌트 |
+| `features/tag/` | 태그 관련 컴포넌트 |
 | `layout/` | 레이아웃 컴포넌트 (Navbar) |
 | `providers/` | Context Provider (ThemeProvider) |
 
@@ -39,7 +41,7 @@ Presentation Layer - UI 컴포넌트
 | `ActionItemList` | 액션 아이템 목록 |
 | `ContextCard` | 컨텍스트 카드 |
 | `ContextForm` | 컨텍스트 입력 폼 |
-| `TagSelector` | 태그 선택/생성 |
+| `SprintCard` | 스프린트 카드 (상태, 날짜 표시) |\n| `SprintForm` | 스프린트 입력 폼 |\n| `TagSelector` | 태그 선택/생성 (Command + Popover) |
 | `TagBadge` | 태그 뱃지 |
 
 ---
