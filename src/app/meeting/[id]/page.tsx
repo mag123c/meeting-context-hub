@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Calendar, FileText } from "lucide-react";
+import { MeetingActions } from "./MeetingActions";
 
 interface MeetingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -43,12 +44,15 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
     <div className="min-h-screen">
       <Navbar />
       <main className="container max-w-4xl py-8">
-        <Link href="/">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            목록으로
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between mb-4">
+          <Link href="/">
+            <Button variant="ghost">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              목록으로
+            </Button>
+          </Link>
+          <MeetingActions meeting={meeting} />
+        </div>
 
         <div className="space-y-6">
           <div>
