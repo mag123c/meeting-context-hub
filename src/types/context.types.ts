@@ -20,6 +20,7 @@ export interface CreateContextInput {
   type: ContextType;
   content: string;
   source?: string;
+  tags?: string[]; // 이미지 분석 시 미리 추출된 태그
 }
 
 export interface ContextWithSimilarity extends Context {

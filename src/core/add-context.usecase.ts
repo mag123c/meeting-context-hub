@@ -3,7 +3,7 @@ import type { ContextRepository } from "../repositories/context.repository.js";
 import type { Context, CreateContextInput } from "../types/context.types.js";
 import { ClaudeClient } from "../ai/clients/claude.client.js";
 import { EmbeddingClient } from "../ai/clients/embedding.client.js";
-import { taggingPrompt, imageTaggingPrompt } from "../ai/prompts/tagging.prompt.js";
+import { taggingPrompt } from "../ai/prompts/tagging.prompt.js";
 import { summarizePrompt } from "../ai/prompts/summarize.prompt.js";
 
 export class AddContextUseCase {
@@ -14,10 +14,16 @@ export class AddContextUseCase {
   ) {}
 
   async execute(input: CreateContextInput): Promise<Context> {
-    const prompt = input.type === "image" ? imageTaggingPrompt : taggingPrompt;
-    const tagsJson = await this.claude.complete(prompt, input.content);
-    const tags = this.parseTags(tagsJson);
+    // 태그: 이미 있으면 사용, 없으면 Claude로 추출
+    let tags: string[];
+    if (input.tags && input.tags.length > 0) {
+      tags = input.tags;
+    } else {
+      const tagsJson = await this.claude.complete(taggingPrompt, input.content);
+      tags = this.parseTags(tagsJson);
+    }
 
+    // 요약: 이미지는 content가 이미 요약, 나머지는 Claude로 생성
     const summary = input.type === "image"
       ? input.content
       : await this.claude.complete(summarizePrompt, input.content);
