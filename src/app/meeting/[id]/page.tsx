@@ -43,10 +43,10 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="container max-w-4xl py-8">
-        <div className="flex items-center justify-between mb-4">
+      <main className="container max-w-3xl py-8">
+        <div className="flex items-center justify-between mb-6">
           <Link href="/">
-            <Button variant="ghost">
+            <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               목록으로
             </Button>
@@ -54,29 +54,29 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
           <MeetingActions meeting={meeting} />
         </div>
 
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">{meeting.title}</h1>
+        <article className="space-y-8">
+          <header>
+            <h1 className="font-serif text-2xl font-semibold tracking-tight mb-3">{meeting.title}</h1>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
                 <Calendar className="h-4 w-4" />
                 {date}
               </span>
               {meeting.obsidian_path && (
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <FileText className="h-4 w-4" />
                   {meeting.obsidian_path}
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center gap-1.5 mt-4">
               {meeting.tags.map((tag) => (
                 <Badge key={tag.id} variant="secondary">
                   {tag.name}
                 </Badge>
               ))}
             </div>
-          </div>
+          </header>
 
           {meeting.prd_summary && <PRDSummary prd={meeting.prd_summary} />}
 
@@ -89,12 +89,12 @@ export default async function MeetingDetailPage({ params }: MeetingDetailPagePro
               <CardTitle>원본 회의록</CardTitle>
             </CardHeader>
             <CardContent>
-              <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded-lg">
+              <pre className="text-sm whitespace-pre-wrap font-mono bg-muted p-4 rounded leading-relaxed">
                 {meeting.raw_content}
               </pre>
             </CardContent>
           </Card>
-        </div>
+        </article>
       </main>
     </div>
   );

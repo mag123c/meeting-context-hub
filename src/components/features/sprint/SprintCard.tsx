@@ -10,18 +10,11 @@ interface SprintCardProps {
   actionItemCount?: number;
 }
 
-const statusColors: Record<string, string> = {
-  planning: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-  active: "bg-green-500/10 text-green-500 border-green-500/20",
-  completed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
-};
-
-const statusLabels: Record<string, string> = {
-  planning: "계획 중",
-  active: "진행 중",
-  completed: "완료",
-  cancelled: "취소됨",
+const statusConfig: Record<string, { variant: "warning" | "success" | "default" | "destructive"; label: string }> = {
+  planning: { variant: "warning", label: "계획 중" },
+  active: { variant: "success", label: "진행 중" },
+  completed: { variant: "default", label: "완료" },
+  cancelled: { variant: "destructive", label: "취소됨" },
 };
 
 export function SprintCard({ sprint, meetingCount = 0, actionItemCount = 0 }: SprintCardProps) {
@@ -34,21 +27,25 @@ export function SprintCard({ sprint, meetingCount = 0, actionItemCount = 0 }: Sp
     day: "numeric",
   });
 
+  const config = statusConfig[sprint.status] || statusConfig.planning;
+
   return (
     <Link href={`/sprints/${sprint.id}`}>
-      <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+      <Card className="hover:bg-accent/50 transition-colors cursor-pointer group">
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <CardTitle className="text-lg line-clamp-1">{sprint.name}</CardTitle>
-            <Badge variant="outline" className={statusColors[sprint.status]}>
-              {statusLabels[sprint.status]}
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle className="line-clamp-1 group-hover:text-primary transition-colors">
+              {sprint.name}
+            </CardTitle>
+            <Badge variant={config.variant}>
+              {config.label}
             </Badge>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           {sprint.goal && (
-            <div className="flex items-start gap-2 mb-3">
-              <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div className="flex items-start gap-2">
+              <Target className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {sprint.goal}
               </p>
@@ -57,18 +54,16 @@ export function SprintCard({ sprint, meetingCount = 0, actionItemCount = 0 }: Sp
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center text-muted-foreground">
-              <Calendar className="h-4 w-4 mr-1" />
+              <Calendar className="h-3.5 w-3.5 mr-1" />
               {startDate} - {endDate}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 text-muted-foreground">
               {meetingCount > 0 && (
-                <span className="text-muted-foreground">
-                  {meetingCount} 회의
-                </span>
+                <span>{meetingCount} 회의</span>
               )}
               {actionItemCount > 0 && (
-                <span className="flex items-center text-muted-foreground">
+                <span className="flex items-center">
                   <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
                   {actionItemCount}
                 </span>
