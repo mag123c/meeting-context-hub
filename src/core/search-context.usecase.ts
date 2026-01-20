@@ -1,6 +1,7 @@
 import type { ContextRepository } from "../repositories/context.repository.js";
 import type { Context, ContextWithSimilarity, ListOptions } from "../types/context.types.js";
 import { EmbeddingClient } from "../ai/clients/embedding.client.js";
+import { applyProjectSprintFilters } from "../utils/index.js";
 
 export interface SearchResult {
   contexts: Context[] | ContextWithSimilarity[];
@@ -26,13 +27,7 @@ export class SearchContextUseCase {
 
   async searchByTags(tags: string[], options?: ListOptions): Promise<SearchResult> {
     let contexts = await this.repository.findByTags(tags);
-    // Apply project/sprint filters
-    if (options?.project) {
-      contexts = contexts.filter((ctx) => ctx.project === options.project);
-    }
-    if (options?.sprint) {
-      contexts = contexts.filter((ctx) => ctx.sprint === options.sprint);
-    }
+    contexts = applyProjectSprintFilters(contexts, options);
     return { contexts, total: contexts.length };
   }
 
@@ -46,13 +41,7 @@ export class SearchContextUseCase {
     }
     const similar = await this.repository.findSimilar(context.embedding, limit + 1);
     let filtered = similar.filter((ctx) => ctx.id !== id);
-    // Apply project/sprint filters
-    if (options?.project) {
-      filtered = filtered.filter((ctx) => ctx.project === options.project);
-    }
-    if (options?.sprint) {
-      filtered = filtered.filter((ctx) => ctx.sprint === options.sprint);
-    }
+    filtered = applyProjectSprintFilters(filtered, options);
     filtered = filtered.slice(0, limit);
     return { contexts: filtered, total: filtered.length };
   }
@@ -62,13 +51,7 @@ export class SearchContextUseCase {
     // Fetch more if filtering, to ensure we get enough results
     const fetchLimit = options?.project || options?.sprint ? limit * 3 : limit;
     let similar = await this.repository.findSimilar(embeddingVector, fetchLimit);
-    // Apply project/sprint filters
-    if (options?.project) {
-      similar = similar.filter((ctx) => ctx.project === options.project);
-    }
-    if (options?.sprint) {
-      similar = similar.filter((ctx) => ctx.sprint === options.sprint);
-    }
+    similar = applyProjectSprintFilters(similar, options);
     similar = similar.slice(0, limit);
     return { contexts: similar, total: similar.length };
   }

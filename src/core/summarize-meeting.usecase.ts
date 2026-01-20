@@ -6,25 +6,12 @@ import type { Meeting, MeetingSummary, CreateMeetingInput } from "../types/meeti
 import { MeetingSummarySchema } from "../types/meeting.schema.js";
 import { meetingSummaryPrompt } from "../ai/prompts/meeting-summary.prompt.js";
 import { taggingPrompt } from "../ai/prompts/tagging.prompt.js";
+import { extractJsonFromMarkdown, safeJsonParse, addRelatedLinks } from "../utils/index.js";
 
 export interface SummarizeMeetingDeps {
   claudeClient: ClaudeClient;
   embeddingClient: EmbeddingClient;
   contextRepository: ContextRepository;
-}
-
-function extractJSON(text: string): string {
-  // Remove markdown code blocks if present
-  let cleaned = text.trim();
-  if (cleaned.startsWith("```json")) {
-    cleaned = cleaned.slice(7);
-  } else if (cleaned.startsWith("```")) {
-    cleaned = cleaned.slice(3);
-  }
-  if (cleaned.endsWith("```")) {
-    cleaned = cleaned.slice(0, -3);
-  }
-  return cleaned.trim();
 }
 
 export class SummarizeMeetingUseCase {
@@ -39,41 +26,20 @@ export class SummarizeMeetingUseCase {
       input.transcript
     );
 
-    let meetingSummary: MeetingSummary;
-    try {
-      const cleanedJSON = extractJSON(summaryResponse);
-      const parsed = JSON.parse(cleanedJSON);
-      meetingSummary = MeetingSummarySchema.parse(parsed);
-    } catch {
-      throw new Error("Failed to parse meeting summary: " + summaryResponse);
-    }
+    const meetingSummary = this.parseMeetingSummary(summaryResponse);
 
-    // 2. 태그 추출 (새 포맷: {tags, project, sprint})
-    const tagResponse = await claudeClient.complete(
-      taggingPrompt,
-      input.transcript
-    );
-
-    let tags: string[];
-    try {
-      const cleanedTags = extractJSON(tagResponse);
-      const parsed = JSON.parse(cleanedTags);
-      // 새 포맷 (객체) 또는 구 포맷 (배열) 지원
-      tags = Array.isArray(parsed) ? parsed : (parsed.tags || []);
-    } catch {
-      tags = [];
-    }
+    // 2. 태그 추출
+    const tags = await this.extractTags(claudeClient, input.transcript);
 
     // 3. project/sprint 결정: CLI 옵션 > AI 추출
     const project = input.project || (meetingSummary.project ?? undefined);
     const sprint = input.sprint || (meetingSummary.sprint ?? undefined);
 
-    // 5. 임베딩 생성 (요약 텍스트 기반)
-    const keyPointsText = meetingSummary.keyPoints.join(" ");
-    const embeddingText = meetingSummary.title + " " + meetingSummary.summary + " " + keyPointsText;
+    // 4. 임베딩 생성 (요약 텍스트 기반)
+    const embeddingText = this.buildEmbeddingText(meetingSummary);
     const embedding = await embeddingClient.embed(embeddingText);
 
-    // 6. Meeting 객체 생성
+    // 5. Meeting 객체 생성
     const now = new Date();
     const meeting: Meeting = {
       id: randomUUID(),
@@ -85,7 +51,7 @@ export class SummarizeMeetingUseCase {
       updatedAt: now,
     };
 
-    // 7. Obsidian에 저장 (마크다운 형식)
+    // 6. Obsidian에 저장 (마크다운 형식)
     const markdownContent = this.formatMeetingMarkdown(meeting, project, sprint);
     await contextRepository.save({
       id: meeting.id,
@@ -101,29 +67,32 @@ export class SummarizeMeetingUseCase {
       updatedAt: now,
     });
 
-    // 8. 관련 문서 링크 추가 (유사도 70% 이상, 최대 5개)
-    await this.addRelatedLinks(contextRepository, meeting.id, embedding);
+    // 7. 관련 문서 링크 추가 (유사도 60% 이상, 최대 5개)
+    await addRelatedLinks(contextRepository, meeting.id, embedding);
 
     return meeting;
   }
 
-  private async addRelatedLinks(
-    repository: ContextRepository,
-    id: string,
-    embedding: number[]
-  ): Promise<void> {
+  private parseMeetingSummary(response: string): MeetingSummary {
     try {
-      const similar = await repository.findSimilar(embedding, 6);
-      const related = similar
-        .filter((s) => s.id !== id && s.similarity >= 0.6)
-        .slice(0, 5);
-
-      if (related.length > 0) {
-        await repository.appendRelatedLinks(id, related.map((r) => r.id));
-      }
+      const cleanedJSON = extractJsonFromMarkdown(response);
+      const parsed = JSON.parse(cleanedJSON);
+      return MeetingSummarySchema.parse(parsed);
     } catch {
-      // 관련 문서 링크 실패해도 무시
+      throw new Error("Failed to parse meeting summary: " + response);
     }
+  }
+
+  private async extractTags(claudeClient: ClaudeClient, transcript: string): Promise<string[]> {
+    const tagResponse = await claudeClient.complete(taggingPrompt, transcript);
+    const parsed = safeJsonParse(tagResponse, { tags: [] });
+    // 새 포맷 (객체) 또는 구 포맷 (배열) 지원
+    return Array.isArray(parsed) ? parsed : (parsed.tags || []);
+  }
+
+  private buildEmbeddingText(summary: MeetingSummary): string {
+    const keyPointsText = summary.keyPoints.join(" ");
+    return `${summary.title} ${summary.summary} ${keyPointsText}`;
   }
 
   private formatMeetingMarkdown(meeting: Meeting, project?: string, sprint?: string): string {

@@ -4,6 +4,7 @@ import { join } from "path";
 import type { ContextRepository } from "../../repositories/context.repository.js";
 import type { Context, ListOptions, ContextWithSimilarity } from "../../types/context.types.js";
 import { contextToMarkdown, markdownToContext, updateFrontmatter } from "./frontmatter.js";
+import { applyFilters } from "../../utils/index.js";
 
 export class ObsidianContextRepository implements ContextRepository {
   constructor(private readonly basePath: string) {}
@@ -83,7 +84,7 @@ export class ObsidianContextRepository implements ContextRepository {
     await this.ensureDir();
     const files = await readdir(this.basePath);
     const shortId = id.slice(0, 8);
-    
+
     // short ID가 포함된 파일 먼저 찾기 (빠른 경로)
     const matchingFile = files.find(f => f.includes(shortId) && f.endsWith(".md"));
     if (matchingFile) {
@@ -145,21 +146,8 @@ export class ObsidianContextRepository implements ContextRepository {
       }
     }
 
-    // Apply filters
-    if (options?.tags && options.tags.length > 0) {
-      contexts = contexts.filter((ctx) =>
-        options.tags!.some((tag) => ctx.tags.includes(tag))
-      );
-    }
-    if (options?.type) {
-      contexts = contexts.filter((ctx) => ctx.type === options.type);
-    }
-    if (options?.project) {
-      contexts = contexts.filter((ctx) => ctx.project === options.project);
-    }
-    if (options?.sprint) {
-      contexts = contexts.filter((ctx) => ctx.sprint === options.sprint);
-    }
+    // Apply filters using utility
+    contexts = applyFilters(contexts, options);
 
     // Sort by createdAt descending
     contexts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
