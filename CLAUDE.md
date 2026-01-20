@@ -34,20 +34,37 @@ mch add -i ./image.png           # 이미지 (Claude Vision)
 mch add -a ./audio.mp3           # 음성 (Whisper)
 mch add -f ./data.csv            # 파일 (txt, md, csv, json)
 mch add -m ./meeting.txt         # 회의록 (PRD 요약 + Action Items)
+mch add -t "내용" --project "프로젝트명" --sprint "S1"  # 메타데이터 override
 
 mch search "키워드"              # 의미론적 검색 (임베딩 유사도, 기본)
 mch search "키워드" --exact      # 정확한 텍스트 매칭 검색
 mch search --similar <id>        # 특정 문서와 유사한 문서 검색
 mch search --tag "회의"          # 태그 필터
+mch search --project "프로젝트명"  # 프로젝트 필터
+mch search --sprint "S1"         # 스프린트 필터
 
 mch list                         # 전체 목록
 mch list --tag "회의"            # 태그 필터
 mch list --type text             # 타입 필터
+mch list --project "프로젝트명"  # 프로젝트 필터
+mch list --sprint "S1"           # 스프린트 필터
 
 mch config show                  # 설정 확인
 mch config set <KEY> <value>     # API 키 설정 (키체인)
 mch config check                 # API 키 상태 확인
 ```
+
+### AI 자동 추론
+
+내용에서 프로젝트/스프린트 정보를 AI가 자동 추출:
+
+```bash
+mch add -t "결제 리뉴얼 Sprint 3에서 PG 연동 완료"
+# → AI가 자동으로 project: "결제 리뉴얼", sprint: "Sprint 3" 추출
+```
+
+- **CLI 옵션 > AI 추론**: `--project`, `--sprint` 옵션 지정 시 AI 결과보다 우선
+- **추측 안 함**: 명시적으로 언급된 것만 추출
 
 ### 회의록 출력 형식
 
@@ -253,12 +270,12 @@ MCH_FOLDER=mch
 
 ### 파일 구조
 
-컨텍스트는 `{VAULT}/{MCH_FOLDER}/{sanitized-summary}_{short-id}.md` 형식으로 저장:
+컨텍스트는 `{VAULT}/{MCH_FOLDER}/{short-title}_{short-id}.md` 형식으로 저장:
 
 **파일명 규칙**:
-- summary 앞 30자 + UUID 앞 8자
-- 특수문자 제거, 공백 → 하이픈
-- 예: `회의록-요약-테스트_a1b2c3d4.md`
+- 제목 15자 + UUID 앞 8자
+- 불필요한 조사/어미 제거, 공백 → 하이픈
+- 예: `PG연동-완료_a64cbac7.md`
 - 구버전 UUID 파일명 호환성 유지
 
 ```markdown
@@ -269,15 +286,28 @@ summary: 요약 내용
 tags:
   - 태그1
   - 태그2
+project: 프로젝트명        # 선택적
+sprint: 스프린트명         # 선택적
 embedding: [0.1, 0.2, ...]
 createdAt: 2024-01-01T00:00:00.000Z
 updatedAt: 2024-01-01T00:00:00.000Z
 ---
 
 실제 컨텍스트 내용
+
+## 관련 문서
+- [[연관-문서-제목_b1234567]]
+- [[다른-문서_c2345678]]
 ```
+
+### 관련 문서 자동 링크
+
+저장 시 임베딩 유사도 70% 이상인 문서를 자동으로 `[[링크]]` 추가:
+- 최대 5개까지 연결
+- Obsidian Graph View에서 연결선으로 표시
+- 클릭하여 관련 문서로 바로 이동
 
 ### 시각화
 
-- **Graph View**: 태그 기반 연결 확인
+- **Graph View**: 태그 + 관련 문서 링크 기반 연결 확인
 - **Dataview**: 커스텀 쿼리로 목록 조회

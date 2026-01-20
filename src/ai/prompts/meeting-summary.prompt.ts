@@ -1,7 +1,7 @@
 import type { Prompt } from "../../types/prompt.types.js";
 
 export const meetingSummaryPrompt: Prompt = {
-  version: "1.0.0",
+  version: "2.0.0",
   name: "meeting-summary",
   description: "회의 녹취록에서 구조화된 요약 정보를 추출합니다",
   system: `당신은 회의록 분석 전문가입니다.
@@ -16,8 +16,10 @@ export const meetingSummaryPrompt: Prompt = {
 6. 주요 논의 포인트: 깊이 논의된 주제들
 7. 미해결 이슈: 결론 없이 남은 문제들
 8. 다음 단계: 향후 계획이나 후속 조치
+9. 프로젝트: 명시적으로 언급된 프로젝트명만 추출 (추측 금지)
+10. 스프린트: 명시적으로 언급된 스프린트/마일스톤만 추출 (추측 금지)
 
-담당자/기한이 명시되지 않으면 null로 표시합니다.`,
+담당자/기한/프로젝트/스프린트가 명시되지 않으면 null로 표시합니다.`,
   template: (transcript: string) =>
     `다음 회의 녹취록을 분석하고 JSON 형식으로 반환하세요:
 
@@ -35,7 +37,9 @@ ${transcript}
   ],
   "keyPoints": ["주요 논의 포인트 1", "주요 논의 포인트 2"],
   "openIssues": ["미해결 이슈 1"],
-  "nextSteps": ["다음 단계 1"]
+  "nextSteps": ["다음 단계 1"],
+  "project": "프로젝트명 또는 null",
+  "sprint": "스프린트명 또는 null"
 }
 
 JSON만 반환하세요.`,

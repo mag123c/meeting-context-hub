@@ -15,34 +15,41 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * 파일명 생성: {sanitized-summary}_{short-id}.md
+   * 파일명 생성: {short-title}_{short-id}.md
+   * 예: PG연동-완료_a64cbac7.md
    */
   private generateFileName(context: Context): string {
     const shortId = context.id.slice(0, 8);
-    const sanitized = this.sanitizeForFileName(context.summary);
-    return `${sanitized}_${shortId}.md`;
+    const title = this.extractShortTitle(context.summary);
+    return `${title}_${shortId}.md`;
   }
 
   /**
-   * 파일명용 문자열 정제
-   * - 특수문자 제거
-   * - 공백 → 하이픈
-   * - 20자 제한
+   * 요약에서 짧은 제목 추출 (15자 제한)
    */
-  private sanitizeForFileName(text: string): string {
-    return text
-      .replace(/[<>:"/\\|?*]/g, "") // 파일명 금지 문자 제거
-      .replace(/\s+/g, "-") // 공백 → 하이픈
-      .replace(/-+/g, "-") // 연속 하이픈 정리
-      .slice(0, 30) // 30자 제한
-      .replace(/-$/, ""); // 끝 하이픈 제거
+  private extractShortTitle(summary: string): string {
+    // 불필요한 조사/어미 제거하고 핵심만
+    const cleaned = summary
+      .replace(/했습니다|합니다|입니다|됩니다|있습니다/g, "")
+      .replace(/[을를이가은는의에서로](?=\s|$)/g, "")
+      .replace(/[<>:"/\\|?*.,!?]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    // 15자 제한, 단어 중간에서 자르지 않기
+    if (cleaned.length <= 15) return cleaned;
+
+    const truncated = cleaned.slice(0, 15);
+    const lastDash = truncated.lastIndexOf("-");
+    return lastDash > 5 ? truncated.slice(0, lastDash) : truncated;
   }
 
   private getFilePath(id: string, summary?: string): string {
     if (summary) {
       const shortId = id.slice(0, 8);
-      const sanitized = this.sanitizeForFileName(summary);
-      return join(this.basePath, `${sanitized}_${shortId}.md`);
+      const title = this.extractShortTitle(summary);
+      return join(this.basePath, `${title}_${shortId}.md`);
     }
     // fallback: UUID 파일명 (구버전 호환)
     return join(this.basePath, `${id}.md`);
@@ -147,6 +154,12 @@ export class ObsidianContextRepository implements ContextRepository {
     if (options?.type) {
       contexts = contexts.filter((ctx) => ctx.type === options.type);
     }
+    if (options?.project) {
+      contexts = contexts.filter((ctx) => ctx.project === options.project);
+    }
+    if (options?.sprint) {
+      contexts = contexts.filter((ctx) => ctx.sprint === options.sprint);
+    }
 
     // Sort by createdAt descending
     contexts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
@@ -234,5 +247,46 @@ export class ObsidianContextRepository implements ContextRepository {
     }
     if (normA === 0 || normB === 0) return 0;
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  /**
+   * ID로 파일명 조회 (확장자 제외, Obsidian 링크용)
+   */
+  async getFileNameById(id: string): Promise<string | null> {
+    const filePath = await this.findFilePathById(id);
+    if (!filePath) return null;
+    const fileName = filePath.split("/").pop();
+    return fileName ? fileName.replace(/\.md$/, "") : null;
+  }
+
+  /**
+   * 관련 문서 섹션 추가
+   */
+  async appendRelatedLinks(id: string, relatedIds: string[]): Promise<void> {
+    const filePath = await this.findFilePathById(id);
+    if (!filePath) return;
+
+    // 관련 문서 파일명 조회
+    const links: string[] = [];
+    for (const relatedId of relatedIds) {
+      const fileName = await this.getFileNameById(relatedId);
+      if (fileName) {
+        links.push(`- [[${fileName}]]`);
+      }
+    }
+
+    if (links.length === 0) return;
+
+    // 파일에 관련 문서 섹션 추가
+    let content = await readFile(filePath, "utf-8");
+
+    // 기존 관련 문서 섹션 제거 (있으면)
+    content = content.replace(/\n## 관련 문서\n[\s\S]*$/, "");
+
+    // 새 섹션 추가
+    const relatedSection = `\n## 관련 문서\n${links.join("\n")}\n`;
+    content = content.trimEnd() + "\n" + relatedSection;
+
+    await writeFile(filePath, content, "utf-8");
   }
 }

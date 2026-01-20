@@ -13,6 +13,8 @@ export function createAddCommand(): Command {
     .option("-a, --audio <path>", "Add audio file (Whisper)")
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
     .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
+    .option("--project <name>", "Project name")
+    .option("--sprint <name>", "Sprint identifier")
     .action(async (options) => {
       // stdout으로 설정해서 console.log와 순서 보장
       const spinner = ora({ stream: process.stdout });
@@ -23,10 +25,18 @@ export function createAddCommand(): Command {
         if (options.meeting) {
           spinner.start("Processing meeting transcript...");
           const meetingInput = await handleMeetingInput(options.meeting);
-          
+
+          // project/sprint 옵션 추가
+          if (options.project) meetingInput.project = options.project;
+          if (options.sprint) meetingInput.sprint = options.sprint;
+
           spinner.text = "Analyzing meeting (extracting summary, action items)...";
           const meeting = await services.summarizeMeetingUseCase.execute(meetingInput);
           spinner.succeed("Meeting processed and saved!");
+
+          // project/sprint: CLI 옵션 > AI 추출
+          const finalProject = options.project || meeting.summary.project;
+          const finalSprint = options.sprint || meeting.summary.sprint;
 
           console.log(chalk.green("\nMeeting summary created:"));
           console.log(chalk.gray("  ID:"), meeting.id);
@@ -34,6 +44,8 @@ export function createAddCommand(): Command {
           console.log(chalk.gray("  Date:"), meeting.summary.date || "-");
           console.log(chalk.gray("  Participants:"), meeting.summary.participants.join(", "));
           console.log(chalk.gray("  Tags:"), meeting.tags.join(", "));
+          if (finalProject) console.log(chalk.gray("  Project:"), finalProject);
+          if (finalSprint) console.log(chalk.gray("  Sprint:"), finalSprint);
           
           console.log(chalk.cyan("\n📋 Summary:"));
           console.log("  " + meeting.summary.summary);
@@ -90,6 +102,10 @@ export function createAddCommand(): Command {
           input = services.textHandler.handle(answers.content);
         }
 
+        // project/sprint 옵션 추가
+        if (options.project) input.project = options.project;
+        if (options.sprint) input.sprint = options.sprint;
+
         spinner.start("Processing context (tagging, summarizing, embedding)...");
         const context = await services.addContextUseCase.execute(input);
         spinner.succeed("Context saved!");
@@ -101,6 +117,12 @@ export function createAddCommand(): Command {
         console.log(chalk.gray("  Tags:"), context.tags.join(", "));
         if (context.source) {
           console.log(chalk.gray("  Source:"), context.source);
+        }
+        if (context.project) {
+          console.log(chalk.gray("  Project:"), context.project);
+        }
+        if (context.sprint) {
+          console.log(chalk.gray("  Sprint:"), context.sprint);
         }
       } catch (error) {
         spinner.fail("Failed to add context");

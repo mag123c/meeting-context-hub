@@ -44,4 +44,14 @@ export interface ContextRepository {
    * Context의 임베딩을 업데이트합니다.
    */
   updateEmbedding(id: string, embedding: number[]): Promise<void>;
+
+  /**
+   * ID로 파일명을 조회합니다 (Obsidian 링크용).
+   */
+  getFileNameById(id: string): Promise<string | null>;
+
+  /**
+   * 관련 문서 링크를 추가합니다.
+   */
+  appendRelatedLinks(id: string, relatedIds: string[]): Promise<void>;
 }

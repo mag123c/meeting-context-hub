@@ -16,6 +16,8 @@ export const MeetingSummarySchema = z.object({
   keyPoints: z.array(z.string()),
   openIssues: z.array(z.string()),
   nextSteps: z.array(z.string()),
+  project: z.string().nullable().optional(),
+  sprint: z.string().nullable().optional(),
 });
 
 export const MeetingSchema = z.object({

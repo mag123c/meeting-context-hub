@@ -10,6 +10,8 @@ export const ContextSchema = z.object({
   tags: z.array(z.string()),
   embedding: z.array(z.number()).optional(),
   source: z.string().optional(),
+  project: z.string().optional(),
+  sprint: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
@@ -18,11 +20,15 @@ export const CreateContextInputSchema = z.object({
   type: ContextTypeSchema,
   content: z.string().min(1),
   source: z.string().optional(),
+  project: z.string().optional(),
+  sprint: z.string().optional(),
 });
 
 export const ListOptionsSchema = z.object({
   tags: z.array(z.string()).optional(),
   type: ContextTypeSchema.optional(),
+  project: z.string().optional(),
+  sprint: z.string().optional(),
   limit: z.number().int().positive().optional(),
   offset: z.number().int().nonnegative().optional(),
 });

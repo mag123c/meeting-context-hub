@@ -9,6 +9,8 @@ export function createListCommand(): Command {
     .description("List all contexts")
     .option("--tag <tags>", "Filter by tags (comma-separated)")
     .option("--type <type>", "Filter by type (text, image, audio, file)")
+    .option("--project <name>", "Filter by project name")
+    .option("--sprint <name>", "Filter by sprint identifier")
     .option("-l, --limit <n>", "Limit results", "20")
     .option("-o, --offset <n>", "Offset for pagination", "0")
     .action(async (options) => {
@@ -20,6 +22,8 @@ export function createListCommand(): Command {
         const listOptions: {
           tags?: string[];
           type?: ContextType;
+          project?: string;
+          sprint?: string;
           limit?: number;
           offset?: number;
         } = {
@@ -32,6 +36,12 @@ export function createListCommand(): Command {
         }
         if (options.type) {
           listOptions.type = options.type as ContextType;
+        }
+        if (options.project) {
+          listOptions.project = options.project;
+        }
+        if (options.sprint) {
+          listOptions.sprint = options.sprint;
         }
 
         const contexts = await services.repository.findAll(listOptions);

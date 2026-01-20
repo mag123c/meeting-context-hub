@@ -8,6 +8,8 @@ export interface Frontmatter {
   tags: string[];
   embedding?: number[];
   source?: string;
+  project?: string;
+  sprint?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +31,12 @@ export function contextToMarkdown(context: Context): string {
   if (context.embedding && context.embedding.length > 0) {
     frontmatter.embedding = context.embedding;
   }
+  if (context.project) {
+    frontmatter.project = context.project;
+  }
+  if (context.sprint) {
+    frontmatter.sprint = context.sprint;
+  }
 
   return matter.stringify(context.content, frontmatter);
 }
@@ -45,6 +53,8 @@ export function markdownToContext(markdown: string): Context {
     tags: fm.tags || [],
     embedding: fm.embedding,
     source: fm.source,
+    project: fm.project,
+    sprint: fm.sprint,
     createdAt: new Date(fm.createdAt),
     updatedAt: new Date(fm.updatedAt),
   };

@@ -48,7 +48,7 @@ export class SummarizeMeetingUseCase {
       throw new Error("Failed to parse meeting summary: " + summaryResponse);
     }
 
-    // 2. 태그 추출
+    // 2. 태그 추출 (새 포맷: {tags, project, sprint})
     const tagResponse = await claudeClient.complete(
       taggingPrompt,
       input.transcript
@@ -57,17 +57,23 @@ export class SummarizeMeetingUseCase {
     let tags: string[];
     try {
       const cleanedTags = extractJSON(tagResponse);
-      tags = JSON.parse(cleanedTags);
+      const parsed = JSON.parse(cleanedTags);
+      // 새 포맷 (객체) 또는 구 포맷 (배열) 지원
+      tags = Array.isArray(parsed) ? parsed : (parsed.tags || []);
     } catch {
       tags = [];
     }
 
-    // 3. 임베딩 생성 (요약 텍스트 기반)
+    // 3. project/sprint 결정: CLI 옵션 > AI 추출
+    const project = input.project || (meetingSummary.project ?? undefined);
+    const sprint = input.sprint || (meetingSummary.sprint ?? undefined);
+
+    // 5. 임베딩 생성 (요약 텍스트 기반)
     const keyPointsText = meetingSummary.keyPoints.join(" ");
     const embeddingText = meetingSummary.title + " " + meetingSummary.summary + " " + keyPointsText;
     const embedding = await embeddingClient.embed(embeddingText);
 
-    // 4. Meeting 객체 생성
+    // 6. Meeting 객체 생성
     const now = new Date();
     const meeting: Meeting = {
       id: randomUUID(),
@@ -79,8 +85,8 @@ export class SummarizeMeetingUseCase {
       updatedAt: now,
     };
 
-    // 5. Obsidian에 저장 (마크다운 형식)
-    const markdownContent = this.formatMeetingMarkdown(meeting);
+    // 7. Obsidian에 저장 (마크다운 형식)
+    const markdownContent = this.formatMeetingMarkdown(meeting, project, sprint);
     await contextRepository.save({
       id: meeting.id,
       type: "text",
@@ -89,14 +95,38 @@ export class SummarizeMeetingUseCase {
       tags: [...tags, "meeting"],
       embedding,
       source: input.source,
+      project,
+      sprint,
       createdAt: now,
       updatedAt: now,
     });
 
+    // 8. 관련 문서 링크 추가 (유사도 70% 이상, 최대 5개)
+    await this.addRelatedLinks(contextRepository, meeting.id, embedding);
+
     return meeting;
   }
 
-  private formatMeetingMarkdown(meeting: Meeting): string {
+  private async addRelatedLinks(
+    repository: ContextRepository,
+    id: string,
+    embedding: number[]
+  ): Promise<void> {
+    try {
+      const similar = await repository.findSimilar(embedding, 6);
+      const related = similar
+        .filter((s) => s.id !== id && s.similarity >= 0.7)
+        .slice(0, 5);
+
+      if (related.length > 0) {
+        await repository.appendRelatedLinks(id, related.map((r) => r.id));
+      }
+    } catch {
+      // 관련 문서 링크 실패해도 무시
+    }
+  }
+
+  private formatMeetingMarkdown(meeting: Meeting, project?: string, sprint?: string): string {
     const { summary } = meeting;
     const lines: string[] = [];
 
@@ -108,6 +138,12 @@ export class SummarizeMeetingUseCase {
     }
     if (summary.participants.length > 0) {
       lines.push("**참석자**: " + summary.participants.join(", "));
+    }
+    if (project) {
+      lines.push("**프로젝트**: " + project);
+    }
+    if (sprint) {
+      lines.push("**스프린트**: " + sprint);
     }
     lines.push("");
 
