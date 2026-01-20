@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "rules": {
     "meeting_summary": {
       "description": "회의록 요약 규칙",
@@ -202,19 +202,26 @@
         "template": "---\ntags: [{tags}]\ndate: {date}\ntype: meeting\n---\n\n# {title}\n\n## PRD Summary\n\n### Problem\n{problem}\n\n### Goal\n{goal}\n\n### Scope\n{scope}\n\n### Requirements\n{requirements}\n\n## Action Items\n\n{action_items}"
       },
       "context": {
-        "path": "contexts/{sanitized-summary}_{short_id}.md",
+        "path": "contexts/{short-title}_{short_id}.md",
         "naming_rules": {
-          "format": "{sanitized-summary}_{short-id}.md",
-          "description": "summary 기반 파일명 + 충돌 방지용 short_id",
-          "example": "회의록-요약-테스트_a1b2c3d4.md",
+          "format": "{short-title}_{short-id}.md",
+          "description": "짧은 제목 + 충돌 방지용 short_id",
+          "example": "PG연동-완료_a64cbac7.md",
           "sanitization": [
-            "특수문자 제거: <>:\"/\\|?*",
+            "특수문자 제거: <>:\"/\\|?*.,!?",
+            "불필요한 조사/어미 제거 (했습니다, 합니다, 을/를/이/가 등)",
             "공백 → 하이픈",
-            "최대 30자 제한",
+            "최대 15자 제한 (단어 중간에서 자르지 않음)",
             "구버전 UUID 파일명 호환"
           ]
         },
-        "template": "---\nid: {id}\ntags: [{tags}]\ntype: {type}\nsummary: {summary}\nsource: {source}\nembedding: [{embedding}]\ncreatedAt: {createdAt}\nupdatedAt: {updatedAt}\n---\n\n{content}"
+        "related_links": {
+          "description": "관련 문서 자동 링크",
+          "threshold": "유사도 60% 이상",
+          "max_links": 5,
+          "format": "## 관련 문서\n- [[파일명]]"
+        },
+        "template": "---\nid: {id}\ntags: [{tags}]\ntype: {type}\nsummary: {summary}\nproject: {project}\nsprint: {sprint}\nsource: {source}\nembedding: [{embedding}]\ncreatedAt: {createdAt}\nupdatedAt: {updatedAt}\n---\n\n{content}\n\n## 관련 문서\n{related_links}"
       }
     },
     "storage_abstraction": {
