@@ -3,6 +3,7 @@ import chalk from "chalk";
 import ora from "ora";
 import inquirer from "inquirer";
 import { createServices } from "../../core/factories.js";
+import { handleMeetingInput } from "../../input/meeting.handler.js";
 
 export function createAddCommand(): Command {
   const cmd = new Command("add")
@@ -11,10 +12,54 @@ export function createAddCommand(): Command {
     .option("-i, --image <path>", "Add image file (Claude Vision)")
     .option("-a, --audio <path>", "Add audio file (Whisper)")
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
+    .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
     .action(async (options) => {
       const spinner = ora();
       try {
         const services = createServices();
+
+        // Meeting 옵션 처리 (별도 UseCase)
+        if (options.meeting) {
+          spinner.start("Processing meeting transcript...");
+          const meetingInput = await handleMeetingInput(options.meeting);
+          
+          spinner.text = "Analyzing meeting (extracting summary, action items)...";
+          const meeting = await services.summarizeMeetingUseCase.execute(meetingInput);
+          spinner.succeed("Meeting processed and saved!");
+
+          console.log(chalk.green("\nMeeting summary created:"));
+          console.log(chalk.gray("  ID:"), meeting.id);
+          console.log(chalk.gray("  Title:"), meeting.summary.title);
+          console.log(chalk.gray("  Date:"), meeting.summary.date || "-");
+          console.log(chalk.gray("  Participants:"), meeting.summary.participants.join(", "));
+          console.log(chalk.gray("  Tags:"), meeting.tags.join(", "));
+          
+          console.log(chalk.cyan("\n📋 Summary:"));
+          console.log("  " + meeting.summary.summary);
+
+          if (meeting.summary.decisions.length > 0) {
+            console.log(chalk.cyan("\n🎯 Decisions:"));
+            meeting.summary.decisions.forEach((d) => console.log("  - " + d));
+          }
+
+          if (meeting.summary.actionItems.length > 0) {
+            console.log(chalk.cyan("\n✅ Action Items:"));
+            meeting.summary.actionItems.forEach((item) => {
+              const assignee = item.assignee ? " (@" + item.assignee + ")" : "";
+              const deadline = item.deadline ? " [" + item.deadline + "]" : "";
+              console.log("  - " + item.task + assignee + deadline);
+            });
+          }
+
+          if (meeting.summary.nextSteps.length > 0) {
+            console.log(chalk.cyan("\n📅 Next Steps:"));
+            meeting.summary.nextSteps.forEach((s) => console.log("  - " + s));
+          }
+
+          return;
+        }
+
+        // 기존 Context 처리
         let input;
 
         if (options.text) {

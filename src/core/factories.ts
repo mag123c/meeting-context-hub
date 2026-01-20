@@ -4,6 +4,7 @@ import { ClaudeClient, WhisperClient, EmbeddingClient } from "../ai/index.js";
 import { TextHandler, ImageHandler, AudioHandler, FileHandler } from "../input/index.js";
 import { AddContextUseCase } from "./add-context.usecase.js";
 import { SearchContextUseCase } from "./search-context.usecase.js";
+import { SummarizeMeetingUseCase } from "./summarize-meeting.usecase.js";
 
 export interface AppServices {
   config: Config;
@@ -17,6 +18,7 @@ export interface AppServices {
   fileHandler: FileHandler;
   addContextUseCase: AddContextUseCase;
   searchContextUseCase: SearchContextUseCase;
+  summarizeMeetingUseCase: SummarizeMeetingUseCase;
 }
 
 let services: AppServices | null = null;
@@ -39,6 +41,11 @@ export function createServices(): AppServices {
 
   const addContextUseCase = new AddContextUseCase(repository, claude, embedding);
   const searchContextUseCase = new SearchContextUseCase(repository, embedding);
+  const summarizeMeetingUseCase = new SummarizeMeetingUseCase({
+    claudeClient: claude,
+    embeddingClient: embedding,
+    contextRepository: repository,
+  });
 
   services = {
     config,
@@ -52,6 +59,7 @@ export function createServices(): AppServices {
     fileHandler,
     addContextUseCase,
     searchContextUseCase,
+    summarizeMeetingUseCase,
   };
 
   return services;

@@ -1,10 +1,10 @@
 # Meeting Context Hub
 
-CLI 도구: 멀티모달 입력(텍스트/이미지/음성/파일)을 AI로 처리하여 Obsidian에 저장. 태그 + 임베딩으로 연관성 체이닝.
+CLI 도구: 멀티모달 입력(텍스트/이미지/음성/파일/회의록)을 AI로 처리하여 Obsidian에 저장. 태그 + 임베딩으로 연관성 체이닝.
 
 ## Quick Start
 
-\`\`\`bash
+```bash
 # API 키 설정 (macOS 키체인)
 mch config set ANTHROPIC_API_KEY sk-ant-xxx
 mch config set OPENAI_API_KEY sk-xxx
@@ -18,20 +18,22 @@ pnpm build
 
 # 사용
 mch add -t "회의 내용..."
+mch add -m ./meeting.txt       # 회의록 요약
 mch search "키워드"
 mch list --tag "회의"
-\`\`\`
+```
 
 ---
 
 ## CLI 명령어
 
-\`\`\`bash
+```bash
 mch add                          # 대화형 모드
 mch add -t "텍스트"              # 텍스트 추가
 mch add -i ./image.png           # 이미지 (Claude Vision)
 mch add -a ./audio.mp3           # 음성 (Whisper)
 mch add -f ./data.csv            # 파일 (txt, md, csv, json)
+mch add -m ./meeting.txt         # 회의록 (PRD 요약 + Action Items)
 
 mch search "키워드"              # 키워드 검색
 mch search --similar <id>        # 임베딩 유사도 검색
@@ -44,7 +46,25 @@ mch list --type text             # 타입 필터
 mch config show                  # 설정 확인
 mch config set <KEY> <value>     # API 키 설정 (키체인)
 mch config check                 # API 키 상태 확인
-\`\`\`
+```
+
+### 회의록 출력 형식
+
+`mch add -m` 명령은 회의 녹취록을 분석하여 다음 형식으로 저장:
+
+```markdown
+# 회의 제목
+
+**일시**: YYYY-MM-DD
+**참석자**: 이름(역할), ...
+
+## 📋 회의 요약
+## 🎯 핵심 결정사항
+## ✅ Action Items (테이블)
+## 💡 주요 논의 포인트
+## ❓ 미해결 이슈
+## 📅 다음 단계
+```
 
 ---
 
@@ -54,20 +74,20 @@ mch config check                 # API 키 상태 확인
 
 | 타입 | 브랜치 접두사 | 설명 |
 |------|---------------|------|
-| 새 기능 | \`feat/\` | 새로운 기능 추가 |
-| 버그 수정 | \`fix/\` | 버그 수정 |
-| 리팩토링 | \`refactor/\` | 코드 개선 |
-| 문서 | \`docs/\` | 문서 작성/수정 |
+| 새 기능 | `feat/` | 새로운 기능 추가 |
+| 버그 수정 | `fix/` | 버그 수정 |
+| 리팩토링 | `refactor/` | 코드 개선 |
+| 문서 | `docs/` | 문서 작성/수정 |
 
 ### 커밋 메시지 (Conventional Commits)
 
-\`\`\`
+```
 {타입}: {설명}
 
 # 예시
 feat: 이미지 분석 기능 추가
 fix: 임베딩 유사도 계산 버그 수정
-\`\`\`
+```
 
 **규칙**:
 - 한글 커밋 메시지 허용
@@ -78,7 +98,7 @@ fix: 임베딩 유사도 계산 버그 수정
 
 ## Architecture
 
-\`\`\`
+```
 ┌─────────────────────────────────────────────────────────────┐
 │   CLI Layer                                                  │
 │   cli/commands/ → 사용자 입력 처리                           │
@@ -98,11 +118,11 @@ fix: 임베딩 유사도 계산 버그 수정
 │   Infrastructure Layer                                       │
 │   storage/ (Obsidian 구현체) + ai/ (Claude, Whisper, Embed) │
 └─────────────────────────────────────────────────────────────┘
-\`\`\`
+```
 
 ## Structure
 
-\`\`\`
+```
 src/
 ├── cli/
 │   ├── index.ts            # 진입점 (bin)
@@ -114,6 +134,7 @@ src/
 │
 ├── core/                   # Application Layer
 │   ├── add-context.usecase.ts
+│   ├── summarize-meeting.usecase.ts
 │   ├── search-context.usecase.ts
 │   └── factories.ts        # DI Factory
 │
@@ -123,6 +144,8 @@ src/
 ├── types/                  # Domain Layer (타입 + Zod 스키마)
 │   ├── context.types.ts
 │   ├── context.schema.ts
+│   ├── meeting.types.ts
+│   ├── meeting.schema.ts
 │   ├── prompt.types.ts
 │   ├── tag.types.ts
 │   └── config.types.ts
@@ -139,19 +162,21 @@ src/
 │   │   └── embedding.client.ts
 │   └── prompts/
 │       ├── tagging.prompt.ts
-│       └── summarize.prompt.ts
+│       ├── summarize.prompt.ts
+│       └── meeting-summary.prompt.ts
 │
 ├── input/                  # 입력 핸들러
 │   ├── text.handler.ts
 │   ├── image.handler.ts
 │   ├── audio.handler.ts
-│   └── file.handler.ts
+│   ├── file.handler.ts
+│   └── meeting.handler.ts
 │
 └── config/
     ├── config.ts
     ├── keychain.ts         # macOS 키체인 통합
     └── env.ts
-\`\`\`
+```
 
 ---
 
@@ -159,15 +184,15 @@ src/
 
 | 구분 | 패턴 | 예시 |
 |------|------|------|
-| Repository 인터페이스 | \`{entity}.repository.ts\` | \`context.repository.ts\` |
-| Repository 구현체 | \`{entity}.obsidian.ts\` | \`context.obsidian.ts\` |
-| UseCase | \`{action}-{entity}.usecase.ts\` | \`add-context.usecase.ts\` |
-| AI 클라이언트 | \`{provider}.client.ts\` | \`claude.client.ts\` |
-| 프롬프트 | \`{purpose}.prompt.ts\` | \`tagging.prompt.ts\` |
-| 타입 | \`{entity}.types.ts\` | \`context.types.ts\` |
-| Zod 스키마 | \`{entity}.schema.ts\` | \`context.schema.ts\` |
-| CLI 명령어 | \`{name}.command.ts\` | \`add.command.ts\` |
-| 입력 핸들러 | \`{type}.handler.ts\` | \`image.handler.ts\` |
+| Repository 인터페이스 | `{entity}.repository.ts` | `context.repository.ts` |
+| Repository 구현체 | `{entity}.obsidian.ts` | `context.obsidian.ts` |
+| UseCase | `{action}-{entity}.usecase.ts` | `add-context.usecase.ts`, `summarize-meeting.usecase.ts` |
+| AI 클라이언트 | `{provider}.client.ts` | `claude.client.ts` |
+| 프롬프트 | `{purpose}.prompt.ts` | `tagging.prompt.ts`, `meeting-summary.prompt.ts` |
+| 타입 | `{entity}.types.ts` | `context.types.ts`, `meeting.types.ts` |
+| Zod 스키마 | `{entity}.schema.ts` | `context.schema.ts`, `meeting.schema.ts` |
+| CLI 명령어 | `{name}.command.ts` | `add.command.ts` |
+| 입력 핸들러 | `{type}.handler.ts` | `image.handler.ts`, `meeting.handler.ts` |
 
 ---
 
@@ -182,12 +207,12 @@ src/
 
 ## Commands
 
-\`\`\`bash
+```bash
 pnpm dev          # 개발 모드 (tsx)
 pnpm build        # TypeScript 빌드
 pnpm lint         # ESLint 실행
 pnpm start        # 빌드된 CLI 실행
-\`\`\`
+```
 
 ---
 
@@ -197,30 +222,30 @@ pnpm start        # 빌드된 CLI 실행
 
 API 키는 macOS 키체인에서 가져오고, 없으면 환경변수 폴백:
 
-\`\`\`bash
+```bash
 # 키체인 등록
 mch config set ANTHROPIC_API_KEY sk-ant-xxx
 mch config set OPENAI_API_KEY sk-xxx
 
 # 또는 직접 등록
 security add-generic-password -s "mch" -a "ANTHROPIC_API_KEY" -w "sk-ant-xxx"
-\`\`\`
+```
 
 ### 기본값
 
 | 설정 | 기본값 |
 |------|--------|
-| OBSIDIAN_VAULT_PATH | \`~/Library/Mobile Documents/iCloud~md~obsidian/Documents\` |
-| MCH_FOLDER | \`mch\` |
+| OBSIDIAN_VAULT_PATH | `~/Library/Mobile Documents/iCloud~md~obsidian/Documents` |
+| MCH_FOLDER | `mch` |
 
 ### .env.local (폴백용)
 
-\`\`\`bash
+```bash
 ANTHROPIC_API_KEY=sk-ant-xxx
 OPENAI_API_KEY=sk-xxx
 OBSIDIAN_VAULT_PATH=~/path/to/vault
 MCH_FOLDER=mch
-\`\`\`
+```
 
 ---
 
@@ -228,9 +253,9 @@ MCH_FOLDER=mch
 
 ### 파일 구조
 
-컨텍스트는 \`{VAULT}/{MCH_FOLDER}/{id}.md\` 형식으로 저장:
+컨텍스트는 `{VAULT}/{MCH_FOLDER}/{id}.md` 형식으로 저장:
 
-\`\`\`markdown
+```markdown
 ---
 id: uuid
 type: text
@@ -244,7 +269,7 @@ updatedAt: 2024-01-01T00:00:00.000Z
 ---
 
 실제 컨텍스트 내용
-\`\`\`
+```
 
 ### 시각화
 

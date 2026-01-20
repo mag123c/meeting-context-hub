@@ -13,17 +13,19 @@ export interface Frontmatter {
 }
 
 export function contextToMarkdown(context: Context): string {
-  const frontmatter: Frontmatter = {
+  const frontmatter: Record<string, unknown> = {
     id: context.id,
     type: context.type,
     summary: context.summary,
     tags: context.tags,
-    source: context.source,
     createdAt: context.createdAt.toISOString(),
     updatedAt: context.updatedAt.toISOString(),
   };
 
-  // 임베딩이 있으면 frontmatter에 포함
+  // undefined 값은 제외
+  if (context.source) {
+    frontmatter.source = context.source;
+  }
   if (context.embedding && context.embedding.length > 0) {
     frontmatter.embedding = context.embedding;
   }
