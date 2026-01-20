@@ -35,8 +35,9 @@ mch add -a ./audio.mp3           # 음성 (Whisper)
 mch add -f ./data.csv            # 파일 (txt, md, csv, json)
 mch add -m ./meeting.txt         # 회의록 (PRD 요약 + Action Items)
 
-mch search "키워드"              # 키워드 검색
-mch search --similar <id>        # 임베딩 유사도 검색
+mch search "키워드"              # 의미론적 검색 (임베딩 유사도, 기본)
+mch search "키워드" --exact      # 정확한 텍스트 매칭 검색
+mch search --similar <id>        # 특정 문서와 유사한 문서 검색
 mch search --tag "회의"          # 태그 필터
 
 mch list                         # 전체 목록
@@ -253,7 +254,13 @@ MCH_FOLDER=mch
 
 ### 파일 구조
 
-컨텍스트는 `{VAULT}/{MCH_FOLDER}/{id}.md` 형식으로 저장:
+컨텍스트는 `{VAULT}/{MCH_FOLDER}/{sanitized-summary}_{short-id}.md` 형식으로 저장:
+
+**파일명 규칙**:
+- summary 앞 30자 + UUID 앞 8자
+- 특수문자 제거, 공백 → 하이픈
+- 예: `회의록-요약-테스트_a1b2c3d4.md`
+- 구버전 UUID 파일명 호환성 유지
 
 ```markdown
 ---

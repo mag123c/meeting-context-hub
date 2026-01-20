@@ -14,7 +14,8 @@ export function createAddCommand(): Command {
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
     .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
     .action(async (options) => {
-      const spinner = ora();
+      // stdout으로 설정해서 console.log와 순서 보장
+      const spinner = ora({ stream: process.stdout });
       try {
         const services = createServices();
 

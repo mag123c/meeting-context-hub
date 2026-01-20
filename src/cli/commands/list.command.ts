@@ -12,7 +12,8 @@ export function createListCommand(): Command {
     .option("-l, --limit <n>", "Limit results", "20")
     .option("-o, --offset <n>", "Offset for pagination", "0")
     .action(async (options) => {
-      const spinner = ora("Loading contexts...").start();
+      // stdout으로 설정해서 console.log와 순서 보장
+      const spinner = ora({ text: "Loading contexts...", stream: process.stdout }).start();
       try {
         const services = createServices();
         

@@ -10,9 +10,11 @@ export function createSearchCommand(): Command {
     .argument("[keyword]", "Search keyword")
     .option("--similar <id>", "Find similar contexts by ID")
     .option("--tag <tags>", "Filter by tags (comma-separated)")
+    .option("--exact", "Use exact text matching instead of semantic search")
     .option("-l, --limit <n>", "Limit results", "10")
     .action(async (keyword, options) => {
-      const spinner = ora();
+      // stdout으로 설정해서 console.log와 순서 보장
+      const spinner = ora({ stream: process.stdout });
       try {
         const services = createServices();
         const limit = parseInt(options.limit, 10);
@@ -23,10 +25,26 @@ export function createSearchCommand(): Command {
           spinner.start("Finding similar contexts...");
           result = await services.searchContextUseCase.searchSimilar(options.similar, limit);
         } else if (options.tag) {
+          spinner.start("Searching by tags...");
           const tags = options.tag.split(",").map((t: string) => t.trim());
           result = await services.searchContextUseCase.searchByTags(tags);
         } else if (keyword) {
-          result = await services.searchContextUseCase.searchByKeyword(keyword, { limit });
+          // 입력 검증: 빈 문자열 및 길이 제한
+          const sanitizedKeyword = keyword.trim().slice(0, 500);
+          if (!sanitizedKeyword) {
+            spinner.fail("Empty keyword");
+            return;
+          }
+
+          if (options.exact) {
+            // 텍스트 매칭 검색
+            spinner.start("Searching with exact match...");
+            result = await services.searchContextUseCase.searchByKeyword(sanitizedKeyword, { limit });
+          } else {
+            // 임베딩 유사도 검색 (기본)
+            spinner.start("Searching with semantic similarity...");
+            result = await services.searchContextUseCase.searchByText(sanitizedKeyword, limit);
+          }
         } else {
           spinner.start("Fetching all contexts...");
           const all = await services.repository.findAll({ limit });
