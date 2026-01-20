@@ -115,7 +115,7 @@ export class SummarizeMeetingUseCase {
     try {
       const similar = await repository.findSimilar(embedding, 6);
       const related = similar
-        .filter((s) => s.id !== id && s.similarity >= 0.7)
+        .filter((s) => s.id !== id && s.similarity >= 0.6)
         .slice(0, 5);
 
       if (related.length > 0) {

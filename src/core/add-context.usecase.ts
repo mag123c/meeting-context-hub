@@ -69,7 +69,7 @@ export class AddContextUseCase {
       const similar = await this.repository.findSimilar(context.embedding, 6);
       // 자기 자신 제외, 유사도 70% 이상만
       const related = similar
-        .filter((s) => s.id !== context.id && s.similarity >= 0.7)
+        .filter((s) => s.id !== context.id && s.similarity >= 0.6)
         .slice(0, 5);
 
       if (related.length > 0) {
