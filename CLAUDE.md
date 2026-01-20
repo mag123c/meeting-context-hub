@@ -1,58 +1,50 @@
 # Meeting Context Hub
 
-팀용 웹 애플리케이션: 회의록 PRD/Action Items 요약 + 컨텍스트 자동 태깅 → 옵시디언 저장
+CLI 도구: 멀티모달 입력(텍스트/이미지/음성/파일)을 AI로 처리하여 Obsidian에 저장. 태그 + 임베딩으로 연관성 체이닝.
 
 ## Quick Start
 
-```bash
-cp .env.local.example .env.local  # 환경변수 설정
+\`\`\`bash
+# API 키 설정 (macOS 키체인)
+mch config set ANTHROPIC_API_KEY sk-ant-xxx
+mch config set OPENAI_API_KEY sk-xxx
+
+# 또는 환경변수 (폴백)
+cp .env.local.example .env.local
+
+# 설치 및 빌드
 pnpm install
-pnpm dev  # localhost:3000
-```
+pnpm build
+
+# 사용
+mch add -t "회의 내용..."
+mch search "키워드"
+mch list --tag "회의"
+\`\`\`
 
 ---
 
-## 스킬 자동 호출 규칙 (필수 준수)
+## CLI 명령어
 
-| 트리거 상황 | 필수 스킬 | 이유 |
-|-------------|----------|------|
-| 세션 첫 프롬프트 | `/clarify` 먼저 호출 | 요구사항 명확화 (Hook으로 강제) |
-| clarify 완료 후 | `EnterPlanMode` 자동 호출 | 계획 작성 |
-| Plan 승인 후 구현 시작 | `/implement` 호출 | 워크플로우 일관성 |
-| 코드 변경 요청 시 | `/implement` 먼저 호출 | 분석→구현→검증 체이닝 |
-| 구현 완료 / 커밋 전 | `/verify` 실행 | 빌드/린트/테스트 검증 |
-| UI 디자인 작업 시 | `/vs-design` 호출 | Mode Collapse 방지 |
-| 세션 마무리 시 | `/mch-wrap` 호출 | 문서 최신화 |
+\`\`\`bash
+mch add                          # 대화형 모드
+mch add -t "텍스트"              # 텍스트 추가
+mch add -i ./image.png           # 이미지 (Claude Vision)
+mch add -a ./audio.mp3           # 음성 (Whisper)
+mch add -f ./data.csv            # 파일 (txt, md, csv, json)
 
-**규칙**: 스킬 호출 없이 직접 코드를 작성하면 안 됩니다. 사용자가 명시적으로 스킬을 호출하지 않아도, Claude가 먼저 적절한 스킬을 호출해야 합니다.
+mch search "키워드"              # 키워드 검색
+mch search --similar <id>        # 임베딩 유사도 검색
+mch search --tag "회의"          # 태그 필터
 
-### 워크플로우
+mch list                         # 전체 목록
+mch list --tag "회의"            # 태그 필터
+mch list --type text             # 타입 필터
 
-```
-세션 시작
-    ↓
-[HOOK] clarify-prompt.sh → /clarify 강제
-    ↓
-[SKILL] /clarify → 요구사항 명확화
-    ↓
-[AUTO] EnterPlanMode → 계획 작성
-    ↓
-사용자 승인
-    ↓
-[SKILL] /implement → 분석 → 구현 → /verify → 커밋
-    ↓
-[SKILL] /mch-wrap → 세션 마무리 (선택)
-```
-
-### Skills (`.claude/skills/`)
-
-| 스킬 | 용도 |
-|------|------|
-| `/clarify` | 요구사항 명확화 → Plan Mode 자동 진입 |
-| `/implement` | 전체 워크플로우 오케스트레이션 (분석→구현→검증→커밋) |
-| `/verify` | 자체 검증 루프 (빌드/린트/테스트) |
-| `/vs-design` | VS Design Diverge (UI 디자인) |
-| `/mch-wrap` | 세션 마무리 (문서 최신화) |
+mch config show                  # 설정 확인
+mch config set <KEY> <value>     # API 키 설정 (키체인)
+mch config check                 # API 키 상태 확인
+\`\`\`
 
 ---
 
@@ -62,146 +54,104 @@ pnpm dev  # localhost:3000
 
 | 타입 | 브랜치 접두사 | 설명 |
 |------|---------------|------|
-| 새 기능 | `feat/` | 새로운 기능 추가 |
-| 버그 수정 | `fix/` | 버그 수정 |
-| 리팩토링 | `refactor/` | 코드 개선 (기능 변경 없음) |
-| 문서 | `docs/` | 문서 작성/수정 |
-| 스타일 | `style/` | 코드 포맷팅/UI 스타일 |
-| 테스트 | `test/` | 테스트 추가/수정 |
-
-```bash
-# 예시
-git checkout -b feat/meeting-summary
-git checkout -b fix/tag-duplicate
-```
+| 새 기능 | \`feat/\` | 새로운 기능 추가 |
+| 버그 수정 | \`fix/\` | 버그 수정 |
+| 리팩토링 | \`refactor/\` | 코드 개선 |
+| 문서 | \`docs/\` | 문서 작성/수정 |
 
 ### 커밋 메시지 (Conventional Commits)
 
-```
+\`\`\`
 {타입}: {설명}
 
 # 예시
-feat: 회의록 요약 API 구현
-fix: 태그 중복 생성 버그 수정
-refactor: Claude SDK 래퍼 정리
-docs: README 업데이트
-style: Editorial Notion 디자인 적용
-```
+feat: 이미지 분석 기능 추가
+fix: 임베딩 유사도 계산 버그 수정
+\`\`\`
 
 **규칙**:
 - 한글 커밋 메시지 허용
 - **Co-Authored-By 금지** (Claude/AI 마킹 절대 금지)
-- `git -C` 명령어 사용 금지 (working directory에서 직접 실행)
 - main 직접 커밋 금지 (브랜치에서 작업)
-
-### PR 템플릿
-
-```markdown
-## Summary
-- {변경 사항 요약}
-
-## Changes
-- {구체적 변경 목록}
-
-## Test
-- [ ] pnpm build 통과
-- [ ] pnpm lint 통과
-- [ ] 기능 테스트 완료
-```
 
 ---
 
 ## Architecture
 
-```
+\`\`\`
 ┌─────────────────────────────────────────────────────────────┐
-│   Presentation Layer                                         │
-│   components/ (UI) → hooks/ (State) → app/ (Pages/Routes)   │
+│   CLI Layer                                                  │
+│   cli/commands/ → 사용자 입력 처리                           │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │   Application Layer                                          │
-│   application/ (UseCases + 비즈니스 로직)                    │
+│   core/ (UseCases + Factories)                               │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │   Domain Layer                                               │
-│   repositories/ (인터페이스) + types/ (엔티티 타입)          │
+│   repositories/ (인터페이스) + types/ (엔티티 + Zod 스키마)  │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │   Infrastructure Layer                                       │
-│   storage/ (Supabase/Obsidian 구현체) + lib/ (외부 SDK)      │
+│   storage/ (Obsidian 구현체) + ai/ (Claude, Whisper, Embed) │
 └─────────────────────────────────────────────────────────────┘
-```
-
-### Design System Integration
-
-디자인 시스템은 Presentation Layer에 통합:
-
-| 구성 요소 | 위치 | 설명 |
-|-----------|------|------|
-| Colors | `globals.css` | CSS 변수 (Notion Dark 팔레트) |
-| Typography | `globals.css` + `layout.tsx` | Lora, Inter, JetBrains Mono |
-| Components | `components/ui/` | shadcn/ui + Editorial 스타일 |
+\`\`\`
 
 ## Structure
 
-```
+\`\`\`
 src/
-├── app/                  # Next.js App Router
-│   ├── api/              # API Routes
-│   └── sprints/          # 스프린트 페이지
-├── components/
-│   ├── ui/               # shadcn/ui 기본 컴포넌트
-│   ├── features/         # 도메인별 컴포넌트 (meeting, context, search, sprint, tag)
-│   ├── layout/           # 레이아웃 컴포넌트 (Navbar)
-│   └── providers/        # Context Providers (ThemeProvider)
-├── hooks/                # 커스텀 React Hooks
-├── repositories/         # Domain Layer (인터페이스)
-│   └── types/            # 엔티티 타입
-├── storage/              # Infrastructure (구현체)
-│   ├── supabase/         # Supabase 구현
-│   └── obsidian/         # Obsidian 저장
-├── application/          # UseCase + Factory
-└── lib/
-    ├── ai/               # Claude SDK + 프롬프트
-    └── external/         # Slack, Notion API
-```
-
-## Pages
-
-| 경로 | 설명 |
-|------|------|
-| `/` | 대시보드 (회의록/컨텍스트 목록) |
-| `/meeting` | 회의록 입력 |
-| `/meeting/[id]` | 회의록 상세 |
-| `/context` | 컨텍스트 입력 |
-| `/context/[id]` | 컨텍스트 상세 |
-| `/search` | Q&A 검색 |
-| `/sprints` | 스프린트 목록 |
-| `/sprints/new` | 스프린트 생성 |
-| `/sprints/[id]` | 스프린트 상세 (액션아이템 포함) |
-| `/settings` | 설정 (Slack/Notion 연동) |
-| `/login` | 로그인 |
-
-## API Routes
-
-| 경로 | 메서드 | 설명 |
-|------|--------|------|
-| `/api/meeting` | GET, POST | 회의록 목록/생성 |
-| `/api/meeting/[id]` | GET, PATCH, DELETE | 회의록 조회/수정/삭제 |
-| `/api/context` | GET, POST | 컨텍스트 목록/생성 |
-| `/api/context/[id]` | GET, DELETE | 컨텍스트 조회/삭제 |
-| `/api/sprint` | GET, POST | 스프린트 목록/생성 |
-| `/api/sprint/[id]` | GET, PATCH, DELETE | 스프린트 조회/수정/삭제 |
-| `/api/action-item` | GET, POST | 액션아이템 목록/생성 |
-| `/api/action-item/[id]` | GET, PATCH, DELETE | 액션아이템 조회/수정/삭제 |
-| `/api/tag` | GET, POST | 태그 목록/생성 |
-| `/api/search` | POST | Q&A 검색 |
-| `/api/sync/slack` | POST | Slack 동기화 |
-| `/api/sync/notion` | POST | Notion 동기화 |
-
+├── cli/
+│   ├── index.ts            # 진입점 (bin)
+│   └── commands/
+│       ├── add.command.ts
+│       ├── search.command.ts
+│       ├── list.command.ts
+│       └── config.command.ts
+│
+├── core/                   # Application Layer
+│   ├── add-context.usecase.ts
+│   ├── search-context.usecase.ts
+│   └── factories.ts        # DI Factory
+│
+├── repositories/           # Domain Layer (인터페이스)
+│   └── context.repository.ts
+│
+├── types/                  # Domain Layer (타입 + Zod 스키마)
+│   ├── context.types.ts
+│   ├── context.schema.ts
+│   ├── prompt.types.ts
+│   ├── tag.types.ts
+│   └── config.types.ts
+│
+├── storage/                # Infrastructure (Obsidian)
+│   └── obsidian/
+│       ├── context.obsidian.ts
+│       └── frontmatter.ts
+│
+├── ai/                     # Infrastructure (AI 클라이언트)
+│   ├── clients/
+│   │   ├── claude.client.ts
+│   │   ├── whisper.client.ts
+│   │   └── embedding.client.ts
+│   └── prompts/
+│       ├── tagging.prompt.ts
+│       └── summarize.prompt.ts
+│
+├── input/                  # 입력 핸들러
+│   ├── text.handler.ts
+│   ├── image.handler.ts
+│   ├── audio.handler.ts
+│   └── file.handler.ts
+│
+└── config/
+    ├── config.ts
+    ├── keychain.ts         # macOS 키체인 통합
+    └── env.ts
+\`\`\`
 
 ---
 
@@ -209,64 +159,94 @@ src/
 
 | 구분 | 패턴 | 예시 |
 |------|------|------|
-| 컴포넌트 | `PascalCase.tsx` | `MeetingCard.tsx` |
-| Hooks | `use{Name}.ts` | `useMeeting.ts` |
-| Repository 인터페이스 | `{entity}.repository.ts` | `meeting.repository.ts` |
-| Repository 구현체 | `{entity}.{provider}.ts` | `meeting.supabase.ts` |
-| UseCase | `{action}-{entity}.usecase.ts` | `summarize-meeting.usecase.ts` |
-| 프롬프트 | `{purpose}.prompt.ts` | `meeting-summary.prompt.ts` |
-| 타입 | `{entity}.types.ts` | `meeting.types.ts` |
-
-### Design System Naming
-
-| 구분 | 패턴 | 예시 |
-|------|------|------|
-| 컬러 변수 | `--{role}` | `--primary`, `--accent` |
-| 폰트 변수 | `--font-{type}` | `--font-serif`, `--font-mono` |
-| 유틸리티 클래스 | Tailwind 기본 | `font-serif`, `text-muted-foreground` |
+| Repository 인터페이스 | \`{entity}.repository.ts\` | \`context.repository.ts\` |
+| Repository 구현체 | \`{entity}.obsidian.ts\` | \`context.obsidian.ts\` |
+| UseCase | \`{action}-{entity}.usecase.ts\` | \`add-context.usecase.ts\` |
+| AI 클라이언트 | \`{provider}.client.ts\` | \`claude.client.ts\` |
+| 프롬프트 | \`{purpose}.prompt.ts\` | \`tagging.prompt.ts\` |
+| 타입 | \`{entity}.types.ts\` | \`context.types.ts\` |
+| Zod 스키마 | \`{entity}.schema.ts\` | \`context.schema.ts\` |
+| CLI 명령어 | \`{name}.command.ts\` | \`add.command.ts\` |
+| 입력 핸들러 | \`{type}.handler.ts\` | \`image.handler.ts\` |
 
 ---
 
 ## Core Rules
 
 1. **Clean Architecture**: Repository 인터페이스 → Storage 구현체 분리
-2. **선언형 프롬프트**: lib/ai/prompts에 version 필드 포함
-3. **Zod 스키마**: 모든 API 응답/입력 검증
-4. **RSC 보안**: Server Action에서 민감 데이터 반환 금지
-5. **디렉토리 문서화**: 새 디렉토리 생성 시 `CLAUDE.md` 작성
-6. **디자인 일관성**: CSS 변수 사용, 하드코딩 금지 (상세: `components/CLAUDE.md`)
+2. **선언형 프롬프트**: ai/prompts에 version 필드 포함
+3. **Zod 스키마**: types/에 스키마 정의
+4. **디렉토리 문서화**: 새 디렉토리 생성 시 CLAUDE.md 작성
 
 ---
 
 ## Commands
 
-```bash
-pnpm dev          # 개발 서버
-pnpm build        # 빌드
+\`\`\`bash
+pnpm dev          # 개발 모드 (tsx)
+pnpm build        # TypeScript 빌드
 pnpm lint         # ESLint 실행
-pnpm lint --fix   # 린트 자동 수정
-```
+pnpm start        # 빌드된 CLI 실행
+\`\`\`
 
 ---
 
-## AI Context (`.claude/ai-context/`)
+## 환경변수 & 키체인
 
-| 문서 | 경로 | 설명 |
-|------|------|------|
-| 도메인 용어 | `meeting-domain/glossary.json` | PRD, Action Items 등 용어 |
-| 엔티티 정의 | `meeting-domain/entities.json` | Meeting, Context, Tag |
-| 비즈니스 규칙 | `meeting-domain/rules.json` | 요약/태깅 규칙 |
-| Obsidian 설정 | `integrations/obsidian.json` | 저장 경로, 템플릿 |
-| Slack 연동 | `integrations/slack.json` | API 설정 |
-| Notion 연동 | `integrations/notion.json` | API 설정 |
+### macOS 키체인 우선
 
-### 문서 업데이트 규칙
+API 키는 macOS 키체인에서 가져오고, 없으면 환경변수 폴백:
 
-| 변경 유형 | 대상 |
-|----------|------|
-| 도메인 용어 | `.claude/ai-context/meeting-domain/glossary.json` |
-| 엔티티 정의 | `.claude/ai-context/meeting-domain/entities.json` |
-| 비즈니스 규칙 | `.claude/ai-context/meeting-domain/rules.json` |
-| 통합 설정 | `.claude/ai-context/integrations/*.json` |
-| 모듈/규칙 | `CLAUDE.md` |
-| 디자인 시스템 | `src/components/CLAUDE.md` |
+\`\`\`bash
+# 키체인 등록
+mch config set ANTHROPIC_API_KEY sk-ant-xxx
+mch config set OPENAI_API_KEY sk-xxx
+
+# 또는 직접 등록
+security add-generic-password -s "mch" -a "ANTHROPIC_API_KEY" -w "sk-ant-xxx"
+\`\`\`
+
+### 기본값
+
+| 설정 | 기본값 |
+|------|--------|
+| OBSIDIAN_VAULT_PATH | \`~/Library/Mobile Documents/iCloud~md~obsidian/Documents\` |
+| MCH_FOLDER | \`mch\` |
+
+### .env.local (폴백용)
+
+\`\`\`bash
+ANTHROPIC_API_KEY=sk-ant-xxx
+OPENAI_API_KEY=sk-xxx
+OBSIDIAN_VAULT_PATH=~/path/to/vault
+MCH_FOLDER=mch
+\`\`\`
+
+---
+
+## Obsidian 통합
+
+### 파일 구조
+
+컨텍스트는 \`{VAULT}/{MCH_FOLDER}/{id}.md\` 형식으로 저장:
+
+\`\`\`markdown
+---
+id: uuid
+type: text
+summary: 요약 내용
+tags:
+  - 태그1
+  - 태그2
+embedding: [0.1, 0.2, ...]
+createdAt: 2024-01-01T00:00:00.000Z
+updatedAt: 2024-01-01T00:00:00.000Z
+---
+
+실제 컨텍스트 내용
+\`\`\`
+
+### 시각화
+
+- **Graph View**: 태그 기반 연결 확인
+- **Dataview**: 커스텀 쿼리로 목록 조회

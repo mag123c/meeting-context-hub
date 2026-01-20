@@ -1,37 +1,47 @@
-import type {
-  Context,
-  ContextWithTags,
-  CreateContextInput,
-  UpdateContextInput,
-  ContextSource,
-} from "./types";
-import type { Pagination, PaginatedResult } from "./types";
+import type { Context, ListOptions, ContextWithSimilarity } from "../types/context.types.js";
 
+/**
+ * Context Repository Interface
+ * Infrastructure Layer에서 구현체 제공
+ */
 export interface ContextRepository {
-  create(userId: string, data: CreateContextInput): Promise<Context>;
-  getById(id: string): Promise<ContextWithTags | null>;
-  listByUser(
-    userId: string,
-    pagination?: Pagination
-  ): Promise<PaginatedResult<ContextWithTags>>;
-  listBySource(
-    userId: string,
-    source: ContextSource,
-    pagination?: Pagination
-  ): Promise<PaginatedResult<ContextWithTags>>;
-  listByTag(
-    userId: string,
-    tagId: string,
-    pagination?: Pagination
-  ): Promise<PaginatedResult<ContextWithTags>>;
-  update(id: string, data: UpdateContextInput): Promise<Context>;
+  /**
+   * Context를 저장하고 ID를 반환합니다.
+   */
+  save(context: Context): Promise<string>;
+
+  /**
+   * ID로 Context를 조회합니다.
+   */
+  findById(id: string): Promise<Context | null>;
+
+  /**
+   * 태그로 Context를 조회합니다.
+   */
+  findByTags(tags: string[]): Promise<Context[]>;
+
+  /**
+   * 임베딩 유사도로 Context를 검색합니다.
+   */
+  findSimilar(embedding: number[], limit?: number): Promise<ContextWithSimilarity[]>;
+
+  /**
+   * 모든 Context를 조회합니다.
+   */
+  findAll(options?: ListOptions): Promise<Context[]>;
+
+  /**
+   * Context를 삭제합니다.
+   */
   delete(id: string): Promise<void>;
-  addTags(contextId: string, tagIds: string[]): Promise<void>;
-  removeTags(contextId: string, tagIds: string[]): Promise<void>;
-  setTags(contextId: string, tagIds: string[]): Promise<void>;
-  search(
-    userId: string,
-    query: string,
-    pagination?: Pagination
-  ): Promise<PaginatedResult<ContextWithTags>>;
+
+  /**
+   * Context의 태그를 업데이트합니다.
+   */
+  updateTags(id: string, tags: string[]): Promise<void>;
+
+  /**
+   * Context의 임베딩을 업데이트합니다.
+   */
+  updateEmbedding(id: string, embedding: number[]): Promise<void>;
 }

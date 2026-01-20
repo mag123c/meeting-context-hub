@@ -1,2 +1,2 @@
-export { ObsidianFileStorage, obsidianStorage } from "./obsidian.storage";
-export type { ObsidianStorage } from "./obsidian.storage";
+export { ObsidianContextRepository } from "./context.obsidian.js";
+export { contextToMarkdown, markdownToContext, updateFrontmatter } from "./frontmatter.js";
