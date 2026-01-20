@@ -4,7 +4,8 @@ import { join } from "path";
 import type { ContextRepository } from "../../repositories/context.repository.js";
 import type { Context, ListOptions, ContextWithSimilarity } from "../../types/context.types.js";
 import { contextToMarkdown, markdownToContext, updateFrontmatter } from "./frontmatter.js";
-import { applyFilters } from "../../utils/index.js";
+import { applyFilters, cosineSimilarity } from "../../utils/index.js";
+import { NotFoundError } from "../../errors/index.js";
 
 export class ObsidianContextRepository implements ContextRepository {
   constructor(private readonly basePath: string) {}
@@ -122,7 +123,7 @@ export class ObsidianContextRepository implements ContextRepository {
       .filter((ctx) => ctx.embedding && ctx.embedding.length > 0)
       .map((ctx) => ({
         ...ctx,
-        similarity: this.cosineSimilarity(embedding, ctx.embedding!),
+        similarity: cosineSimilarity(embedding, ctx.embedding!),
       }))
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
@@ -180,12 +181,12 @@ export class ObsidianContextRepository implements ContextRepository {
   async updateTags(id: string, tags: string[]): Promise<void> {
     const context = await this.findById(id);
     if (!context) {
-      throw new Error(`Context not found: ${id}`);
+      throw new NotFoundError("Context", id);
     }
 
     const filePath = await this.findFilePathById(id);
     if (!filePath) {
-      throw new Error(`File not found for context: ${id}`);
+      throw new NotFoundError("Context file", id);
     }
 
     const markdown = await readFile(filePath, "utf-8");
@@ -196,7 +197,7 @@ export class ObsidianContextRepository implements ContextRepository {
   async updateEmbedding(id: string, embedding: number[]): Promise<void> {
     const filePath = await this.findFilePathById(id);
     if (!filePath) {
-      throw new Error(`Context not found: ${id}`);
+      throw new NotFoundError("Context", id);
     }
     const markdown = await readFile(filePath, "utf-8");
     const updated = updateFrontmatter(markdown, { embedding });
@@ -221,20 +222,6 @@ export class ObsidianContextRepository implements ContextRepository {
     }
 
     return null;
-  }
-
-  private cosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) return 0;
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    for (let i = 0; i < a.length; i++) {
-      dotProduct += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-    if (normA === 0 || normB === 0) return 0;
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 
   /**

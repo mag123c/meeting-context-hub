@@ -24,3 +24,5 @@ export {
   addRelatedLinks,
   type RelatedLinksConfig,
 } from "./related-links.js";
+
+export { cosineSimilarity } from "./math.js";

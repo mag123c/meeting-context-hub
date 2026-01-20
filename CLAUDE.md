@@ -118,7 +118,7 @@ fix: 임베딩 유사도 계산 버그 수정
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │   CLI Layer                                                  │
-│   cli/commands/ → 사용자 입력 처리                           │
+│   cli/commands/ + cli/utils/ (스피너, 포매터)               │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
@@ -129,11 +129,14 @@ fix: 임베딩 유사도 계산 버그 수정
 ┌─────────────────────────────────────────────────────────────┐
 │   Domain Layer                                               │
 │   repositories/ (인터페이스) + types/ (엔티티 + Zod 스키마)  │
+│   errors/ (커스텀 에러 클래스)                               │
 └─────────────────────────────────────────────────────────────┘
                               │
 ┌─────────────────────────────────────────────────────────────┐
 │   Infrastructure Layer                                       │
-│   storage/ (Obsidian 구현체) + ai/ (Claude, Whisper, Embed) │
+│   ai/interfaces/ (ILLMClient, IEmbeddingClient 등)          │
+│   ai/clients/ (Claude, Whisper, Embed 구현체)               │
+│   storage/ (Obsidian 구현체)                                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -143,11 +146,15 @@ fix: 임베딩 유사도 계산 버그 수정
 src/
 ├── cli/
 │   ├── index.ts            # 진입점 (bin)
-│   └── commands/
-│       ├── add.command.ts
-│       ├── search.command.ts
-│       ├── list.command.ts
-│       └── config.command.ts
+│   ├── commands/
+│   │   ├── add.command.ts
+│   │   ├── search.command.ts
+│   │   ├── list.command.ts
+│   │   └── config.command.ts
+│   └── utils/              # CLI 공통 유틸리티
+│       ├── cli-runner.ts   # withSpinner, exitWithError
+│       ├── formatters.ts   # 출력 포매팅 함수
+│       └── index.ts
 │
 ├── core/                   # Application Layer
 │   ├── add-context.usecase.ts
@@ -167,12 +174,17 @@ src/
 │   ├── tag.types.ts
 │   └── config.types.ts
 │
+├── errors/                 # 커스텀 에러 클래스
+│   └── index.ts            # MCHError, NotFoundError, ValidationError 등
+│
 ├── storage/                # Infrastructure (Obsidian)
 │   └── obsidian/
 │       ├── context.obsidian.ts
 │       └── frontmatter.ts
 │
 ├── ai/                     # Infrastructure (AI 클라이언트)
+│   ├── interfaces/         # AI 클라이언트 인터페이스
+│   │   └── index.ts        # ILLMClient, IEmbeddingClient, ITranscriptionClient
 │   ├── clients/
 │   │   ├── claude.client.ts
 │   │   ├── whisper.client.ts
@@ -189,6 +201,14 @@ src/
 │   ├── file.handler.ts
 │   └── meeting.handler.ts
 │
+├── utils/                  # 공통 유틸리티
+│   ├── json-parser.ts
+│   ├── file-validator.ts
+│   ├── filter.ts
+│   ├── related-links.ts
+│   ├── math.ts             # cosineSimilarity 등
+│   └── index.ts
+│
 └── config/
     ├── config.ts
     ├── keychain.ts         # macOS 키체인 통합
@@ -204,12 +224,15 @@ src/
 | Repository 인터페이스 | `{entity}.repository.ts` | `context.repository.ts` |
 | Repository 구현체 | `{entity}.obsidian.ts` | `context.obsidian.ts` |
 | UseCase | `{action}-{entity}.usecase.ts` | `add-context.usecase.ts`, `summarize-meeting.usecase.ts` |
+| AI 인터페이스 | `I{Type}Client` | `ILLMClient`, `IEmbeddingClient`, `ITranscriptionClient` |
 | AI 클라이언트 | `{provider}.client.ts` | `claude.client.ts` |
 | 프롬프트 | `{purpose}.prompt.ts` | `tagging.prompt.ts`, `meeting-summary.prompt.ts` |
 | 타입 | `{entity}.types.ts` | `context.types.ts`, `meeting.types.ts` |
 | Zod 스키마 | `{entity}.schema.ts` | `context.schema.ts`, `meeting.schema.ts` |
 | CLI 명령어 | `{name}.command.ts` | `add.command.ts` |
+| CLI 유틸리티 | `{purpose}.ts` | `cli-runner.ts`, `formatters.ts` |
 | 입력 핸들러 | `{type}.handler.ts` | `image.handler.ts`, `meeting.handler.ts` |
+| 에러 클래스 | `{Type}Error` | `NotFoundError`, `ValidationError`, `AIClientError` |
 
 ---
 
@@ -219,6 +242,9 @@ src/
 2. **선언형 프롬프트**: ai/prompts에 version 필드 포함
 3. **Zod 스키마**: types/에 스키마 정의
 4. **디렉토리 문서화**: 새 디렉토리 생성 시 CLAUDE.md 작성
+5. **AI 클라이언트 추상화**: ai/interfaces 인터페이스 기반 의존성 주입
+6. **통합 에러 처리**: errors/에 MCHError 기반 커스텀 에러 클래스 정의
+7. **CLI 공통 기능**: cli/utils에 스피너, 포매팅, 에러 처리 중앙화
 
 ---
 

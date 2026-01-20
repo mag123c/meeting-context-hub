@@ -1,7 +1,8 @@
 import OpenAI from "openai";
 import { createReadStream } from "fs";
+import type { ITranscriptionClient } from "../interfaces/index.js";
 
-export class WhisperClient {
+export class WhisperClient implements ITranscriptionClient {
   private client: OpenAI;
 
   constructor(apiKey: string) {

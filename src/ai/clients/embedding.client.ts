@@ -1,6 +1,7 @@
 import OpenAI from "openai";
+import type { IEmbeddingClient } from "../interfaces/index.js";
 
-export class EmbeddingClient {
+export class EmbeddingClient implements IEmbeddingClient {
   private client: OpenAI;
 
   constructor(apiKey: string) {

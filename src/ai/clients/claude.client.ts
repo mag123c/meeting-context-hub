@@ -1,8 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { readFile } from "fs/promises";
 import type { Prompt } from "../../types/prompt.types.js";
+import type { ILLMClient } from "../interfaces/index.js";
 
-export class ClaudeClient {
+export class ClaudeClient implements ILLMClient {
   private client: Anthropic;
 
   constructor(apiKey: string) {

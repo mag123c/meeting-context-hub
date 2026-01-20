@@ -42,7 +42,7 @@ export function createServices(): AppServices {
   const addContextUseCase = new AddContextUseCase(repository, claude, embedding);
   const searchContextUseCase = new SearchContextUseCase(repository, embedding);
   const summarizeMeetingUseCase = new SummarizeMeetingUseCase({
-    claudeClient: claude,
+    llmClient: claude,
     embeddingClient: embedding,
     contextRepository: repository,
   });

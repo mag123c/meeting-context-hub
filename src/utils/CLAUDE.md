@@ -10,6 +10,7 @@
 | `file-validator.ts` | 파일 존재/확장자 검증 |
 | `filter.ts` | Context 필터링 (tags, type, project, sprint) |
 | `related-links.ts` | 관련 문서 링크 추가 |
+| `math.ts` | 수학 유틸리티 (cosineSimilarity 등) |
 | `index.ts` | 모든 유틸리티 re-export |
 
 ## 사용 패턴
