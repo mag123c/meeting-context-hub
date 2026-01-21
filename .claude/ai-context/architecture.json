@@ -86,21 +86,29 @@
     },
     "input": {
       "path": "src/input/",
-      "description": "Input handlers for different content types",
+      "description": "Input handlers with pre-flight validation",
       "ctx": "src/input/CLAUDE.md",
       "files": {
         "interfaces.ts": "Generic InputHandler interface",
         "text.handler.ts": "Text input",
-        "image.handler.ts": "Image input (Claude Vision)",
-        "audio.handler.ts": "Audio input (Whisper)",
-        "file.handler.ts": "File input (txt, md, csv, json)",
-        "meeting.handler.ts": "Meeting transcript (with validateFile)"
+        "image.handler.ts": "Image input (Claude Vision, 15MB limit)",
+        "audio.handler.ts": "Audio input (Whisper, 25MB limit)",
+        "recording.handler.ts": "Live recording (binary check, mic permission)",
+        "file.handler.ts": "File input (txt, md, csv, json, 10MB limit)",
+        "meeting.handler.ts": "Meeting transcript (improved path detection)"
       }
     },
     "utils": {
       "path": "src/utils/",
-      "description": "Common utility functions",
-      "ctx": "src/utils/CLAUDE.md"
+      "description": "Common utility functions and pre-flight validation",
+      "ctx": "src/utils/CLAUDE.md",
+      "subdirs": {
+        "preflight": "Pre-flight validation (file size, permissions, format, recording deps)"
+      },
+      "files": {
+        "path-sanitizer.ts": "Path sanitization and directory traversal prevention",
+        "atomic-file.ts": "Atomic file writes with locking"
+      }
     },
     "config": {
       "path": "src/config/",

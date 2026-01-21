@@ -6,7 +6,7 @@ Configuration, environment, and secure credential management.
 
 | File | Purpose |
 |------|---------|
-| `config.ts` | Main config loader, Obsidian path resolution |
+| `config.ts` | Main config loader, Obsidian path resolution, validation |
 | `keychain.ts` | macOS Keychain integration (secure API key storage) |
 | `env.ts` | Environment variables, defaults |
 | `constants.ts` | Application constants |
@@ -18,6 +18,29 @@ Configuration, environment, and secure credential management.
 | `AI_CONFIG` | `DEFAULT_MODEL`, `MAX_TOKENS` | Claude API settings |
 | `SIMILARITY_CONFIG` | `THRESHOLD`, `MAX_RELATED_LINKS` | Related docs linking |
 | `STORAGE_CONFIG` | `SHORT_ID_LENGTH`, `MAX_TITLE_LENGTH` | Filename generation |
+
+## Validation Functions
+
+| Function | Purpose |
+|----------|---------|
+| `validateApiKeyFormat()` | Check API key format (throws `APIKeyFormatError`) |
+| `validateConfig()` | Validate entire config, returns `ConfigValidationResult` |
+| `loadAndValidateConfig()` | Load + validate, throws `ConfigError` if invalid |
+
+### Validation Checks
+
+- **Anthropic API key**: Must start with `sk-ant-`, length > 20
+- **OpenAI API key**: Must start with `sk-` (not `sk-ant-`), length > 20
+- **Obsidian vault path**: Must exist on filesystem
+
+### ConfigValidationResult
+
+```typescript
+interface ConfigValidationResult {
+  valid: boolean;
+  issues: string[];  // Descriptive messages
+}
+```
 
 ## Security
 
