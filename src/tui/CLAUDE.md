@@ -25,6 +25,8 @@ Interactive TUI using ink (React for CLI).
 | `KeyHint`, `KeyHintBar` | Keyboard shortcuts |
 | `ContextCard`, `ContextList` | Context display |
 | `RecordingIndicator` | Recording state + timer + chunk progress |
+| `ErrorBoundary` | Error catching boundary for TUI |
+| `ApiKeyPrompt` | Prompt when required API keys missing |
 
 ## Hooks
 
@@ -35,6 +37,18 @@ Interactive TUI using ink (React for CLI).
 | `useNavigation` | Screen navigation |
 | `useRecording` | Recording state, timer, chunk tracking |
 | `useTranslation` | i18n context (t, language, setLanguage, formatDate, formatDateTime) |
+| `useApiKeyGuard` | API key validation before screen navigation |
+
+## API Key Guard
+
+Screens requiring API keys are protected by `useApiKeyGuard` hook.
+
+| Screen | Required Keys |
+|--------|---------------|
+| `add` | Anthropic + OpenAI |
+| `search` (semantic) | OpenAI |
+
+**Flow:** Navigate → Guard checks keys → Missing? → Show `ApiKeyPrompt` → Go to Config
 
 ## Screens
 

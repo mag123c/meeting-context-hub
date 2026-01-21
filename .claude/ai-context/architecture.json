@@ -118,7 +118,8 @@
         "config.ts": "Main config",
         "keychain.ts": "macOS keychain integration (spawnSync)",
         "env.ts": "Environment variables",
-        "constants.ts": "Application constants (AI, similarity, storage)"
+        "constants.ts": "Application constants (AI, similarity, storage)",
+        "api-key-check.ts": "Non-throwing API key availability check for pre-flight validation"
       }
     },
     "i18n": {
@@ -141,6 +142,7 @@
       "cli → core",
       "tui → core",
       "tui → i18n",
+      "tui → config/api-key-check (for API key guard)",
       "core → repositories",
       "core → ai/interfaces",
       "core → storage",

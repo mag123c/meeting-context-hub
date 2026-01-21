@@ -6,3 +6,4 @@ export { ErrorBanner } from "./ErrorBanner.js";
 export { ErrorBoundary } from "./ErrorBoundary.js";
 export { ContextCard, ContextList } from "./ContextCard.js";
 export { RecordingIndicator } from "./RecordingIndicator.js";
+export { ApiKeyPrompt } from "./ApiKeyPrompt.js";

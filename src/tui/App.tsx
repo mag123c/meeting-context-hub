@@ -10,7 +10,8 @@ import { SearchScreen } from "./screens/SearchScreen.js";
 import { ListScreen } from "./screens/ListScreen.js";
 import { DetailScreen } from "./screens/DetailScreen.js";
 import { ConfigScreen } from "./screens/ConfigScreen.js";
-import { Header, KeyHintBar, ErrorBoundary } from "./components/index.js";
+import { Header, KeyHintBar, ErrorBoundary, ApiKeyPrompt } from "./components/index.js";
+import { useApiKeyGuard } from "./hooks/index.js";
 
 export type Screen = "main" | "add" | "search" | "list" | "detail" | "config";
 
@@ -40,6 +41,9 @@ function AppContent() {
   const [selectedContext, setSelectedContext] = useState<Context | null>(null);
   const [configVersion, setConfigVersion] = useState(0);
 
+  // API key guard
+  const apiKeyGuard = useApiKeyGuard();
+
   // Services initialization (re-runs when configVersion changes)
   const { services, initError } = useMemo<{
     services: AppServices | null;
@@ -57,17 +61,33 @@ function AppContent() {
   const handleConfigured = useCallback(() => {
     setConfigVersion((v) => v + 1);
     setNavigation({ screen: "main", history: [] });
-  }, []);
+    apiKeyGuard.resetGuard();
+  }, [apiKeyGuard]);
+
+  // Handle API key prompt confirmation - go to config
+  const handleApiKeyConfirm = useCallback(() => {
+    apiKeyGuard.confirmGoToConfig();
+    setNavigation((prev) => ({
+      screen: "config",
+      params: undefined,
+      history: [...prev.history, prev.screen],
+    }));
+  }, [apiKeyGuard]);
 
   const navigate = useCallback(
     (screen: Screen, params?: NavigationState["params"]) => {
+      // Check API key requirements before navigating
+      if (!apiKeyGuard.checkNavigation(screen)) {
+        return; // Guard will show prompt
+      }
+
       setNavigation((prev) => ({
         screen,
         params,
         history: [...prev.history, prev.screen],
       }));
     },
-    []
+    [apiKeyGuard]
   );
 
   const goBack = useCallback(() => {
@@ -110,6 +130,20 @@ function AppContent() {
   };
 
   const renderScreen = () => {
+    // Show API key prompt if guard is active
+    if (apiKeyGuard.guardState.showPrompt) {
+      return (
+        <Box flexDirection="column">
+          <Header title={t.mainMenu.title} />
+          <ApiKeyPrompt
+            missingKeys={apiKeyGuard.guardState.missingKeys}
+            onConfirm={handleApiKeyConfirm}
+            onCancel={apiKeyGuard.cancelPrompt}
+          />
+        </Box>
+      );
+    }
+
     // Config screen is always accessible
     if (navigation.screen === "config") {
       return (

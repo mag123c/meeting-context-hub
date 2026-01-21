@@ -10,6 +10,24 @@ Configuration, environment, and secure credential management.
 | `keychain.ts` | macOS Keychain integration (secure API key storage) |
 | `env.ts` | Environment variables, defaults |
 | `constants.ts` | Application constants |
+| `api-key-check.ts` | Non-throwing API key availability check |
+
+## API Key Check (api-key-check.ts)
+
+Non-throwing utility to check API key availability before operations.
+
+| Function | Returns | Purpose |
+|----------|---------|---------|
+| `getApiKeyStatus()` | `ApiKeyStatus` | Get availability of all API keys |
+| `hasRequiredKeys(providers)` | `boolean` | Check if all required keys are available |
+| `getMissingKeys(providers)` | `ApiKeyProvider[]` | Get list of missing keys |
+
+```typescript
+type ApiKeyProvider = "anthropic" | "openai";
+interface ApiKeyStatus { anthropic: boolean; openai: boolean; }
+```
+
+**Usage:** Used by TUI `useApiKeyGuard` hook to validate screen access.
 
 ## Constants
 
