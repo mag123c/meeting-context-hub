@@ -1,6 +1,5 @@
 import { createWriteStream, unlink, statSync } from "fs";
-import { execSync } from "child_process";
-import { tmpdir, platform } from "os";
+import { tmpdir } from "os";
 import { join } from "path";
 import mic from "mic";
 import type { WriteStream } from "fs";
@@ -9,41 +8,24 @@ import type { WhisperClient } from "../ai/clients/whisper.client.js";
 import type { CreateContextInput } from "../types/context.types.js";
 import {
   RecordingDependencyError,
-  type RecordingBinary,
-  type RecordingOS,
+  RecordingStreamError,
+  PreflightError,
 } from "../errors/index.js";
+import {
+  validateRecording,
+  getRecordingInfo,
+} from "../utils/preflight/index.js";
 
 // 10 minutes per chunk (safe margin under 25MB Whisper limit)
 const CHUNK_DURATION_MS = 10 * 60 * 1000;
 // Check interval for chunk rotation
 const CHECK_INTERVAL_MS = 1000;
 
-/**
- * Get recording binary and OS for current platform
- */
-function getRecordingBinary(): { binary: RecordingBinary; os: RecordingOS } {
-  const p = platform();
-  if (p === "linux") return { binary: "arecord", os: "linux" };
-  return { binary: "sox", os: p === "darwin" ? "macos" : "windows" };
-}
-
-/**
- * Check if a binary is available in PATH
- */
-function isBinaryAvailable(binary: string): boolean {
-  try {
-    const cmd = platform() === "win32" ? `where ${binary}` : `which ${binary}`;
-    execSync(cmd, { stdio: "ignore" });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export interface RecordingController {
   stop: () => void;
   getChunkPaths: () => string[];
   getChunkCount: () => number;
+  getError: () => Error | null;
 }
 
 export class RecordingHandler {
@@ -56,6 +38,7 @@ export class RecordingHandler {
   private chunkStartTime: number = 0;
   private chunkCheckInterval: NodeJS.Timeout | null = null;
   private sessionId: string = "";
+  private streamError: Error | null = null;
 
   constructor(private whisper: WhisperClient) {}
 
@@ -65,14 +48,14 @@ export class RecordingHandler {
    */
   static checkDependency(): {
     available: boolean;
-    binary: RecordingBinary;
-    os: RecordingOS;
+    binary: string;
+    os: string;
   } {
-    const { binary, os } = getRecordingBinary();
+    const info = getRecordingInfo();
     if (this.checkedAvailable === null) {
-      this.checkedAvailable = isBinaryAvailable(binary);
+      this.checkedAvailable = info.available;
     }
-    return { available: this.checkedAvailable, binary, os };
+    return { available: this.checkedAvailable, binary: info.binary, os: info.os };
   }
 
   /**
@@ -83,14 +66,28 @@ export class RecordingHandler {
   }
 
   startRecording(): RecordingController {
-    // Check dependency before starting
-    const dep = RecordingHandler.checkDependency();
-    if (!dep.available) {
-      throw new RecordingDependencyError(dep.binary, dep.os);
+    // Run full preflight validation
+    const preflightResult = validateRecording();
+    if (!preflightResult.valid) {
+      // Check for specific error types
+      const binaryMissing = preflightResult.issues.find(
+        i => i.code === "RECORDING_BINARY_MISSING"
+      );
+      if (binaryMissing) {
+        const dep = RecordingHandler.checkDependency();
+        throw new RecordingDependencyError(
+          dep.binary as "sox" | "arecord",
+          dep.os as "macos" | "windows" | "linux"
+        );
+      }
+      // Throw aggregate preflight error for other issues
+      throw new PreflightError(preflightResult, "recording");
     }
 
+    // Reset state
     this.sessionId = Date.now().toString();
     this.chunkPaths = [];
+    this.streamError = null;
 
     this.micInstance = mic({
       rate: "16000",
@@ -103,12 +100,19 @@ export class RecordingHandler {
 
     this.audioStream = this.micInstance.getAudioStream();
 
+    // Track stream errors and auto-stop on error
     this.audioStream.on("error", (err) => {
-      console.error("Recording error:", err);
+      this.streamError = new RecordingStreamError(err.message, err);
+      this.stopRecording(); // Auto-stop on error
     });
 
-    // Start first chunk
-    this.startNewChunk();
+    // Start first chunk with error handling
+    try {
+      this.startNewChunk();
+    } catch (err) {
+      this.cleanup(this.chunkPaths);
+      throw err;
+    }
 
     this.micInstance.start();
 
@@ -121,6 +125,7 @@ export class RecordingHandler {
       stop: () => this.stopRecording(),
       getChunkPaths: () => [...this.chunkPaths],
       getChunkCount: () => this.chunkPaths.length,
+      getError: () => this.streamError,
     };
   }
 
@@ -133,11 +138,26 @@ export class RecordingHandler {
 
     const chunkIndex = this.chunkPaths.length;
     const tempPath = join(tmpdir(), `mch-rec-${this.sessionId}-${chunkIndex}.wav`);
-    this.chunkPaths.push(tempPath);
 
-    this.outputStream = createWriteStream(tempPath);
-    this.audioStream?.pipe(this.outputStream);
-    this.chunkStartTime = Date.now();
+    try {
+      this.outputStream = createWriteStream(tempPath);
+
+      // Handle output stream errors
+      this.outputStream.on("error", (err) => {
+        this.streamError = new RecordingStreamError(`Failed to write chunk: ${err.message}`, err);
+        this.stopRecording();
+      });
+
+      this.chunkPaths.push(tempPath);
+      this.audioStream?.pipe(this.outputStream);
+      this.chunkStartTime = Date.now();
+    } catch (err) {
+      // If we can't create the output stream, throw and let caller handle cleanup
+      throw new RecordingStreamError(
+        `Failed to create recording chunk: ${err instanceof Error ? err.message : String(err)}`,
+        err instanceof Error ? err : undefined
+      );
+    }
   }
 
   private checkChunkRotation(): void {

@@ -186,6 +186,24 @@ export interface Translations {
     configErrorTitle: string;
     unexpectedError: string;
     pressQToExit: string;
+    // Preflight error messages
+    fileTooLarge: string;
+    filePermissionDenied: string;
+    symlinkNotAllowed: string;
+    invalidEncoding: string;
+    pathTraversal: string;
+    micPermissionDenied: string;
+    diskSpaceLow: string;
+    apiKeyInvalidFormat: string;
+    emptyInput: string;
+    textTooLong: string;
+  };
+  preflight: {
+    checking: string;
+    passed: string;
+    failed: string;
+    warnings: string;
+    errors: string;
   };
   recording: {
     error: string;

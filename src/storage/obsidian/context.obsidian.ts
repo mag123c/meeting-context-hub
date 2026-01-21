@@ -7,6 +7,8 @@ import { contextToMarkdown, markdownToContext, updateFrontmatter } from "./front
 import { applyFilters, cosineSimilarity, normalizeKoreanText } from "../../utils/index.js";
 import { NotFoundError } from "../../errors/index.js";
 import { STORAGE_CONFIG } from "../../config/constants.js";
+import { buildSafePath } from "../../utils/path-sanitizer.js";
+import { withFileLock, atomicWriteFile, generateUniqueFilename } from "../../utils/atomic-file.js";
 
 const HIERARCHY_CACHE_FILE = "hierarchy.json";
 
@@ -47,8 +49,8 @@ export class ObsidianContextRepository implements ContextRepository {
     for (const entry of entries) {
       const entryPath = join(dirPath, entry);
 
-      // Skip hierarchy.json
-      if (entry === HIERARCHY_CACHE_FILE) continue;
+      // Skip hierarchy.json and temp files
+      if (entry === HIERARCHY_CACHE_FILE || entry.startsWith(".tmp-")) continue;
 
       try {
         const entryStat = await stat(entryPath);
@@ -62,12 +64,20 @@ export class ObsidianContextRepository implements ContextRepository {
           try {
             const ctx = markdownToContext(markdown);
             contexts.push(ctx);
-          } catch {
-            // Skip invalid files
+          } catch (parseError) {
+            // Log corrupted file for debugging instead of silent skip
+            console.error(
+              `[MCH] Corrupted context file skipped: ${entryPath}`,
+              parseError instanceof Error ? parseError.message : String(parseError)
+            );
           }
         }
-      } catch {
-        // Skip entries we can't access
+      } catch (accessError) {
+        // Log access errors for debugging
+        console.error(
+          `[MCH] Cannot access file: ${entryPath}`,
+          accessError instanceof Error ? accessError.message : String(accessError)
+        );
       }
     }
 
@@ -88,16 +98,6 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * Generate filename: {short-title}_{short-id}.md
-   * Example: PG-integration-done_a64cbac7.md
-   */
-  private generateFileName(context: Context): string {
-    const shortId = context.id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
-    const title = this.extractShortTitle(context.summary);
-    return `${title}_${shortId}.md`;
-  }
-
-  /**
    * Extract short title from summary
    */
   private extractShortTitle(summary: string): string {
@@ -115,7 +115,6 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   async save(context: Context): Promise<string> {
-    const fileName = this.generateFileName(context);
     const folderPath = this.getHierarchyPath(context.project, context.category);
 
     // Ensure the target directory exists
@@ -123,22 +122,41 @@ export class ObsidianContextRepository implements ContextRepository {
       await mkdir(folderPath, { recursive: true });
     }
 
+    // Get existing files to check for collisions
+    const existingFiles = new Set<string>();
+    try {
+      const entries = await readdir(folderPath);
+      entries.forEach(e => existingFiles.add(e.toLowerCase()));
+    } catch {
+      // Directory might not exist yet, that's fine
+    }
+
+    // Generate filename with collision detection
+    const shortId = context.id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
+    const title = this.extractShortTitle(context.summary);
+    const baseName = `${title}_${shortId}`;
+    const fileName = generateUniqueFilename(folderPath, baseName, ".md", existingFiles);
+
     const filePath = join(folderPath, fileName);
     const markdown = contextToMarkdown(context);
-    await writeFile(filePath, markdown, "utf-8");
+
+    // Use atomic write to prevent partial writes
+    await atomicWriteFile(filePath, markdown);
     this.invalidateCache();
     return context.id;
   }
 
   /**
    * Get the folder path based on hierarchy (project/category)
+   * Uses buildSafePath to prevent directory traversal attacks
    */
   private getHierarchyPath(project?: string, category?: string): string {
     if (project && category) {
-      return join(this.basePath, project, category);
+      // Sanitize inputs to prevent path traversal
+      return buildSafePath(this.basePath, project, category);
     }
     if (project) {
-      return join(this.basePath, project, "General");
+      return buildSafePath(this.basePath, project, "General");
     }
     // Legacy: save directly in basePath
     return this.basePath;
@@ -366,6 +384,7 @@ export class ObsidianContextRepository implements ContextRepository {
 
   /**
    * Append related documents section
+   * Uses file lock to prevent race conditions during concurrent writes
    */
   async appendRelatedLinks(id: string, relatedIds: string[]): Promise<void> {
     const filePath = await this.findFilePathById(id);
@@ -382,17 +401,21 @@ export class ObsidianContextRepository implements ContextRepository {
 
     if (links.length === 0) return;
 
-    // Append related documents section to file
-    let content = await readFile(filePath, "utf-8");
+    // Use file lock to prevent race conditions
+    await withFileLock(filePath, async () => {
+      let content = await readFile(filePath, "utf-8");
 
-    // Remove existing related documents section (if any)
-    content = content.replace(/\n## 관련 문서\n[\s\S]*$/, "");
+      // Remove existing related documents section (if any)
+      content = content.replace(/\n## 관련 문서\n[\s\S]*$/, "");
 
-    // Add new section
-    const relatedSection = `\n## 관련 문서\n${links.join("\n")}\n`;
-    content = content.trimEnd() + "\n" + relatedSection;
+      // Add new section
+      const relatedSection = `\n## 관련 문서\n${links.join("\n")}\n`;
+      content = content.trimEnd() + "\n" + relatedSection;
 
-    await writeFile(filePath, content, "utf-8");
+      // Use atomic write for safety
+      await atomicWriteFile(filePath, content);
+    });
+
     this.invalidateCache();
   }
 }

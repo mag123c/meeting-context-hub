@@ -28,3 +28,21 @@ export {
 export { cosineSimilarity } from "./math.js";
 export { normalizeKoreanText } from "./text-normalizer.js";
 export { formatMeetingMarkdown, type FormatMeetingOptions } from "./meeting-formatter.js";
+
+// Path sanitization
+export {
+  sanitizePathSegment,
+  validatePathWithinBase,
+  buildSafePath,
+  safeBasename,
+  normalizeForCollision,
+} from "./path-sanitizer.js";
+
+// Atomic file operations
+export {
+  atomicWriteFile,
+  FileLock,
+  withFileLock,
+  safeReadFile,
+  generateUniqueFilename,
+} from "./atomic-file.js";
