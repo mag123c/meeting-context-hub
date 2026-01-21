@@ -70,5 +70,7 @@ See `.claude/ai-context/` for detailed knowledge:
 | AI clients | `src/ai/CLAUDE.md` |
 | CLI layer | `src/cli/CLAUDE.md` |
 | TUI layer | `src/tui/CLAUDE.md` |
+| Config | `src/config/CLAUDE.md` |
+| Input handlers | `src/input/CLAUDE.md` |
 | Errors | `src/errors/CLAUDE.md` |
 | Utils | `src/utils/CLAUDE.md` |

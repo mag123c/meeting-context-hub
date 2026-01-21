@@ -82,12 +82,14 @@
     "input": {
       "path": "src/input/",
       "description": "Input handlers for different content types",
+      "ctx": "src/input/CLAUDE.md",
       "files": {
+        "interfaces.ts": "Generic InputHandler interface",
         "text.handler.ts": "Text input",
         "image.handler.ts": "Image input (Claude Vision)",
         "audio.handler.ts": "Audio input (Whisper)",
         "file.handler.ts": "File input (txt, md, csv, json)",
-        "meeting.handler.ts": "Meeting transcript"
+        "meeting.handler.ts": "Meeting transcript (with validateFile)"
       }
     },
     "utils": {
@@ -98,10 +100,12 @@
     "config": {
       "path": "src/config/",
       "description": "Configuration and environment",
+      "ctx": "src/config/CLAUDE.md",
       "files": {
         "config.ts": "Main config",
-        "keychain.ts": "macOS keychain integration",
-        "env.ts": "Environment variables"
+        "keychain.ts": "macOS keychain integration (spawnSync)",
+        "env.ts": "Environment variables",
+        "constants.ts": "Application constants (AI, similarity, storage)"
       }
     }
   },
