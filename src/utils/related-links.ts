@@ -3,6 +3,7 @@
  */
 
 import type { ContextRepository } from "../repositories/context.repository.js";
+import { SIMILARITY_CONFIG } from "../config/constants.js";
 
 export interface RelatedLinksConfig {
   threshold?: number; // Similarity threshold (default: 0.6 = 60%)
@@ -10,8 +11,8 @@ export interface RelatedLinksConfig {
 }
 
 const DEFAULT_CONFIG: Required<RelatedLinksConfig> = {
-  threshold: 0.6,
-  maxLinks: 5,
+  threshold: SIMILARITY_CONFIG.THRESHOLD,
+  maxLinks: SIMILARITY_CONFIG.MAX_RELATED_LINKS,
 };
 
 /**

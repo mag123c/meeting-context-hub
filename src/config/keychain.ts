@@ -3,44 +3,67 @@
  * CLI-only module - no web exposure
  */
 
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 
 const SERVICE_NAME = "mch";
 
-export function getApiKeyFromKeychain(account: string): string | null {
-  try {
-    const result = execSync(
-      `security find-generic-password -s "${SERVICE_NAME}" -a "${account}" -w`,
-      { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }
-    );
-    return result.trim();
-  } catch {
-    return null;
+/**
+ * Validate account name to prevent injection
+ * Only allows uppercase letters and underscores (e.g., ANTHROPIC_API_KEY)
+ */
+function validateAccountName(account: string): void {
+  if (!/^[A-Z_]+$/.test(account)) {
+    throw new Error("Invalid account name: must contain only uppercase letters and underscores");
   }
 }
 
+export function getApiKeyFromKeychain(account: string): string | null {
+  validateAccountName(account);
+
+  const result = spawnSync("security", [
+    "find-generic-password",
+    "-s", SERVICE_NAME,
+    "-a", account,
+    "-w"
+  ], { encoding: "utf-8" });
+
+  if (result.status !== 0 || result.error) {
+    return null;
+  }
+
+  return result.stdout.trim();
+}
+
 export function setApiKeyInKeychain(account: string, value: string): void {
-  try {
-    execSync(
-      `security delete-generic-password -s "${SERVICE_NAME}" -a "${account}" 2>/dev/null || true`,
-      { encoding: "utf-8" }
-    );
-    execSync(
-      `security add-generic-password -s "${SERVICE_NAME}" -a "${account}" -w "${value}"`,
-      { encoding: "utf-8" }
-    );
-  } catch (error) {
-    throw new Error(`Failed to save API key to keychain: ${error}`);
+  validateAccountName(account);
+
+  // Delete existing (ignore errors if not found)
+  spawnSync("security", [
+    "delete-generic-password",
+    "-s", SERVICE_NAME,
+    "-a", account
+  ], { encoding: "utf-8" });
+
+  // Add new key
+  const result = spawnSync("security", [
+    "add-generic-password",
+    "-s", SERVICE_NAME,
+    "-a", account,
+    "-w", value
+  ], { encoding: "utf-8" });
+
+  if (result.status !== 0) {
+    throw new Error(`Failed to save API key to keychain: ${result.stderr || "Unknown error"}`);
   }
 }
 
 export function deleteApiKeyFromKeychain(account: string): void {
-  try {
-    execSync(
-      `security delete-generic-password -s "${SERVICE_NAME}" -a "${account}"`,
-      { encoding: "utf-8" }
-    );
-  } catch {
-    // Ignore if key doesn't exist
-  }
+  validateAccountName(account);
+
+  spawnSync("security", [
+    "delete-generic-password",
+    "-s", SERVICE_NAME,
+    "-a", account
+  ], { encoding: "utf-8" });
+  // Ignore result - key may not exist
 }

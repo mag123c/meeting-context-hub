@@ -14,6 +14,7 @@ const {
   mockUpdateFrontmatter,
   mockApplyFilters,
   mockCosineSimilarity,
+  mockNormalizeKoreanText,
 } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
   mockWriteFile: vi.fn(),
@@ -26,6 +27,7 @@ const {
   mockUpdateFrontmatter: vi.fn(),
   mockApplyFilters: vi.fn((contexts: Context[]) => contexts),
   mockCosineSimilarity: vi.fn(),
+  mockNormalizeKoreanText: vi.fn((text: string) => text.slice(0, 15).replace(/\s+/g, "-")),
 }));
 
 vi.mock("fs/promises", () => ({
@@ -49,6 +51,7 @@ vi.mock("./frontmatter.js", () => ({
 vi.mock("../../utils/index.js", () => ({
   applyFilters: mockApplyFilters,
   cosineSimilarity: mockCosineSimilarity,
+  normalizeKoreanText: mockNormalizeKoreanText,
 }));
 
 import { ObsidianContextRepository } from "./context.obsidian.js";

@@ -4,10 +4,14 @@ import { join } from "path";
 import type { ContextRepository } from "../../repositories/context.repository.js";
 import type { Context, ListOptions, ContextWithSimilarity } from "../../types/context.types.js";
 import { contextToMarkdown, markdownToContext, updateFrontmatter } from "./frontmatter.js";
-import { applyFilters, cosineSimilarity } from "../../utils/index.js";
+import { applyFilters, cosineSimilarity, normalizeKoreanText } from "../../utils/index.js";
 import { NotFoundError } from "../../errors/index.js";
+import { STORAGE_CONFIG } from "../../config/constants.js";
 
 export class ObsidianContextRepository implements ContextRepository {
+  private cache: { contexts: Context[]; timestamp: number } | null = null;
+  private static readonly CACHE_TTL_MS = 5000;
+
   constructor(private readonly basePath: string) {}
 
   private async ensureDir(): Promise<void> {
@@ -17,39 +21,67 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
+   * Invalidate cache (call after write operations)
+   */
+  private invalidateCache(): void {
+    this.cache = null;
+  }
+
+  /**
+   * Load all contexts from disk (uncached)
+   */
+  private async loadAllFromDisk(): Promise<Context[]> {
+    await this.ensureDir();
+    const files = await readdir(this.basePath);
+    const mdFiles = files.filter((f) => f.endsWith(".md"));
+
+    const contexts: Context[] = [];
+    for (const file of mdFiles) {
+      const filePath = join(this.basePath, file);
+      const markdown = await readFile(filePath, "utf-8");
+      try {
+        const ctx = markdownToContext(markdown);
+        contexts.push(ctx);
+      } catch {
+        // Skip invalid files
+      }
+    }
+    return contexts;
+  }
+
+  /**
+   * Get all contexts with caching
+   */
+  private async getAllCached(): Promise<Context[]> {
+    const now = Date.now();
+    if (this.cache && now - this.cache.timestamp < ObsidianContextRepository.CACHE_TTL_MS) {
+      return this.cache.contexts;
+    }
+    const contexts = await this.loadAllFromDisk();
+    this.cache = { contexts, timestamp: now };
+    return contexts;
+  }
+
+  /**
    * Generate filename: {short-title}_{short-id}.md
    * Example: PG-integration-done_a64cbac7.md
    */
   private generateFileName(context: Context): string {
-    const shortId = context.id.slice(0, 8);
+    const shortId = context.id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
     const title = this.extractShortTitle(context.summary);
     return `${title}_${shortId}.md`;
   }
 
   /**
-   * Extract short title from summary (15 char limit)
+   * Extract short title from summary
    */
   private extractShortTitle(summary: string): string {
-    // Remove unnecessary particles/endings and extract core
-    const cleaned = summary
-      .replace(/했습니다|합니다|입니다|됩니다|있습니다/g, "")
-      .replace(/[을를이가은는의에서로](?=\s|$)/g, "")
-      .replace(/[<>:"/\\|?*.,!?]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    // 15 char limit, don't cut mid-word
-    if (cleaned.length <= 15) return cleaned;
-
-    const truncated = cleaned.slice(0, 15);
-    const lastDash = truncated.lastIndexOf("-");
-    return lastDash > 5 ? truncated.slice(0, lastDash) : truncated;
+    return normalizeKoreanText(summary);
   }
 
   private getFilePath(id: string, summary?: string): string {
     if (summary) {
-      const shortId = id.slice(0, 8);
+      const shortId = id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
       const title = this.extractShortTitle(summary);
       return join(this.basePath, `${title}_${shortId}.md`);
     }
@@ -63,6 +95,7 @@ export class ObsidianContextRepository implements ContextRepository {
     const filePath = join(this.basePath, fileName);
     const markdown = contextToMarkdown(context);
     await writeFile(filePath, markdown, "utf-8");
+    this.invalidateCache();
     return context.id;
   }
 
@@ -84,7 +117,7 @@ export class ObsidianContextRepository implements ContextRepository {
   private async findByIdFromAll(id: string): Promise<Context | null> {
     await this.ensureDir();
     const files = await readdir(this.basePath);
-    const shortId = id.slice(0, 8);
+    const shortId = id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
 
     // Find file containing short ID first (fast path)
     const matchingFile = files.find(f => f.includes(shortId) && f.endsWith(".md"));
@@ -111,14 +144,14 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   async findByTags(tags: string[]): Promise<Context[]> {
-    const all = await this.findAll();
+    const all = await this.getAllCached();
     return all.filter((ctx) =>
       tags.some((tag) => ctx.tags.includes(tag))
     );
   }
 
   async findSimilar(embedding: number[], limit = 10): Promise<ContextWithSimilarity[]> {
-    const all = await this.findAll();
+    const all = await this.getAllCached();
     const withSimilarity: ContextWithSimilarity[] = all
       .filter((ctx) => ctx.embedding && ctx.embedding.length > 0)
       .map((ctx) => ({
@@ -131,21 +164,7 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   async findAll(options?: ListOptions): Promise<Context[]> {
-    await this.ensureDir();
-    const files = await readdir(this.basePath);
-    const mdFiles = files.filter((f) => f.endsWith(".md"));
-
-    let contexts: Context[] = [];
-    for (const file of mdFiles) {
-      const filePath = join(this.basePath, file);
-      const markdown = await readFile(filePath, "utf-8");
-      try {
-        const ctx = markdownToContext(markdown);
-        contexts.push(ctx);
-      } catch {
-        // Skip invalid files
-      }
-    }
+    let contexts = await this.getAllCached();
 
     // Apply filters using utility
     contexts = applyFilters(contexts, options);
@@ -168,6 +187,7 @@ export class ObsidianContextRepository implements ContextRepository {
     const newPath = this.getFilePath(id, context.summary);
     if (existsSync(newPath)) {
       await unlink(newPath);
+      this.invalidateCache();
       return;
     }
 
@@ -175,6 +195,7 @@ export class ObsidianContextRepository implements ContextRepository {
     const legacyPath = join(this.basePath, `${id}.md`);
     if (existsSync(legacyPath)) {
       await unlink(legacyPath);
+      this.invalidateCache();
     }
   }
 
@@ -192,6 +213,7 @@ export class ObsidianContextRepository implements ContextRepository {
     const markdown = await readFile(filePath, "utf-8");
     const updated = updateFrontmatter(markdown, { tags });
     await writeFile(filePath, updated, "utf-8");
+    this.invalidateCache();
   }
 
   async updateEmbedding(id: string, embedding: number[]): Promise<void> {
@@ -202,12 +224,13 @@ export class ObsidianContextRepository implements ContextRepository {
     const markdown = await readFile(filePath, "utf-8");
     const updated = updateFrontmatter(markdown, { embedding });
     await writeFile(filePath, updated, "utf-8");
+    this.invalidateCache();
   }
 
   private async findFilePathById(id: string): Promise<string | null> {
     await this.ensureDir();
     const files = await readdir(this.basePath);
-    const shortId = id.slice(0, 8);
+    const shortId = id.slice(0, STORAGE_CONFIG.SHORT_ID_LENGTH);
 
     // Fast search by short ID
     const matchingFile = files.find(f => f.includes(shortId) && f.endsWith(".md"));
@@ -241,14 +264,14 @@ export class ObsidianContextRepository implements ContextRepository {
     const filePath = await this.findFilePathById(id);
     if (!filePath) return;
 
-    // Get related document filenames
-    const links: string[] = [];
-    for (const relatedId of relatedIds) {
-      const fileName = await this.getFileNameById(relatedId);
-      if (fileName) {
-        links.push(`- [[${fileName}]]`);
-      }
-    }
+    // Get related document filenames (parallel)
+    const fileNames = await Promise.all(
+      relatedIds.map(relatedId => this.getFileNameById(relatedId))
+    );
+
+    const links = fileNames
+      .filter((fileName): fileName is string => fileName !== null)
+      .map(fileName => `- [[${fileName}]]`);
 
     if (links.length === 0) return;
 
@@ -263,5 +286,6 @@ export class ObsidianContextRepository implements ContextRepository {
     content = content.trimEnd() + "\n" + relatedSection;
 
     await writeFile(filePath, content, "utf-8");
+    this.invalidateCache();
   }
 }

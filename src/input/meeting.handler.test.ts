@@ -1,12 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted to declare mocks before vi.mock hoisting
-const { mockReadFile } = vi.hoisted(() => ({
+const { mockReadFile, mockValidateFile } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
+  mockValidateFile: vi.fn(),
 }));
 
 vi.mock("fs/promises", () => ({
   readFile: mockReadFile,
+}));
+
+vi.mock("../utils/index.js", () => ({
+  validateFile: mockValidateFile,
 }));
 
 import { handleMeetingInput } from "./meeting.handler.js";
@@ -18,6 +23,7 @@ describe("handleMeetingInput", () => {
 
   describe("파일 입력 처리", () => {
     it(".txt 파일 경로면 파일 읽기", async () => {
+      mockValidateFile.mockReturnValue({ valid: true, absolutePath: "/path/to/meeting.txt" });
       mockReadFile.mockResolvedValue("회의 녹취록 내용입니다.");
 
       const result = await handleMeetingInput("/path/to/meeting.txt");
@@ -26,34 +32,40 @@ describe("handleMeetingInput", () => {
         transcript: "회의 녹취록 내용입니다.",
         source: "/path/to/meeting.txt",
       });
+      expect(mockValidateFile).toHaveBeenCalledWith("/path/to/meeting.txt", "document");
       expect(mockReadFile).toHaveBeenCalledWith("/path/to/meeting.txt", "utf-8");
     });
 
     it(".md 파일 경로면 파일 읽기", async () => {
+      const absolutePath = "/Users/test/meeting-notes.md";
+      mockValidateFile.mockReturnValue({ valid: true, absolutePath });
       mockReadFile.mockResolvedValue("# 회의록\n\n내용...");
 
       const result = await handleMeetingInput("./meeting-notes.md");
 
       expect(result).toEqual({
         transcript: "# 회의록\n\n내용...",
-        source: "./meeting-notes.md",
+        source: absolutePath,
       });
-      expect(mockReadFile).toHaveBeenCalledWith("./meeting-notes.md", "utf-8");
+      expect(mockValidateFile).toHaveBeenCalledWith("./meeting-notes.md", "document");
+      expect(mockReadFile).toHaveBeenCalledWith(absolutePath, "utf-8");
     });
 
     it("파일 경로일 때 source 포함", async () => {
+      const absolutePath = "/Users/test/docs/notes.txt";
+      mockValidateFile.mockReturnValue({ valid: true, absolutePath });
       mockReadFile.mockResolvedValue("content");
 
       const result = await handleMeetingInput("/Users/test/docs/notes.txt");
 
-      expect(result.source).toBe("/Users/test/docs/notes.txt");
+      expect(result.source).toBe(absolutePath);
     });
 
-    it("파일 읽기 에러 전파", async () => {
-      mockReadFile.mockRejectedValue(new Error("ENOENT: no such file"));
+    it("파일 검증 에러 전파", async () => {
+      mockValidateFile.mockReturnValue({ valid: false, absolutePath: "/nonexistent.txt", error: "File not found" });
 
       await expect(handleMeetingInput("/nonexistent.txt")).rejects.toThrow(
-        "ENOENT: no such file"
+        "File not found"
       );
     });
   });

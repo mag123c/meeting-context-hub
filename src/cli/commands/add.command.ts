@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import inquirer from "inquirer";
+import { createInterface } from "readline/promises";
 import { createServices } from "../../core/factories.js";
 import { handleMeetingInput } from "../../input/meeting.handler.js";
 import { withSpinner, formatContextMeta, formatMeetingResult } from "../utils/index.js";
@@ -53,18 +53,14 @@ export function createAddCommand(): Command {
         } else if (options.file) {
           input = await services.fileHandler.handle(options.file);
         } else {
-          const answers = await inquirer.prompt([
-            {
-              type: "input",
-              name: "content",
-              message: "Enter your context:",
-            },
-          ]);
-          if (!answers.content) {
+          const rl = createInterface({ input: process.stdin, output: process.stdout });
+          const content = await rl.question("Enter your context: ");
+          rl.close();
+          if (!content) {
             console.log(chalk.yellow("No content provided."));
             return;
           }
-          input = services.textHandler.handle(answers.content);
+          input = services.textHandler.handle(content);
         }
 
         if (options.project) input.project = options.project;

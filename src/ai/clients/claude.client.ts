@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { readFile } from "fs/promises";
 import type { Prompt } from "../../types/prompt.types.js";
 import type { ILLMClient } from "../interfaces/index.js";
+import { AI_CONFIG } from "../../config/constants.js";
 
 export class ClaudeClient implements ILLMClient {
   private client: Anthropic;
@@ -12,8 +13,8 @@ export class ClaudeClient implements ILLMClient {
 
   async complete(prompt: Prompt, input: string): Promise<string> {
     const message = await this.client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      model: AI_CONFIG.DEFAULT_MODEL,
+      max_tokens: AI_CONFIG.MAX_TOKENS,
       system: prompt.system,
       messages: [
         { role: "user", content: prompt.template(input) },
@@ -33,8 +34,8 @@ export class ClaudeClient implements ILLMClient {
     const mediaType = this.getMediaType(imagePath);
 
     const message = await this.client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      model: AI_CONFIG.DEFAULT_MODEL,
+      max_tokens: AI_CONFIG.MAX_TOKENS,
       system: prompt.system,
       messages: [
         {

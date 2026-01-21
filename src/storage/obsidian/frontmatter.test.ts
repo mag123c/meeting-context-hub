@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { contextToMarkdown, markdownToContext, updateFrontmatter } from "./frontmatter.js";
 import type { Context } from "../../types/context.types.js";
 

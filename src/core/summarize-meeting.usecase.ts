@@ -5,7 +5,7 @@ import type { Meeting, MeetingSummary, CreateMeetingInput } from "../types/meeti
 import { MeetingSummarySchema } from "../types/meeting.schema.js";
 import { meetingSummaryPrompt } from "../ai/prompts/meeting-summary.prompt.js";
 import { taggingPrompt } from "../ai/prompts/tagging.prompt.js";
-import { extractJsonFromMarkdown, safeJsonParse, addRelatedLinks } from "../utils/index.js";
+import { extractJsonFromMarkdown, safeJsonParse, addRelatedLinks, formatMeetingMarkdown } from "../utils/index.js";
 
 export interface SummarizeMeetingDeps {
   llmClient: ILLMClient;
@@ -50,7 +50,7 @@ export class SummarizeMeetingUseCase {
     };
 
     // 6. Save to Obsidian (markdown format)
-    const markdownContent = this.formatMeetingMarkdown(meeting, project, sprint);
+    const markdownContent = formatMeetingMarkdown(meeting, { project, sprint });
     await contextRepository.save({
       id: meeting.id,
       type: "text",
@@ -84,69 +84,5 @@ export class SummarizeMeetingUseCase {
   private buildEmbeddingText(summary: MeetingSummary): string {
     const keyPointsText = summary.keyPoints.join(" ");
     return `${summary.title} ${summary.summary} ${keyPointsText}`;
-  }
-
-  private formatMeetingMarkdown(meeting: Meeting, project?: string, sprint?: string): string {
-    const { summary } = meeting;
-    const lines: string[] = [];
-
-    lines.push("# " + summary.title);
-    lines.push("");
-
-    if (summary.date) {
-      lines.push("**일시**: " + summary.date);
-    }
-    if (summary.participants.length > 0) {
-      lines.push("**참석자**: " + summary.participants.join(", "));
-    }
-    if (project) {
-      lines.push("**프로젝트**: " + project);
-    }
-    if (sprint) {
-      lines.push("**스프린트**: " + sprint);
-    }
-    lines.push("");
-
-    lines.push("## 📋 회의 요약");
-    lines.push(summary.summary);
-    lines.push("");
-
-    if (summary.decisions.length > 0) {
-      lines.push("## 🎯 핵심 결정사항");
-      summary.decisions.forEach((d) => lines.push("- " + d));
-      lines.push("");
-    }
-
-    if (summary.actionItems.length > 0) {
-      lines.push("## ✅ Action Items");
-      lines.push("| 할 일 | 담당자 | 기한 |");
-      lines.push("|-------|--------|------|");
-      summary.actionItems.forEach((item) => {
-        const assignee = item.assignee || "-";
-        const deadline = item.deadline || "-";
-        lines.push("| " + item.task + " | " + assignee + " | " + deadline + " |");
-      });
-      lines.push("");
-    }
-
-    if (summary.keyPoints.length > 0) {
-      lines.push("## 💡 주요 논의 포인트");
-      summary.keyPoints.forEach((p) => lines.push("- " + p));
-      lines.push("");
-    }
-
-    if (summary.openIssues.length > 0) {
-      lines.push("## ❓ 미해결 이슈");
-      summary.openIssues.forEach((i) => lines.push("- " + i));
-      lines.push("");
-    }
-
-    if (summary.nextSteps.length > 0) {
-      lines.push("## 📅 다음 단계");
-      summary.nextSteps.forEach((s) => lines.push("- " + s));
-      lines.push("");
-    }
-
-    return lines.join("\n");
   }
 }

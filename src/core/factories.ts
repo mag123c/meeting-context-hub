@@ -71,3 +71,10 @@ export function getServices(): AppServices {
   }
   return services;
 }
+
+/**
+ * Reset services (for testing purposes)
+ */
+export function resetServices(): void {
+  services = null;
+}
