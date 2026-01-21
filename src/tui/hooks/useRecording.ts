@@ -14,8 +14,8 @@ export interface UseRecordingResult {
   transcribedChunks: number;
   totalChunks: number;
   startRecording: () => void;
-  stopRecording: () => void;
-  transcribe: () => Promise<CreateContextInput>;
+  stopRecording: () => string[]; // Returns paths for immediate use
+  transcribe: (paths?: string[]) => Promise<CreateContextInput>;
   cancel: () => Promise<void>;
   cleanup: () => Promise<void>;
 }
@@ -75,8 +75,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     }
   }, [handler]);
 
-  const stopRecording = useCallback(() => {
-    if (!controllerRef.current) return;
+  const stopRecording = useCallback((): string[] => {
+    if (!controllerRef.current) return [];
 
     setState("stopping");
     clearTimer();
@@ -87,27 +87,33 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
       controllerRef.current = null;
       setChunkPaths(paths);
       setTotalChunks(paths.length);
+      return paths; // Return paths directly for immediate use
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to stop recording");
       setState("idle");
+      return [];
     }
   }, [clearTimer]);
 
-  const transcribe = useCallback(async (): Promise<CreateContextInput> => {
-    if (chunkPaths.length === 0) {
+  const transcribe = useCallback(async (paths?: string[]): Promise<CreateContextInput> => {
+    // Use provided paths or fall back to state (paths param avoids React state timing issue)
+    const pathsToTranscribe = paths || chunkPaths;
+
+    if (pathsToTranscribe.length === 0) {
       throw new Error("No recording to transcribe");
     }
 
     setState("processing");
     setTranscribedChunks(0);
+    setTotalChunks(pathsToTranscribe.length);
 
     try {
       // Custom transcription with progress tracking
       const transcriptions: string[] = [];
 
-      for (let i = 0; i < chunkPaths.length; i++) {
+      for (let i = 0; i < pathsToTranscribe.length; i++) {
         setTranscribedChunks(i + 1);
-        const result = await handler.transcribe([chunkPaths[i]]);
+        const result = await handler.transcribe([pathsToTranscribe[i]]);
         if (result.content.trim()) {
           transcriptions.push(result.content.trim());
         }

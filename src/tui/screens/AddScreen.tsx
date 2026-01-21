@@ -57,9 +57,9 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
           recording.startRecording();
         } else if (recording.state === "recording") {
           void (async () => {
-            recording.stopRecording();
+            const paths = recording.stopRecording(); // Get paths directly (avoids React state timing issue)
             try {
-              const transcriptionResult = await recording.transcribe();
+              const transcriptionResult = await recording.transcribe(paths);
               setFormData((prev) => ({ ...prev, content: transcriptionResult.content }));
               setStep("project");
             } catch {
