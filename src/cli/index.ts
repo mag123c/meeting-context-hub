@@ -2,12 +2,19 @@
 
 import { Command } from "commander";
 import chalk from "chalk";
+import updateNotifier from "update-notifier";
+import { createRequire } from "module";
 import {
   createAddCommand,
   createSearchCommand,
   createListCommand,
   createConfigCommand,
 } from "./commands/index.js";
+
+// 업데이트 알림 체크 (비동기, 논블로킹)
+const require = createRequire(import.meta.url);
+const pkg = require("../../package.json");
+updateNotifier({ pkg }).notify();
 
 // TUI 모드: 인자 없이 실행 시 (mch)
 if (process.argv.length === 2) {
@@ -19,7 +26,7 @@ if (process.argv.length === 2) {
   program
     .name("mch")
     .description("Meeting Context Hub - CLI tool for managing contexts with Obsidian")
-    .version("1.0.0");
+    .version(pkg.version);
 
   program.addCommand(createAddCommand());
   program.addCommand(createSearchCommand());
