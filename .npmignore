@@ -1,0 +1,26 @@
+# Source
+src/
+
+# Config
+.env*
+.claude/
+tsconfig.json
+eslint.config.mjs
+vitest.config.ts
+
+# Dev
+node_modules/
+coverage/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Test
+**/*.test.ts
+**/*.spec.ts

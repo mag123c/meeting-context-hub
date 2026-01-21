@@ -6,6 +6,31 @@
   "bin": {
     "mch": "./dist/cli/index.js"
   },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "cli",
+    "meeting",
+    "context",
+    "obsidian",
+    "ai",
+    "claude",
+    "openai",
+    "whisper",
+    "tui",
+    "productivity"
+  ],
+  "author": "mag123c (https://github.com/mag123c)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mag123c/meeting-context-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mag123c/meeting-context-hub/issues"
+  },
+  "homepage": "https://github.com/mag123c/meeting-context-hub#readme",
   "scripts": {
     "dev": "tsx src/cli/index.ts",
     "build": "tsc",
