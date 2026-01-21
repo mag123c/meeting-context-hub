@@ -19,7 +19,7 @@ export class SummarizeMeetingUseCase {
   async execute(input: CreateMeetingInput): Promise<Meeting> {
     const { llmClient, embeddingClient, contextRepository } = this.deps;
 
-    // 1. 회의록 요약 + 태그 병렬 추출
+    // 1. Extract meeting summary + tags in parallel
     const [summaryResponse, tagResponse] = await Promise.all([
       llmClient.complete(meetingSummaryPrompt, input.transcript),
       llmClient.complete(taggingPrompt, input.transcript),
@@ -29,15 +29,15 @@ export class SummarizeMeetingUseCase {
     const parsed = safeJsonParse(tagResponse, { tags: [] });
     const tags: string[] = Array.isArray(parsed) ? parsed : (parsed.tags || []);
 
-    // 2. project/sprint 결정: CLI 옵션 > AI 추출
+    // 2. Determine project/sprint: CLI option > AI extraction
     const project = input.project || (meetingSummary.project ?? undefined);
     const sprint = input.sprint || (meetingSummary.sprint ?? undefined);
 
-    // 3. 임베딩 생성 (요약 텍스트 기반)
+    // 3. Generate embedding (based on summary text)
     const embeddingText = this.buildEmbeddingText(meetingSummary);
     const embedding = await embeddingClient.embed(embeddingText);
 
-    // 5. Meeting 객체 생성
+    // 5. Create Meeting object
     const now = new Date();
     const meeting: Meeting = {
       id: randomUUID(),
@@ -49,7 +49,7 @@ export class SummarizeMeetingUseCase {
       updatedAt: now,
     };
 
-    // 6. Obsidian에 저장 (마크다운 형식)
+    // 6. Save to Obsidian (markdown format)
     const markdownContent = this.formatMeetingMarkdown(meeting, project, sprint);
     await contextRepository.save({
       id: meeting.id,
@@ -65,7 +65,7 @@ export class SummarizeMeetingUseCase {
       updatedAt: now,
     });
 
-    // 7. 관련 문서 링크 추가 (유사도 60% 이상, 최대 5개)
+    // 7. Add related document links (60%+ similarity, max 5)
     await addRelatedLinks(contextRepository, meeting.id, embedding);
 
     return meeting;

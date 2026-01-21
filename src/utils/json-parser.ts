@@ -1,11 +1,11 @@
 /**
- * JSON 파싱 유틸리티
- * - 마크다운 코드블록 제거
- * - 메타데이터 파싱 (tags, project, sprint)
+ * JSON parsing utilities
+ * - Remove markdown code blocks
+ * - Parse metadata (tags, project, sprint)
  */
 
 /**
- * 마크다운 코드블록에서 JSON 추출
+ * Extract JSON from markdown code block
  */
 export function extractJsonFromMarkdown(text: string): string {
   let cleaned = text.trim();
@@ -27,15 +27,15 @@ export interface ParsedMetadata {
 }
 
 /**
- * AI 응답에서 메타데이터 파싱 (tags, project, sprint)
- * - 객체 형식: { tags: [...], project: "...", sprint: "..." }
- * - 배열 형식 폴백: ["tag1", "tag2"]
+ * Parse metadata from AI response (tags, project, sprint)
+ * - Object format: { tags: [...], project: "...", sprint: "..." }
+ * - Array format fallback: ["tag1", "tag2"]
  */
 export function parseMetadata(json: string): ParsedMetadata {
   try {
     const cleaned = extractJsonFromMarkdown(json);
 
-    // 객체 형식 시도
+    // Try object format
     const objectMatch = cleaned.match(/\{[\s\S]*\}/);
     if (objectMatch) {
       const parsed = JSON.parse(objectMatch[0]);
@@ -48,7 +48,7 @@ export function parseMetadata(json: string): ParsedMetadata {
       };
     }
 
-    // 배열 형식 폴백
+    // Array format fallback
     const arrayMatch = cleaned.match(/\[[\s\S]*?\]/);
     if (arrayMatch) {
       const parsed = JSON.parse(arrayMatch[0]);
@@ -66,7 +66,7 @@ export function parseMetadata(json: string): ParsedMetadata {
 }
 
 /**
- * 안전한 JSON 파싱 (실패 시 폴백 반환)
+ * Safe JSON parse (returns fallback on failure)
  */
 export function safeJsonParse<T>(json: string, fallback: T): T {
   try {

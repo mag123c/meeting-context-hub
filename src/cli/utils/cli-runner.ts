@@ -7,7 +7,7 @@ export interface RunnerOptions {
 }
 
 /**
- * CLI 명령어의 공통 에러 처리 및 스피너 관리
+ * Common error handling and spinner management for CLI commands
  */
 export async function withSpinner<T>(
   fn: (spinner: Ora) => Promise<T>,
@@ -30,7 +30,7 @@ export async function withSpinner<T>(
 }
 
 /**
- * 에러 메시지 출력 후 종료 (스피너 없이)
+ * Print error message and exit (without spinner)
  */
 export function exitWithError(message: string): never {
   console.error(chalk.red(message));

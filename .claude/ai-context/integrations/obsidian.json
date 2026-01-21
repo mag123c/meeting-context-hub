@@ -4,7 +4,7 @@
   "integration": {
     "name": "Obsidian",
     "type": "local_storage",
-    "description": "로컬 Obsidian Vault에 마크다운 파일 저장"
+    "description": "Store markdown files in local Obsidian Vault"
   },
   "config": {
     "vault_path": {
@@ -24,8 +24,8 @@
     },
     "contexts": {
       "naming": "{sanitized-summary}_{short_id}.md",
-      "naming_description": "summary 기반 파일명 + 충돌 방지용 short_id (UUID 앞 8자)",
-      "naming_example": "회의록-요약-테스트_a1b2c3d4.md",
+      "naming_description": "Summary-based filename + collision-preventing short_id (first 8 chars of UUID)",
+      "naming_example": "meeting-summary-test_a1b2c3d4.md",
       "sanitization": {
         "remove_special_chars": "<>:\"/\\|?*",
         "space_to_hyphen": true,
@@ -38,15 +38,15 @@
   },
   "operations": {
     "write": {
-      "description": "마크다운 파일 생성/덮어쓰기",
+      "description": "Create/overwrite markdown file",
       "implementation": "storage/obsidian/context.obsidian.ts"
     },
     "read": {
-      "description": "마크다운 파일 읽기",
+      "description": "Read markdown file",
       "implementation": "storage/obsidian/context.obsidian.ts"
     },
     "list": {
-      "description": "폴더 내 파일 목록",
+      "description": "List files in folder",
       "implementation": "storage/obsidian/context.obsidian.ts"
     }
   }

@@ -2,56 +2,56 @@ import type { Context, ListOptions, ContextWithSimilarity } from "../types/conte
 
 /**
  * Context Repository Interface
- * Infrastructure Layer에서 구현체 제공
+ * Implementation provided by Infrastructure Layer
  */
 export interface ContextRepository {
   /**
-   * Context를 저장하고 ID를 반환합니다.
+   * Save a context and return its ID
    */
   save(context: Context): Promise<string>;
 
   /**
-   * ID로 Context를 조회합니다.
+   * Find a context by ID
    */
   findById(id: string): Promise<Context | null>;
 
   /**
-   * 태그로 Context를 조회합니다.
+   * Find contexts by tags
    */
   findByTags(tags: string[]): Promise<Context[]>;
 
   /**
-   * 임베딩 유사도로 Context를 검색합니다.
+   * Find similar contexts by embedding similarity
    */
   findSimilar(embedding: number[], limit?: number): Promise<ContextWithSimilarity[]>;
 
   /**
-   * 모든 Context를 조회합니다.
+   * Find all contexts
    */
   findAll(options?: ListOptions): Promise<Context[]>;
 
   /**
-   * Context를 삭제합니다.
+   * Delete a context
    */
   delete(id: string): Promise<void>;
 
   /**
-   * Context의 태그를 업데이트합니다.
+   * Update context tags
    */
   updateTags(id: string, tags: string[]): Promise<void>;
 
   /**
-   * Context의 임베딩을 업데이트합니다.
+   * Update context embedding
    */
   updateEmbedding(id: string, embedding: number[]): Promise<void>;
 
   /**
-   * ID로 파일명을 조회합니다 (Obsidian 링크용).
+   * Get filename by ID (for Obsidian links)
    */
   getFileNameById(id: string): Promise<string | null>;
 
   /**
-   * 관련 문서 링크를 추가합니다.
+   * Append related document links
    */
   appendRelatedLinks(id: string, relatedIds: string[]): Promise<void>;
 }
