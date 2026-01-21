@@ -180,6 +180,8 @@ export const ko: Translations = {
     apiKeysNotConfigured: "API 키가 설정되지 않았을 수 있습니다.",
     selectConfigHint: "메인 메뉴에서 \"설정\"을 선택하여 API 키를 설정하세요",
     configErrorTitle: "설정 오류",
+    unexpectedError: "예기치 않은 오류",
+    pressQToExit: "[q]를 눌러 종료",
   },
   recording: {
     error: "오류:",
@@ -192,6 +194,8 @@ export const ko: Translations = {
     stopping: "중지 중...",
     transcribing: "오디오 변환 중...",
     processingChunk: "청크 처리 중 {current}/{total}",
+    dependencyMissing: "녹음 불가 - {binary} 미설치",
+    installWith: "설치 명령:",
   },
   contextCard: {
     tags: "태그:",

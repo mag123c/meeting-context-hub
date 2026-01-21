@@ -3,5 +3,6 @@ export { Spinner } from "./Spinner.js";
 export { Menu, type MenuItem } from "./Menu.js";
 export { KeyHint, KeyHintBar, type KeyBinding } from "./KeyHint.js";
 export { ErrorBanner } from "./ErrorBanner.js";
+export { ErrorBoundary } from "./ErrorBoundary.js";
 export { ContextCard, ContextList } from "./ContextCard.js";
 export { RecordingIndicator } from "./RecordingIndicator.js";

@@ -34,10 +34,24 @@ export function RecordingIndicator({
   const { t } = useTranslation();
 
   if (error) {
+    const isDependencyError =
+      error.includes("sox") || error.includes("arecord");
     return (
       <Box flexDirection="column">
-        <Text color="red">{t.recording.error} {error}</Text>
-        <Text dimColor>{t.common.pressEscToGoBack}</Text>
+        <Text color="red">
+          {t.recording.error} {error}
+        </Text>
+        {isDependencyError && (
+          <Box marginTop={1} flexDirection="column">
+            <Text>{t.recording.installWith}</Text>
+            <Text dimColor>macOS: brew install sox</Text>
+            <Text dimColor>Linux: sudo apt install alsa-utils</Text>
+            <Text dimColor>Windows: choco install sox.portable</Text>
+          </Box>
+        )}
+        <Box marginTop={1}>
+          <Text dimColor>{t.common.pressEscToGoBack}</Text>
+        </Box>
       </Box>
     );
   }

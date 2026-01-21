@@ -180,6 +180,8 @@ export const en: Translations = {
     apiKeysNotConfigured: "API keys may not be configured.",
     selectConfigHint: "Select \"Config\" from main menu to set API keys",
     configErrorTitle: "Configuration Error",
+    unexpectedError: "Unexpected Error",
+    pressQToExit: "Press [q] to exit",
   },
   recording: {
     error: "Error:",
@@ -192,6 +194,8 @@ export const en: Translations = {
     stopping: "Stopping...",
     transcribing: "Transcribing audio...",
     processingChunk: "Processing chunk {current}/{total}",
+    dependencyMissing: "Recording unavailable - {binary} not installed",
+    installWith: "Install with:",
   },
   contextCard: {
     tags: "Tags:",

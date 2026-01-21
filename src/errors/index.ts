@@ -81,3 +81,27 @@ export class APIKeyMissingError extends MCHError {
     this.name = "APIKeyMissingError";
   }
 }
+
+/**
+ * Recording dependency missing error
+ */
+export type RecordingOS = "macos" | "windows" | "linux";
+export type RecordingBinary = "sox" | "arecord";
+
+export class RecordingDependencyError extends MCHError {
+  constructor(
+    public readonly binary: RecordingBinary,
+    public readonly os: RecordingOS
+  ) {
+    const instructions: Record<RecordingOS, string> = {
+      macos: "brew install sox",
+      windows: "choco install sox.portable",
+      linux: "sudo apt install alsa-utils",
+    };
+    super(
+      `Recording requires ${binary}. Install: ${instructions[os]}`,
+      "RECORDING_DEPENDENCY_MISSING"
+    );
+    this.name = "RecordingDependencyError";
+  }
+}

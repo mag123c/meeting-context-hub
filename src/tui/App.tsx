@@ -10,7 +10,7 @@ import { SearchScreen } from "./screens/SearchScreen.js";
 import { ListScreen } from "./screens/ListScreen.js";
 import { DetailScreen } from "./screens/DetailScreen.js";
 import { ConfigScreen } from "./screens/ConfigScreen.js";
-import { Header, KeyHintBar } from "./components/index.js";
+import { Header, KeyHintBar, ErrorBoundary } from "./components/index.js";
 
 export type Screen = "main" | "add" | "search" | "list" | "detail" | "config";
 
@@ -178,8 +178,10 @@ function AppContent() {
 
 export function App() {
   return (
-    <I18nProvider>
-      <AppContent />
-    </I18nProvider>
+    <ErrorBoundary>
+      <I18nProvider>
+        <AppContent />
+      </I18nProvider>
+    </ErrorBoundary>
   );
 }

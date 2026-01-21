@@ -184,6 +184,8 @@ export interface Translations {
     apiKeysNotConfigured: string;
     selectConfigHint: string;
     configErrorTitle: string;
+    unexpectedError: string;
+    pressQToExit: string;
   };
   recording: {
     error: string;
@@ -196,6 +198,8 @@ export interface Translations {
     stopping: string;
     transcribing: string;
     processingChunk: string;
+    dependencyMissing: string;
+    installWith: string;
   };
   contextCard: {
     tags: string;

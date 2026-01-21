@@ -1,16 +1,44 @@
 import { createWriteStream, unlink, statSync } from "fs";
-import { tmpdir } from "os";
+import { execSync } from "child_process";
+import { tmpdir, platform } from "os";
 import { join } from "path";
 import mic from "mic";
 import type { WriteStream } from "fs";
 import type { Readable } from "stream";
 import type { WhisperClient } from "../ai/clients/whisper.client.js";
 import type { CreateContextInput } from "../types/context.types.js";
+import {
+  RecordingDependencyError,
+  type RecordingBinary,
+  type RecordingOS,
+} from "../errors/index.js";
 
 // 10 minutes per chunk (safe margin under 25MB Whisper limit)
 const CHUNK_DURATION_MS = 10 * 60 * 1000;
 // Check interval for chunk rotation
 const CHECK_INTERVAL_MS = 1000;
+
+/**
+ * Get recording binary and OS for current platform
+ */
+function getRecordingBinary(): { binary: RecordingBinary; os: RecordingOS } {
+  const p = platform();
+  if (p === "linux") return { binary: "arecord", os: "linux" };
+  return { binary: "sox", os: p === "darwin" ? "macos" : "windows" };
+}
+
+/**
+ * Check if a binary is available in PATH
+ */
+function isBinaryAvailable(binary: string): boolean {
+  try {
+    const cmd = platform() === "win32" ? `where ${binary}` : `which ${binary}`;
+    execSync(cmd, { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export interface RecordingController {
   stop: () => void;
@@ -19,6 +47,8 @@ export interface RecordingController {
 }
 
 export class RecordingHandler {
+  private static checkedAvailable: boolean | null = null;
+
   private micInstance: ReturnType<typeof mic> | null = null;
   private outputStream: WriteStream | null = null;
   private audioStream: Readable | null = null;
@@ -29,7 +59,36 @@ export class RecordingHandler {
 
   constructor(private whisper: WhisperClient) {}
 
+  /**
+   * Check if recording dependencies are available
+   * Caches the result for subsequent calls
+   */
+  static checkDependency(): {
+    available: boolean;
+    binary: RecordingBinary;
+    os: RecordingOS;
+  } {
+    const { binary, os } = getRecordingBinary();
+    if (this.checkedAvailable === null) {
+      this.checkedAvailable = isBinaryAvailable(binary);
+    }
+    return { available: this.checkedAvailable, binary, os };
+  }
+
+  /**
+   * Reset the cached dependency check (for testing)
+   */
+  static resetDependencyCheck(): void {
+    this.checkedAvailable = null;
+  }
+
   startRecording(): RecordingController {
+    // Check dependency before starting
+    const dep = RecordingHandler.checkDependency();
+    if (!dep.available) {
+      throw new RecordingDependencyError(dep.binary, dep.os);
+    }
+
     this.sessionId = Date.now().toString();
     this.chunkPaths = [];
 
