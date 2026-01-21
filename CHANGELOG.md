@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/mag123c/meeting-context-hub/compare/v1.0.0...v1.1.0) (2026-01-21)
+
+
+### Features
+
+* add AI-powered automatic hierarchy classification system ([647e197](https://github.com/mag123c/meeting-context-hub/commit/647e197516ff6e9a03fab409b69d3ed96d501412))
+* **tui:** add microphone recording with auto-chunking ([96eaf9b](https://github.com/mag123c/meeting-context-hub/commit/96eaf9b580cf29991c8f7acf899aedbc6693543d))
+
 # 1.0.0 (2026-01-21)
 
 
