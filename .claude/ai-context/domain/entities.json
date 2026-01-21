@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "entities": {
     "Squad": {
       "description": "Squad entity - Team/organizational unit",
@@ -178,6 +178,20 @@
       "fields": {
         "name": { "type": "string", "description": "Project name" },
         "categories": { "type": "string[]", "description": "List of category names" }
+      }
+    },
+    "RecordingSession": {
+      "description": "Live microphone recording session (TUI only)",
+      "source": "src/input/recording.handler.ts",
+      "fields": {
+        "sessionId": { "type": "string", "description": "Unique session identifier (timestamp)" },
+        "chunkPaths": { "type": "string[]", "description": "Temporary WAV file paths" },
+        "state": { "type": "enum", "values": ["idle", "recording", "stopping", "processing"], "description": "Recording state machine" }
+      },
+      "behavior": {
+        "autoChunk": "10 minutes per chunk (stays under Whisper 25MB limit)",
+        "transcription": "Sequential Whisper calls, combined into single text",
+        "cleanup": "Temp files deleted after successful transcription"
       }
     }
   },

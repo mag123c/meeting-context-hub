@@ -1,7 +1,7 @@
 import { loadConfig, getObsidianPath, type Config } from "../config/index.js";
 import { ObsidianContextRepository } from "../storage/obsidian/index.js";
 import { ClaudeClient, WhisperClient, EmbeddingClient } from "../ai/index.js";
-import { TextHandler, ImageHandler, AudioHandler, FileHandler } from "../input/index.js";
+import { TextHandler, ImageHandler, AudioHandler, FileHandler, RecordingHandler } from "../input/index.js";
 import { AddContextUseCase } from "./add-context.usecase.js";
 import { SearchContextUseCase } from "./search-context.usecase.js";
 import { SummarizeMeetingUseCase } from "./summarize-meeting.usecase.js";
@@ -18,6 +18,7 @@ export interface AppServices {
   imageHandler: ImageHandler;
   audioHandler: AudioHandler;
   fileHandler: FileHandler;
+  recordingHandler: RecordingHandler;
   addContextUseCase: AddContextUseCase;
   searchContextUseCase: SearchContextUseCase;
   summarizeMeetingUseCase: SummarizeMeetingUseCase;
@@ -41,6 +42,7 @@ export function createServices(): AppServices {
   const imageHandler = new ImageHandler(claude);
   const audioHandler = new AudioHandler(whisper);
   const fileHandler = new FileHandler();
+  const recordingHandler = new RecordingHandler(whisper);
 
   const addContextUseCase = new AddContextUseCase(repository, claude, embedding, hierarchyService);
   const searchContextUseCase = new SearchContextUseCase(repository, embedding);
@@ -62,6 +64,7 @@ export function createServices(): AppServices {
     imageHandler,
     audioHandler,
     fileHandler,
+    recordingHandler,
     addContextUseCase,
     searchContextUseCase,
     summarizeMeetingUseCase,

@@ -3,7 +3,8 @@ import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
-import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, type MenuItem } from "../components/index.js";
+import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, RecordingIndicator, type MenuItem } from "../components/index.js";
+import { useRecording } from "../hooks/index.js";
 import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { ContextType, Context } from "../../types/context.types.js";
@@ -14,10 +15,10 @@ interface AddScreenProps {
   services: AppServices;
 }
 
-type Step = "type" | "content" | "project" | "sprint" | "processing" | "result";
+type Step = "type" | "content" | "recording" | "project" | "sprint" | "processing" | "result";
 
 interface FormData {
-  type: ContextType | "meeting";
+  type: ContextType | "meeting" | "record";
   content: string;
   project: string;
   sprint: string;
@@ -27,6 +28,7 @@ const typeItems: MenuItem[] = [
   { label: "Text", value: "text" },
   { label: "Image (file path)", value: "image" },
   { label: "Audio (file path)", value: "audio" },
+  { label: "Record Audio (microphone)", value: "record" },
   { label: "File (txt, md, csv, json)", value: "file" },
   { label: "Meeting Transcript", value: "meeting" },
 ];
@@ -42,8 +44,41 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
   const [result, setResult] = useState<Context | Meeting | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Handle Esc to go back
+  const recording = useRecording(services.recordingHandler);
+
+  // Handle keyboard input
   useInput((_, key) => {
+    // Handle recording step
+    if (step === "recording") {
+      if (key.return) {
+        if (recording.state === "idle") {
+          recording.startRecording();
+        } else if (recording.state === "recording") {
+          void (async () => {
+            recording.stopRecording();
+            try {
+              const transcriptionResult = await recording.transcribe();
+              setFormData((prev) => ({ ...prev, content: transcriptionResult.content }));
+              setStep("project");
+            } catch {
+              setError(recording.error || "Transcription failed");
+              setStep("result");
+            }
+          })();
+        }
+        return;
+      }
+      if (key.escape) {
+        if (recording.state === "recording" || recording.state === "idle") {
+          void recording.cancel();
+          setStep("type");
+        }
+        return;
+      }
+      return;
+    }
+
+    // Handle Esc for other steps
     if (key.escape) {
       if (step === "type") {
         navigation.goBack();
@@ -62,8 +97,12 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
   });
 
   const handleTypeSelect = useCallback((item: MenuItem) => {
-    setFormData((prev) => ({ ...prev, type: item.value as ContextType | "meeting" }));
-    setStep("content");
+    setFormData((prev) => ({ ...prev, type: item.value as ContextType | "meeting" | "record" }));
+    if (item.value === "record") {
+      setStep("recording");
+    } else {
+      setStep("content");
+    }
   }, []);
 
   const handleContentSubmit = useCallback((value: string) => {
@@ -96,6 +135,12 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         const audioResult = await services.audioHandler.handle(content);
         processedContent = audioResult.content;
         source = audioResult.source;
+      } else if (type === "record") {
+        // Content already transcribed, just use it
+        processedContent = content;
+        source = "microphone-recording";
+        // Clean up temp files after processing
+        await recording.cleanup();
       } else if (type === "file") {
         const fileResult = await services.fileHandler.handle(content);
         processedContent = fileResult.content;
@@ -117,7 +162,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
 
       // For non-meeting types, use add context use case
       const ctx = await services.addContextUseCase.execute({
-        type: type as ContextType,
+        type: type === "record" ? "audio" : (type as ContextType),
         content: processedContent,
         source,
         project: project || undefined,
@@ -130,7 +175,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");
       setStep("result");
     }
-  }, [formData, services]);
+  }, [formData, services, recording]);
 
   const renderStep = () => {
     switch (step) {
@@ -160,6 +205,23 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
                 value={formData.content}
                 onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
                 onSubmit={handleContentSubmit}
+              />
+            </Box>
+          </Box>
+        );
+
+      case "recording":
+        return (
+          <Box flexDirection="column">
+            <Text bold>Record Audio</Text>
+            <Box marginTop={1}>
+              <RecordingIndicator
+                state={recording.state}
+                elapsed={recording.elapsed}
+                chunkCount={recording.chunkCount}
+                transcribedChunks={recording.transcribedChunks}
+                totalChunks={recording.totalChunks}
+                error={recording.error}
               />
             </Box>
           </Box>
@@ -292,6 +354,23 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     if (step === "processing") {
       return [];
     }
+    if (step === "recording") {
+      if (recording.state === "idle") {
+        return [
+          { key: "Enter", description: "Start Recording" },
+          { key: "Esc", description: "Back" },
+        ];
+      }
+      if (recording.state === "recording") {
+        return [
+          { key: "Enter", description: "Stop Recording" },
+          { key: "Esc", description: "Cancel" },
+        ];
+      }
+      if (recording.state === "processing" || recording.state === "stopping") {
+        return [];
+      }
+    }
     return [
       { key: "Enter", description: "Submit" },
       { key: "Esc", description: "Back" },
@@ -302,7 +381,9 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     <Box flexDirection="column">
       <Header title="Add Context" breadcrumb={["Main", "Add"]} />
       {renderStep()}
-      {step !== "processing" && <KeyHintBar bindings={getKeyBindings()} />}
+      {step !== "processing" && !(step === "recording" && (recording.state === "processing" || recording.state === "stopping")) && (
+        <KeyHintBar bindings={getKeyBindings()} />
+      )}
     </Box>
   );
 }

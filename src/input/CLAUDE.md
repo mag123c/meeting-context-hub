@@ -10,6 +10,7 @@ Input handlers for different content types (text, image, audio, file, meeting).
 | `text.handler.ts` | Plain text input |
 | `image.handler.ts` | Image analysis (Claude Vision) |
 | `audio.handler.ts` | Audio transcription (Whisper) |
+| `recording.handler.ts` | Live microphone recording (Whisper) |
 | `file.handler.ts` | File content (txt, md, csv, json) |
 | `meeting.handler.ts` | Meeting transcript processing |
 
@@ -22,6 +23,22 @@ interface InputHandler<TOutput> {
 ```
 
 All handlers implement this interface for consistency.
+
+## Recording Handler
+
+`RecordingHandler` supports live microphone recording with auto-chunking:
+
+- **Auto-chunk**: 10-minute chunks (stays under Whisper 25MB limit)
+- **Unlimited duration**: No time limit for recording
+- **Sequential transcription**: Chunks processed one by one, combined into single text
+
+```typescript
+const controller = handler.startRecording();
+// ... recording ...
+controller.stop();
+const result = await handler.transcribe(controller.getChunkPaths());
+await handler.cleanup(chunkPaths);
+```
 
 ## Security
 

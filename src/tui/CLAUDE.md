@@ -24,6 +24,16 @@ Interactive TUI using ink (React for CLI).
 | `Spinner` | Loading state |
 | `KeyHint`, `KeyHintBar` | Keyboard shortcuts |
 | `ContextCard`, `ContextList` | Context display |
+| `RecordingIndicator` | Recording state + timer + chunk progress |
+
+## Hooks
+
+| Hook | Purpose |
+|------|---------|
+| `useServices` | Access AppServices |
+| `useAsyncAction` | Async state management |
+| `useNavigation` | Screen navigation |
+| `useRecording` | Recording state, timer, chunk tracking |
 
 ## Screens
 
