@@ -67,3 +67,17 @@ export class ConfigError extends MCHError {
     this.name = "ConfigError";
   }
 }
+
+/**
+ * API 키 누락 에러
+ */
+export class APIKeyMissingError extends MCHError {
+  constructor(public readonly provider: "anthropic" | "openai") {
+    const envKey = provider === "anthropic" ? "ANTHROPIC_API_KEY" : "OPENAI_API_KEY";
+    super(
+      `${provider.toUpperCase()} API key not configured. Run: mch config set ${envKey} <key>`,
+      "API_KEY_MISSING"
+    );
+    this.name = "APIKeyMissingError";
+  }
+}
