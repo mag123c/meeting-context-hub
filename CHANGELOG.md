@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/mag123c/meeting-context-hub/compare/v1.1.0...v1.1.1) (2026-01-21)
+
+
+### Bug Fixes
+
+* **ci:** add stat mock and require CI success for release ([6b0c26d](https://github.com/mag123c/meeting-context-hub/commit/6b0c26d8859da8900d25f9085d6d5e9dd16e0fc6))
+
 # [1.1.0](https://github.com/mag123c/meeting-context-hub/compare/v1.0.0...v1.1.0) (2026-01-21)
 
 
