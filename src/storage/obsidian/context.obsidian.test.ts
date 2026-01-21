@@ -8,6 +8,7 @@ const {
   mockReaddir,
   mockUnlink,
   mockMkdir,
+  mockStat,
   mockExistsSync,
   mockContextToMarkdown,
   mockMarkdownToContext,
@@ -21,6 +22,7 @@ const {
   mockReaddir: vi.fn(),
   mockUnlink: vi.fn(),
   mockMkdir: vi.fn(),
+  mockStat: vi.fn(),
   mockExistsSync: vi.fn(),
   mockContextToMarkdown: vi.fn(),
   mockMarkdownToContext: vi.fn(),
@@ -36,6 +38,7 @@ vi.mock("fs/promises", () => ({
   readdir: mockReaddir,
   unlink: mockUnlink,
   mkdir: mockMkdir,
+  stat: mockStat,
 }));
 
 vi.mock("fs", () => ({
@@ -74,6 +77,8 @@ describe("ObsidianContextRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockExistsSync.mockReturnValue(true);
+    // Default: all entries are files, not directories
+    mockStat.mockResolvedValue({ isDirectory: () => false });
     repository = new ObsidianContextRepository(basePath);
   });
 
