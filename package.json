@@ -44,7 +44,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "chalk": "^5.4.1",
-    "commander": "^13.1.0",
+    "commander": "^14.0.2",
     "dotenv": "^17.2.3",
     "gray-matter": "^4.0.3",
     "ink": "^6.6.0",
