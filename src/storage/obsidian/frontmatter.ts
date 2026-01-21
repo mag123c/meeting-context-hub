@@ -24,7 +24,7 @@ export function contextToMarkdown(context: Context): string {
     updatedAt: context.updatedAt.toISOString(),
   };
 
-  // undefined 값은 제외
+  // Exclude undefined values
   if (context.source) {
     frontmatter.source = context.source;
   }

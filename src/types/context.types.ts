@@ -11,9 +11,9 @@ export interface Context {
   summary: string;
   tags: string[];
   embedding?: number[];
-  source?: string; // 원본 파일 경로 (image, audio, file)
-  project?: string; // 프로젝트 이름
-  sprint?: string; // 스프린트 식별자
+  source?: string;  // Original file path (image, audio, file)
+  project?: string; // Project name
+  sprint?: string;  // Sprint identifier
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,9 +22,9 @@ export interface CreateContextInput {
   type: ContextType;
   content: string;
   source?: string;
-  tags?: string[]; // 이미지 분석 시 미리 추출된 태그
-  project?: string; // 프로젝트 이름
-  sprint?: string; // 스프린트 식별자
+  tags?: string[];   // Pre-extracted tags from image analysis
+  project?: string;  // Project name
+  sprint?: string;   // Sprint identifier
 }
 
 export interface ContextWithSimilarity extends Context {
@@ -34,8 +34,8 @@ export interface ContextWithSimilarity extends Context {
 export interface ListOptions {
   tags?: string[];
   type?: ContextType;
-  project?: string; // 프로젝트 필터
-  sprint?: string; // 스프린트 필터
+  project?: string;  // Project filter
+  sprint?: string;   // Sprint filter
   limit?: number;
   offset?: number;
 }

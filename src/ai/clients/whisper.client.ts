@@ -13,7 +13,7 @@ export class WhisperClient implements ITranscriptionClient {
     const response = await this.client.audio.transcriptions.create({
       file: createReadStream(audioPath),
       model: "whisper-1",
-      language: "ko", // 한국어 우선
+      language: "ko", // Korean preferred
     });
     return response.text;
   }

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "commands": {
+    "dev": {
+      "command": "pnpm dev",
+      "description": "Run in development mode (tsx)"
+    },
+    "build": {
+      "command": "pnpm build",
+      "description": "TypeScript build"
+    },
+    "lint": {
+      "command": "pnpm lint",
+      "description": "ESLint check"
+    },
+    "lint_fix": {
+      "command": "pnpm lint --fix",
+      "description": "ESLint auto-fix"
+    },
+    "test": {
+      "command": "pnpm test",
+      "description": "Run tests"
+    },
+    "start": {
+      "command": "pnpm start",
+      "description": "Run built CLI"
+    }
+  },
+  "testLocations": {
+    "pattern": "src/**/__tests__/*.test.ts",
+    "structure": "Tests are colocated with source files in __tests__ directories"
+  },
+  "verification": {
+    "before_commit": [
+      "pnpm build",
+      "pnpm lint"
+    ],
+    "description": "Run build and lint before every commit. Use /verify skill."
+  },
+  "environment": {
+    "required_keys": [
+      {
+        "key": "ANTHROPIC_API_KEY",
+        "source": "macOS Keychain or .env.local",
+        "purpose": "Claude API access"
+      },
+      {
+        "key": "OPENAI_API_KEY",
+        "source": "macOS Keychain or .env.local",
+        "purpose": "Embeddings and Whisper"
+      }
+    ],
+    "optional_keys": [
+      {
+        "key": "OBSIDIAN_VAULT_PATH",
+        "default": "~/Library/Mobile Documents/iCloud~md~obsidian/Documents",
+        "purpose": "Obsidian vault location"
+      },
+      {
+        "key": "MCH_FOLDER",
+        "default": "mch",
+        "purpose": "Folder name within vault"
+      }
+    ]
+  }
+}

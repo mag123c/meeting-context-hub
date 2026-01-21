@@ -1,6 +1,6 @@
 /**
- * MCH 기본 에러 클래스
- * 모든 커스텀 에러의 베이스
+ * MCH base error class
+ * Base for all custom errors
  */
 export class MCHError extends Error {
   constructor(
@@ -13,7 +13,7 @@ export class MCHError extends Error {
 }
 
 /**
- * 리소스를 찾을 수 없을 때
+ * Resource not found error
  */
 export class NotFoundError extends MCHError {
   constructor(resource: string, id?: string) {
@@ -26,7 +26,7 @@ export class NotFoundError extends MCHError {
 }
 
 /**
- * 입력 검증 실패
+ * Input validation failed
  */
 export class ValidationError extends MCHError {
   constructor(message: string) {
@@ -36,7 +36,7 @@ export class ValidationError extends MCHError {
 }
 
 /**
- * AI 클라이언트 에러
+ * AI client error
  */
 export class AIClientError extends MCHError {
   constructor(
@@ -49,7 +49,7 @@ export class AIClientError extends MCHError {
 }
 
 /**
- * 파일 시스템 에러
+ * File system error
  */
 export class FileSystemError extends MCHError {
   constructor(message: string, public readonly path: string) {
@@ -59,7 +59,7 @@ export class FileSystemError extends MCHError {
 }
 
 /**
- * 설정 에러
+ * Configuration error
  */
 export class ConfigError extends MCHError {
   constructor(message: string) {
@@ -69,7 +69,7 @@ export class ConfigError extends MCHError {
 }
 
 /**
- * API 키 누락 에러
+ * API key missing error
  */
 export class APIKeyMissingError extends MCHError {
   constructor(public readonly provider: "anthropic" | "openai") {

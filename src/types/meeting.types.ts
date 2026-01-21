@@ -14,8 +14,8 @@ export interface MeetingSummary {
   keyPoints: string[];
   openIssues: string[];
   nextSteps: string[];
-  project?: string | null; // AI가 추출한 프로젝트명
-  sprint?: string | null;  // AI가 추출한 스프린트명
+  project?: string | null;  // AI-extracted project name
+  sprint?: string | null;   // AI-extracted sprint name
 }
 
 export interface Meeting {
@@ -31,6 +31,6 @@ export interface Meeting {
 export interface CreateMeetingInput {
   transcript: string;
   source?: string;
-  project?: string; // 프로젝트 이름
-  sprint?: string; // 스프린트 식별자
+  project?: string;  // Project name
+  sprint?: string;   // Sprint identifier
 }

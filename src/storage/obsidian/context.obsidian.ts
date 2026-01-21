@@ -17,8 +17,8 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * 파일명 생성: {short-title}_{short-id}.md
-   * 예: PG연동-완료_a64cbac7.md
+   * Generate filename: {short-title}_{short-id}.md
+   * Example: PG-integration-done_a64cbac7.md
    */
   private generateFileName(context: Context): string {
     const shortId = context.id.slice(0, 8);
@@ -27,10 +27,10 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * 요약에서 짧은 제목 추출 (15자 제한)
+   * Extract short title from summary (15 char limit)
    */
   private extractShortTitle(summary: string): string {
-    // 불필요한 조사/어미 제거하고 핵심만
+    // Remove unnecessary particles/endings and extract core
     const cleaned = summary
       .replace(/했습니다|합니다|입니다|됩니다|있습니다/g, "")
       .replace(/[을를이가은는의에서로](?=\s|$)/g, "")
@@ -39,7 +39,7 @@ export class ObsidianContextRepository implements ContextRepository {
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
 
-    // 15자 제한, 단어 중간에서 자르지 않기
+    // 15 char limit, don't cut mid-word
     if (cleaned.length <= 15) return cleaned;
 
     const truncated = cleaned.slice(0, 15);
@@ -53,7 +53,7 @@ export class ObsidianContextRepository implements ContextRepository {
       const title = this.extractShortTitle(summary);
       return join(this.basePath, `${title}_${shortId}.md`);
     }
-    // fallback: UUID 파일명 (구버전 호환)
+    // fallback: UUID filename (legacy compatibility)
     return join(this.basePath, `${id}.md`);
   }
 
@@ -67,11 +67,11 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   async findById(id: string): Promise<Context | null> {
-    // 1. 먼저 전체 파일 스캔해서 frontmatter id로 찾기
+    // 1. First scan all files and find by frontmatter id
     const context = await this.findByIdFromAll(id);
     if (context) return context;
 
-    // 2. fallback: 구버전 UUID 파일명
+    // 2. fallback: legacy UUID filename
     const legacyPath = join(this.basePath, `${id}.md`);
     if (existsSync(legacyPath)) {
       const markdown = await readFile(legacyPath, "utf-8");
@@ -86,7 +86,7 @@ export class ObsidianContextRepository implements ContextRepository {
     const files = await readdir(this.basePath);
     const shortId = id.slice(0, 8);
 
-    // short ID가 포함된 파일 먼저 찾기 (빠른 경로)
+    // Find file containing short ID first (fast path)
     const matchingFile = files.find(f => f.includes(shortId) && f.endsWith(".md"));
     if (matchingFile) {
       const filePath = join(this.basePath, matchingFile);
@@ -95,7 +95,7 @@ export class ObsidianContextRepository implements ContextRepository {
       if (ctx.id === id) return ctx;
     }
 
-    // 전체 스캔 (fallback)
+    // Full scan (fallback)
     for (const file of files.filter(f => f.endsWith(".md"))) {
       const filePath = join(this.basePath, file);
       const markdown = await readFile(filePath, "utf-8");
@@ -160,18 +160,18 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   async delete(id: string): Promise<void> {
-    // ID로 파일 찾기
+    // Find file by ID
     const context = await this.findById(id);
     if (!context) return;
 
-    // 새 파일명 형식
+    // New filename format
     const newPath = this.getFilePath(id, context.summary);
     if (existsSync(newPath)) {
       await unlink(newPath);
       return;
     }
 
-    // 구버전 UUID 파일명
+    // Legacy UUID filename
     const legacyPath = join(this.basePath, `${id}.md`);
     if (existsSync(legacyPath)) {
       await unlink(legacyPath);
@@ -209,13 +209,13 @@ export class ObsidianContextRepository implements ContextRepository {
     const files = await readdir(this.basePath);
     const shortId = id.slice(0, 8);
 
-    // short ID로 빠른 검색
+    // Fast search by short ID
     const matchingFile = files.find(f => f.includes(shortId) && f.endsWith(".md"));
     if (matchingFile) {
       return join(this.basePath, matchingFile);
     }
 
-    // 구버전 UUID 파일명
+    // Legacy UUID filename
     const legacyPath = join(this.basePath, `${id}.md`);
     if (existsSync(legacyPath)) {
       return legacyPath;
@@ -225,7 +225,7 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * ID로 파일명 조회 (확장자 제외, Obsidian 링크용)
+   * Get filename by ID (without extension, for Obsidian links)
    */
   async getFileNameById(id: string): Promise<string | null> {
     const filePath = await this.findFilePathById(id);
@@ -235,13 +235,13 @@ export class ObsidianContextRepository implements ContextRepository {
   }
 
   /**
-   * 관련 문서 섹션 추가
+   * Append related documents section
    */
   async appendRelatedLinks(id: string, relatedIds: string[]): Promise<void> {
     const filePath = await this.findFilePathById(id);
     if (!filePath) return;
 
-    // 관련 문서 파일명 조회
+    // Get related document filenames
     const links: string[] = [];
     for (const relatedId of relatedIds) {
       const fileName = await this.getFileNameById(relatedId);
@@ -252,13 +252,13 @@ export class ObsidianContextRepository implements ContextRepository {
 
     if (links.length === 0) return;
 
-    // 파일에 관련 문서 섹션 추가
+    // Append related documents section to file
     let content = await readFile(filePath, "utf-8");
 
-    // 기존 관련 문서 섹션 제거 (있으면)
+    // Remove existing related documents section (if any)
     content = content.replace(/\n## 관련 문서\n[\s\S]*$/, "");
 
-    // 새 섹션 추가
+    // Add new section
     const relatedSection = `\n## 관련 문서\n${links.join("\n")}\n`;
     content = content.trimEnd() + "\n" + relatedSection;
 

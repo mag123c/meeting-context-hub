@@ -1,12 +1,12 @@
 /**
- * 관련 문서 링크 추가 유틸리티
+ * Related document link utility
  */
 
 import type { ContextRepository } from "../repositories/context.repository.js";
 
 export interface RelatedLinksConfig {
-  threshold?: number; // 유사도 임계값 (기본: 0.6 = 60%)
-  maxLinks?: number;  // 최대 링크 수 (기본: 5)
+  threshold?: number; // Similarity threshold (default: 0.6 = 60%)
+  maxLinks?: number;  // Maximum links (default: 5)
 }
 
 const DEFAULT_CONFIG: Required<RelatedLinksConfig> = {
@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: Required<RelatedLinksConfig> = {
 };
 
 /**
- * 유사한 문서를 찾아 관련 문서 링크 추가
+ * Find similar documents and add related document links
  */
 export async function addRelatedLinks(
   repository: ContextRepository,
@@ -37,6 +37,6 @@ export async function addRelatedLinks(
       await repository.appendRelatedLinks(id, related.map((r) => r.id));
     }
   } catch {
-    // 관련 문서 링크 실패해도 무시
+    // Ignore related document link failures
   }
 }

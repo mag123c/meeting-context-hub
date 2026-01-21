@@ -15,18 +15,18 @@ export class AddContextUseCase {
 
   async execute(input: CreateContextInput): Promise<Context> {
     let tags: string[];
-    let project: string | undefined = input.project; // CLI 옵션 우선
-    let sprint: string | undefined = input.sprint;   // CLI 옵션 우선
+    let project: string | undefined = input.project; // CLI option takes priority
+    let sprint: string | undefined = input.sprint;   // CLI option takes priority
     let summary: string;
     let embeddingVector: number[];
 
-    // 이미지: 태그, 요약 이미 있음 → 임베딩만 호출
+    // Image: tags and summary already extracted → only call embedding
     if (input.tags && input.tags.length > 0) {
       tags = input.tags;
-      summary = input.content; // 이미지는 content가 이미 요약
+      summary = input.content; // Image content is already the summary
       embeddingVector = await this.embedding.embed(input.content);
     } else {
-      // 일반 컨텐츠: 태그/메타데이터, 요약, 임베딩 병렬 호출
+      // Regular content: parallel calls for tags/metadata, summary, embedding
       const [metadataJson, summaryResult, embedding] = await Promise.all([
         this.llm.complete(taggingPrompt, input.content),
         input.type === "image"
@@ -40,7 +40,7 @@ export class AddContextUseCase {
       summary = summaryResult;
       embeddingVector = embedding;
 
-      // CLI 옵션이 없을 때만 AI 추론 결과 사용
+      // Use AI inference only when CLI options not provided
       if (!project) project = metadata.project;
       if (!sprint) sprint = metadata.sprint;
     }
@@ -62,7 +62,7 @@ export class AddContextUseCase {
 
     await this.repository.save(context);
 
-    // 관련 문서 찾아서 링크 추가 (유사도 60% 이상, 최대 5개)
+    // Find similar documents and add related links (60%+ similarity, max 5)
     await addRelatedLinks(this.repository, context.id, context.embedding!);
 
     return context;
