@@ -10,7 +10,8 @@ MCHError (베이스)
 ├── ValidationError
 ├── AIClientError
 ├── FileSystemError
-└── ConfigError
+├── ConfigError
+└── APIKeyMissingError
 ```
 
 ## 각 에러 클래스
@@ -23,6 +24,7 @@ MCHError (베이스)
 | `AIClientError` | `AI_CLIENT_ERROR` | AI API 호출 실패 |
 | `FileSystemError` | `FILE_SYSTEM_ERROR` | 파일 시스템 작업 실패 |
 | `ConfigError` | `CONFIG_ERROR` | 설정 로드/검증 실패 |
+| `APIKeyMissingError` | `API_KEY_MISSING` | API 키 미설정 (anthropic/openai) |
 
 ## 사용 패턴
 
@@ -43,3 +45,4 @@ if (!input.trim()) {
 - 모든 에러는 `code` 필드로 프로그래밍 방식 처리 가능
 - `AIClientError`는 `provider` 필드로 어느 API 실패인지 추적
 - `FileSystemError`는 `path` 필드로 문제 파일 경로 기록
+- `APIKeyMissingError`는 `provider` 필드로 누락된 키 종류 표시 + 설정 명령어 안내
