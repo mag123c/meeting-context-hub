@@ -1,3 +1,19 @@
+# [1.2.0](https://github.com/mag123c/meeting-context-hub/compare/v1.1.1...v1.2.0) (2026-01-21)
+
+
+### Bug Fixes
+
+* **recording:** fix React state timing issue in TUI recording ([a992c17](https://github.com/mag123c/meeting-context-hub/commit/a992c17206b52c93d1621e84951a7a3414822091))
+* remove dotenv dependency and update tests for preflight validation ([c325e06](https://github.com/mag123c/meeting-context-hub/commit/c325e06454184687b6f161221966606900d73e31))
+
+
+### Features
+
+* add pre-flight validation system and comprehensive edge case fixes ([0a39da3](https://github.com/mag123c/meeting-context-hub/commit/0a39da39761590b38c168d3b01187ca69a69ac88))
+* **recording:** add dependency check and TUI error boundary ([059c7ee](https://github.com/mag123c/meeting-context-hub/commit/059c7eea5b65fd085a285f6565ed858402eb1d56))
+* **tui:** add API key guard for screen navigation ([5fcd0da](https://github.com/mag123c/meeting-context-hub/commit/5fcd0da0dcb4e1b96554f82cb7a65db28807d389))
+* **tui:** add i18n system with English and Korean support ([1d3ea18](https://github.com/mag123c/meeting-context-hub/commit/1d3ea18ca4df99f74d2f9bb303b5001f2b6a8061))
+
 ## [1.1.1](https://github.com/mag123c/meeting-context-hub/compare/v1.1.0...v1.1.1) (2026-01-21)
 
 
