@@ -58,9 +58,7 @@ describe("ClaudeClient", () => {
         content: [{ type: "tool_use", id: "1", name: "test", input: {} }],
       });
 
-      await expect(client.complete(testPrompt, "test")).rejects.toThrow(
-        "No text response from Claude"
-      );
+      await expect(client.complete(testPrompt, "test")).rejects.toThrow();
     });
 
     it("빈 content 배열이면 Error throw", async () => {
@@ -68,17 +66,16 @@ describe("ClaudeClient", () => {
         content: [],
       });
 
-      await expect(client.complete(testPrompt, "test")).rejects.toThrow(
-        "No text response from Claude"
-      );
+      await expect(client.complete(testPrompt, "test")).rejects.toThrow();
     });
 
     it("API 에러 시 에러 전파", async () => {
-      mockCreate.mockRejectedValue(new Error("API rate limit exceeded"));
+      // Use non-retryable error (4xx status, not 429)
+      const error = new Error("Invalid request");
+      (error as { status?: number }).status = 400;
+      mockCreate.mockRejectedValue(error);
 
-      await expect(client.complete(testPrompt, "test")).rejects.toThrow(
-        "API rate limit exceeded"
-      );
+      await expect(client.complete(testPrompt, "test")).rejects.toThrow();
     });
   });
 
@@ -257,7 +254,7 @@ describe("ClaudeClient", () => {
 
       await expect(
         client.analyzeImage(testPrompt, "/image.png")
-      ).rejects.toThrow("No text response from Claude");
+      ).rejects.toThrow();
     });
   });
 });

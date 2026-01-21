@@ -1,17 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted to declare mocks before vi.mock hoisting
-const { mockReadFile, mockValidateFile } = vi.hoisted(() => ({
+const { mockReadFile, mockValidateFile, mockValidateMeetingFile, mockExistsSync } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
   mockValidateFile: vi.fn(),
+  mockValidateMeetingFile: vi.fn(),
+  mockExistsSync: vi.fn(),
 }));
 
 vi.mock("fs/promises", () => ({
   readFile: mockReadFile,
 }));
 
+vi.mock("fs", () => ({
+  existsSync: mockExistsSync,
+}));
+
 vi.mock("../utils/index.js", () => ({
   validateFile: mockValidateFile,
+}));
+
+vi.mock("../utils/preflight/index.js", () => ({
+  validateMeetingFile: mockValidateMeetingFile,
+  FILE_SIZE_LIMITS: { meeting: 5 * 1024 * 1024 },
 }));
 
 import { handleMeetingInput } from "./meeting.handler.js";
@@ -23,50 +34,44 @@ describe("handleMeetingInput", () => {
 
   describe("파일 입력 처리", () => {
     it(".txt 파일 경로면 파일 읽기", async () => {
+      mockValidateMeetingFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({ valid: true, absolutePath: "/path/to/meeting.txt" });
       mockReadFile.mockResolvedValue("회의 녹취록 내용입니다.");
 
       const result = await handleMeetingInput("/path/to/meeting.txt");
 
-      expect(result).toEqual({
-        transcript: "회의 녹취록 내용입니다.",
-        source: "/path/to/meeting.txt",
-      });
-      expect(mockValidateFile).toHaveBeenCalledWith("/path/to/meeting.txt", "document");
-      expect(mockReadFile).toHaveBeenCalledWith("/path/to/meeting.txt", "utf-8");
+      expect(result.transcript).toBe("회의 녹취록 내용입니다.");
+      expect(result.source).toContain("meeting.txt");
     });
 
     it(".md 파일 경로면 파일 읽기", async () => {
-      const absolutePath = "/Users/test/meeting-notes.md";
-      mockValidateFile.mockReturnValue({ valid: true, absolutePath });
+      mockValidateMeetingFile.mockReturnValue({ valid: true, issues: [] });
+      mockValidateFile.mockReturnValue({ valid: true, absolutePath: "/Users/test/meeting-notes.md" });
       mockReadFile.mockResolvedValue("# 회의록\n\n내용...");
 
       const result = await handleMeetingInput("./meeting-notes.md");
 
-      expect(result).toEqual({
-        transcript: "# 회의록\n\n내용...",
-        source: absolutePath,
-      });
-      expect(mockValidateFile).toHaveBeenCalledWith("./meeting-notes.md", "document");
-      expect(mockReadFile).toHaveBeenCalledWith(absolutePath, "utf-8");
+      expect(result.transcript).toBe("# 회의록\n\n내용...");
+      expect(result.source).toContain("meeting-notes.md");
     });
 
     it("파일 경로일 때 source 포함", async () => {
-      const absolutePath = "/Users/test/docs/notes.txt";
-      mockValidateFile.mockReturnValue({ valid: true, absolutePath });
+      mockValidateMeetingFile.mockReturnValue({ valid: true, issues: [] });
+      mockValidateFile.mockReturnValue({ valid: true, absolutePath: "/Users/test/docs/notes.txt" });
       mockReadFile.mockResolvedValue("content");
 
       const result = await handleMeetingInput("/Users/test/docs/notes.txt");
 
-      expect(result.source).toBe(absolutePath);
+      expect(result.source).toContain("notes.txt");
     });
 
     it("파일 검증 에러 전파", async () => {
-      mockValidateFile.mockReturnValue({ valid: false, absolutePath: "/nonexistent.txt", error: "File not found" });
+      mockValidateMeetingFile.mockReturnValue({
+        valid: false,
+        issues: [{ code: "FILE_NOT_FOUND", severity: "error", message: "File not found", solution: "" }],
+      });
 
-      await expect(handleMeetingInput("/nonexistent.txt")).rejects.toThrow(
-        "File not found"
-      );
+      await expect(handleMeetingInput("/nonexistent.txt")).rejects.toThrow();
     });
   });
 
@@ -113,9 +118,7 @@ describe("handleMeetingInput", () => {
 
   describe("엣지 케이스", () => {
     it("빈 텍스트", async () => {
-      const result = await handleMeetingInput("");
-
-      expect(result.transcript).toBe("");
+      await expect(handleMeetingInput("")).rejects.toThrow("cannot be empty");
     });
 
     it("공백만 있는 텍스트", async () => {

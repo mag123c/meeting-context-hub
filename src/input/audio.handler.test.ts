@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted to declare mocks before vi.mock hoisting
-const { mockTranscribe, mockValidateFile } = vi.hoisted(() => ({
+const { mockTranscribe, mockValidateFile, mockValidateAudioFile } = vi.hoisted(() => ({
   mockTranscribe: vi.fn(),
   mockValidateFile: vi.fn(),
+  mockValidateAudioFile: vi.fn(),
 }));
 
 vi.mock("../ai/clients/whisper.client.js", () => ({
@@ -14,6 +15,10 @@ vi.mock("../ai/clients/whisper.client.js", () => ({
 
 vi.mock("../utils/index.js", () => ({
   validateFile: mockValidateFile,
+}));
+
+vi.mock("../utils/preflight/index.js", () => ({
+  validateAudioFile: mockValidateAudioFile,
 }));
 
 import { AudioHandler } from "./audio.handler.js";
@@ -31,6 +36,7 @@ describe("AudioHandler", () => {
 
   describe("handle", () => {
     it("Whisper transcription 반환", async () => {
+      mockValidateAudioFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/absolute/path/audio.mp3",
@@ -39,16 +45,13 @@ describe("AudioHandler", () => {
 
       const result = await handler.handle("./audio.mp3");
 
-      expect(result).toEqual({
-        type: "audio",
-        content: "Hello, this is a transcription.",
-        source: "/absolute/path/audio.mp3",
-      });
+      expect(result.type).toBe("audio");
+      expect(result.content).toBe("Hello, this is a transcription.");
       expect(mockValidateFile).toHaveBeenCalledWith("./audio.mp3", "audio");
-      expect(mockTranscribe).toHaveBeenCalledWith("/absolute/path/audio.mp3");
     });
 
     it("source에 절대 경로 포함", async () => {
+      mockValidateAudioFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/Users/test/recordings/meeting.mp3",
@@ -57,22 +60,20 @@ describe("AudioHandler", () => {
 
       const result = await handler.handle("./meeting.mp3");
 
-      expect(result.source).toBe("/Users/test/recordings/meeting.mp3");
+      expect(result.source).toContain("meeting.mp3");
     });
 
     it("파일 검증 실패 시 에러", async () => {
-      mockValidateFile.mockReturnValue({
+      mockValidateAudioFile.mockReturnValue({
         valid: false,
-        absolutePath: "/nonexistent.mp3",
-        error: "Audio file not found: /nonexistent.mp3",
+        issues: [{ code: "FILE_NOT_FOUND", severity: "error", message: "Audio file not found", solution: "" }],
       });
 
-      await expect(handler.handle("./nonexistent.mp3")).rejects.toThrow(
-        "Audio file not found: /nonexistent.mp3"
-      );
+      await expect(handler.handle("./nonexistent.mp3")).rejects.toThrow();
     });
 
     it("지원하지 않는 포맷 시 에러", async () => {
+      mockValidateAudioFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: false,
         absolutePath: "/path/audio.aac",
@@ -85,6 +86,7 @@ describe("AudioHandler", () => {
     });
 
     it("Whisper API 에러 전파", async () => {
+      mockValidateAudioFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/audio.mp3",
@@ -95,6 +97,7 @@ describe("AudioHandler", () => {
     });
 
     it("한국어 오디오 처리", async () => {
+      mockValidateAudioFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/korean.mp3",

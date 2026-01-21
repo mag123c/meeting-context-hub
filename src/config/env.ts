@@ -1,9 +1,5 @@
-import { config } from "dotenv";
 import { resolve } from "path";
 import { homedir } from "os";
-
-// Load .env.local if exists
-config({ path: resolve(process.cwd(), ".env.local") });
 
 export function getEnv(key: string, defaultValue?: string): string | undefined {
   return process.env[key] ?? defaultValue;

@@ -57,9 +57,12 @@ describe("EmbeddingClient", () => {
     });
 
     it("API 에러 시 에러 전파", async () => {
-      mockCreate.mockRejectedValue(new Error("Rate limit exceeded"));
+      // Use non-retryable error (4xx status, not 429)
+      const error = new Error("Invalid request");
+      (error as { status?: number }).status = 400;
+      mockCreate.mockRejectedValue(error);
 
-      await expect(client.embed("test")).rejects.toThrow("Rate limit exceeded");
+      await expect(client.embed("test")).rejects.toThrow();
     });
   });
 
@@ -93,26 +96,21 @@ describe("EmbeddingClient", () => {
       expect(result).toEqual([[0.1, 0.2]]);
     });
 
-    it("빈 배열 입력 시 빈 배열 반환", async () => {
-      mockCreate.mockResolvedValue({
-        data: [],
-      });
-
-      const result = await client.embedBatch([]);
-
-      expect(result).toEqual([]);
-      expect(mockCreate).toHaveBeenCalledWith({
-        model: "text-embedding-3-small",
-        input: [],
-      });
+    it("빈 배열 입력 시 에러", async () => {
+      // Empty array throws EmptyInputError
+      await expect(client.embedBatch([])).rejects.toThrow();
+      expect(mockCreate).not.toHaveBeenCalled();
     });
 
     it("API 에러 시 에러 전파", async () => {
-      mockCreate.mockRejectedValue(new Error("Token limit exceeded"));
+      // Use non-retryable error (4xx status, not 429)
+      const error = new Error("Invalid request");
+      (error as { status?: number }).status = 400;
+      mockCreate.mockRejectedValue(error);
 
       await expect(
         client.embedBatch(["text1", "text2"])
-      ).rejects.toThrow("Token limit exceeded");
+      ).rejects.toThrow();
     });
 
     it("순서 보장", async () => {

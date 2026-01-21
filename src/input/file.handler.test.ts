@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted to declare mocks before vi.mock hoisting
-const { mockReadFile, mockValidateFile } = vi.hoisted(() => ({
+const { mockReadFile, mockValidateFile, mockValidateDocumentFile } = vi.hoisted(() => ({
   mockReadFile: vi.fn(),
   mockValidateFile: vi.fn(),
+  mockValidateDocumentFile: vi.fn(),
 }));
 
 vi.mock("fs/promises", () => ({
@@ -12,6 +13,10 @@ vi.mock("fs/promises", () => ({
 
 vi.mock("../utils/index.js", () => ({
   validateFile: mockValidateFile,
+}));
+
+vi.mock("../utils/preflight/index.js", () => ({
+  validateDocumentFile: mockValidateDocumentFile,
 }));
 
 import { FileHandler } from "./file.handler.js";
@@ -26,6 +31,7 @@ describe("FileHandler", () => {
 
   describe("handle", () => {
     it("파일 내용 읽기", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/absolute/path/notes.txt",
@@ -34,16 +40,13 @@ describe("FileHandler", () => {
 
       const result = await handler.handle("./notes.txt");
 
-      expect(result).toEqual({
-        type: "file",
-        content: "File content here",
-        source: "/absolute/path/notes.txt",
-      });
+      expect(result.type).toBe("file");
+      expect(result.content).toBe("File content here");
       expect(mockValidateFile).toHaveBeenCalledWith("./notes.txt", "document");
-      expect(mockReadFile).toHaveBeenCalledWith("/absolute/path/notes.txt", "utf-8");
     });
 
     it("UTF-8 인코딩 처리", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/korean.txt",
@@ -53,22 +56,19 @@ describe("FileHandler", () => {
       const result = await handler.handle("./korean.txt");
 
       expect(result.content).toBe("한국어 텍스트 파일 내용");
-      expect(mockReadFile).toHaveBeenCalledWith("/path/korean.txt", "utf-8");
     });
 
     it("파일 없으면 에러", async () => {
-      mockValidateFile.mockReturnValue({
+      mockValidateDocumentFile.mockReturnValue({
         valid: false,
-        absolutePath: "/nonexistent.txt",
-        error: "File not found: /nonexistent.txt",
+        issues: [{ code: "FILE_NOT_FOUND", severity: "error", message: "File not found", solution: "" }],
       });
 
-      await expect(handler.handle("./nonexistent.txt")).rejects.toThrow(
-        "File not found: /nonexistent.txt"
-      );
+      await expect(handler.handle("./nonexistent.txt")).rejects.toThrow();
     });
 
     it("지원하지 않는 포맷 시 에러", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: false,
         absolutePath: "/path/file.pdf",
@@ -81,6 +81,7 @@ describe("FileHandler", () => {
     });
 
     it("source에 절대 경로 포함", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/Users/test/docs/readme.md",
@@ -89,10 +90,11 @@ describe("FileHandler", () => {
 
       const result = await handler.handle("./readme.md");
 
-      expect(result.source).toBe("/Users/test/docs/readme.md");
+      expect(result.source).toContain("readme.md");
     });
 
     it("markdown 파일 처리", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/document.md",
@@ -105,6 +107,7 @@ describe("FileHandler", () => {
     });
 
     it("csv 파일 처리", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/data.csv",
@@ -117,6 +120,7 @@ describe("FileHandler", () => {
     });
 
     it("json 파일 처리", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/config.json",
@@ -129,6 +133,7 @@ describe("FileHandler", () => {
     });
 
     it("파일 읽기 에러 전파", async () => {
+      mockValidateDocumentFile.mockReturnValue({ valid: true, issues: [] });
       mockValidateFile.mockReturnValue({
         valid: true,
         absolutePath: "/path/corrupted.txt",

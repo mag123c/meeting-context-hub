@@ -9,6 +9,7 @@ const {
   mockUnlink,
   mockMkdir,
   mockStat,
+  mockRename,
   mockExistsSync,
   mockContextToMarkdown,
   mockMarkdownToContext,
@@ -23,6 +24,7 @@ const {
   mockUnlink: vi.fn(),
   mockMkdir: vi.fn(),
   mockStat: vi.fn(),
+  mockRename: vi.fn(),
   mockExistsSync: vi.fn(),
   mockContextToMarkdown: vi.fn(),
   mockMarkdownToContext: vi.fn(),
@@ -39,6 +41,7 @@ vi.mock("fs/promises", () => ({
   unlink: mockUnlink,
   mkdir: mockMkdir,
   stat: mockStat,
+  rename: mockRename,
 }));
 
 vi.mock("fs", () => ({
@@ -79,6 +82,8 @@ describe("ObsidianContextRepository", () => {
     mockExistsSync.mockReturnValue(true);
     // Default: all entries are files, not directories
     mockStat.mockResolvedValue({ isDirectory: () => false });
+    // Default: rename succeeds (for atomic writes)
+    mockRename.mockResolvedValue(undefined);
     repository = new ObsidianContextRepository(basePath);
   });
 
@@ -90,10 +95,11 @@ describe("ObsidianContextRepository", () => {
       const result = await repository.save(context);
 
       expect(result).toBe("abc12345-1234-5678-9abc-def012345678");
-      expect(mockWriteFile).toHaveBeenCalledWith(
-        expect.stringContaining("_abc12345.md"),
-        expect.any(String),
-        "utf-8"
+      // Atomic write: writes to temp file, then renames to final path
+      expect(mockWriteFile).toHaveBeenCalled();
+      expect(mockRename).toHaveBeenCalledWith(
+        expect.stringContaining(".tmp-"),
+        expect.stringContaining("_abc12345.md")
       );
     });
 

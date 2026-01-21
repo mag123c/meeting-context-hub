@@ -41,10 +41,10 @@ describe("WhisperClient", () => {
 
       expect(result).toBe("Hello, this is a test transcription.");
       expect(mockCreateReadStream).toHaveBeenCalledWith("/audio.mp3");
+      // Default behavior: auto-detect (no language param)
       expect(mockCreate).toHaveBeenCalledWith({
         file: mockStream,
         model: "whisper-1",
-        language: "ko",
       });
     });
 
@@ -76,11 +76,13 @@ describe("WhisperClient", () => {
       );
     });
 
-    it("한국어 언어 설정으로 호출", async () => {
+    it("언어 설정으로 호출", async () => {
+      // Create client with Korean language setting
+      const koClient = new WhisperClient({ apiKey: "test-key", language: "ko" });
       mockCreateReadStream.mockReturnValue({});
       mockCreate.mockResolvedValue({ text: "한국어 텍스트" });
 
-      await client.transcribe("/korean.mp3");
+      await koClient.transcribe("/korean.mp3");
 
       expect(mockCreate).toHaveBeenCalledWith(
         expect.objectContaining({
