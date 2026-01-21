@@ -1,18 +1,11 @@
 import { Box, Text } from "ink";
 import type { Context, ContextWithSimilarity } from "../../types/context.types.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface ContextCardProps {
   context: Context | ContextWithSimilarity;
   selected?: boolean;
   showSimilarity?: boolean;
-}
-
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
 }
 
 function truncate(str: string, maxLength: number): string {
@@ -21,6 +14,7 @@ function truncate(str: string, maxLength: number): string {
 }
 
 export function ContextCard({ context, selected, showSimilarity }: ContextCardProps) {
+  const { t, formatDate } = useTranslation();
   const similarity = "similarity" in context ? context.similarity : undefined;
 
   return (
@@ -43,7 +37,7 @@ export function ContextCard({ context, selected, showSimilarity }: ContextCardPr
       </Box>
       <Box paddingLeft={selected ? 2 : 0}>
         <Text dimColor>
-          Tags: {context.tags.length > 0 ? context.tags.join(", ") : "none"}
+          {t.contextCard.tags} {context.tags.length > 0 ? context.tags.join(", ") : t.contextCard.noTags}
         </Text>
       </Box>
     </Box>

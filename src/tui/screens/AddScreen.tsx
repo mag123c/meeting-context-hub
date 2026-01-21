@@ -9,6 +9,7 @@ import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { ContextType, Context } from "../../types/context.types.js";
 import type { Meeting } from "../../types/meeting.types.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface AddScreenProps {
   navigation: NavigationContext;
@@ -24,16 +25,17 @@ interface FormData {
   sprint: string;
 }
 
-const typeItems: MenuItem[] = [
-  { label: "Text", value: "text" },
-  { label: "Image (file path)", value: "image" },
-  { label: "Audio (file path)", value: "audio" },
-  { label: "Record Audio (microphone)", value: "record" },
-  { label: "File (txt, md, csv, json)", value: "file" },
-  { label: "Meeting Transcript", value: "meeting" },
-];
-
 export function AddScreen({ navigation, services }: AddScreenProps) {
+  const { t } = useTranslation();
+
+  const typeItems: MenuItem[] = [
+    { label: t.add.types.text, value: "text" },
+    { label: t.add.types.image, value: "image" },
+    { label: t.add.types.audio, value: "audio" },
+    { label: t.add.types.record, value: "record" },
+    { label: t.add.types.file, value: "file" },
+    { label: t.add.types.meeting, value: "meeting" },
+  ];
   const [step, setStep] = useState<Step>("type");
   const [formData, setFormData] = useState<FormData>({
     type: "text",
@@ -182,7 +184,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       case "type":
         return (
           <Box flexDirection="column">
-            <Text bold>Select input type:</Text>
+            <Text bold>{t.add.selectType}</Text>
             <Box marginTop={1}>
               <Menu items={typeItems} onSelect={handleTypeSelect} />
             </Box>
@@ -194,10 +196,10 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
           <Box flexDirection="column">
             <Text bold>
               {formData.type === "text"
-                ? "Enter content:"
+                ? t.add.enterContent
                 : formData.type === "meeting"
-                ? "Enter transcript file path:"
-                : `Enter ${formData.type} file path:`}
+                ? t.add.enterTranscriptPath
+                : t.add.enterFilePath.replace("{type}", formData.type)}
             </Text>
             <Box marginTop={1}>
               <Text color="cyan">{"> "}</Text>
@@ -213,7 +215,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       case "recording":
         return (
           <Box flexDirection="column">
-            <Text bold>Record Audio</Text>
+            <Text bold>{t.add.recordAudio}</Text>
             <Box marginTop={1}>
               <RecordingIndicator
                 state={recording.state}
@@ -230,7 +232,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       case "project":
         return (
           <Box flexDirection="column">
-            <Text bold>Project name (optional, press Enter to skip):</Text>
+            <Text bold>{t.add.projectName}</Text>
             <Box marginTop={1}>
               <Text color="cyan">{"> "}</Text>
               <TextInput
@@ -245,7 +247,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       case "sprint":
         return (
           <Box flexDirection="column">
-            <Text bold>Sprint identifier (optional, press Enter to skip):</Text>
+            <Text bold>{t.add.sprintIdentifier}</Text>
             <Box marginTop={1}>
               <Text color="cyan">{"> "}</Text>
               <TextInput
@@ -258,14 +260,14 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         );
 
       case "processing":
-        return <Spinner message="Processing content..." />;
+        return <Spinner message={t.add.processing} />;
 
       case "result":
         if (error) {
           return (
             <Box flexDirection="column">
               <ErrorBanner message={error} />
-              <Text dimColor>Press Esc to go back</Text>
+              <Text dimColor>{t.common.pressEscToGoBack}</Text>
             </Box>
           );
         }
@@ -278,24 +280,24 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
             return (
               <Box flexDirection="column">
                 <Text color="green" bold>
-                  Meeting saved successfully!
+                  {t.add.meetingSavedSuccess}
                 </Text>
                 <Box marginTop={1} flexDirection="column">
                   <Text>
-                    <Text bold>ID:</Text> {meeting.id.slice(0, 8)}
+                    <Text bold>{t.add.labels.id}</Text> {meeting.id.slice(0, 8)}
                   </Text>
                   <Text>
-                    <Text bold>Title:</Text> {meeting.summary.title}
+                    <Text bold>{t.add.labels.title}</Text> {meeting.summary.title}
                   </Text>
                   <Text>
-                    <Text bold>Summary:</Text> {meeting.summary.summary}
+                    <Text bold>{t.add.labels.summary}</Text> {meeting.summary.summary}
                   </Text>
                   <Text>
-                    <Text bold>Tags:</Text> {meeting.tags.join(", ")}
+                    <Text bold>{t.add.labels.tags}</Text> {meeting.tags.join(", ")}
                   </Text>
                 </Box>
                 <Box marginTop={1}>
-                  <Text dimColor>Press Esc to go back</Text>
+                  <Text dimColor>{t.common.pressEscToGoBack}</Text>
                 </Box>
               </Box>
             );
@@ -305,34 +307,34 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
           return (
             <Box flexDirection="column">
               <Text color="green" bold>
-                Context saved successfully!
+                {t.add.contextSavedSuccess}
               </Text>
               <Box marginTop={1} flexDirection="column">
                 <Text>
-                  <Text bold>ID:</Text> {ctx.id.slice(0, 8)}
+                  <Text bold>{t.add.labels.id}</Text> {ctx.id.slice(0, 8)}
                 </Text>
                 <Text>
-                  <Text bold>Type:</Text> {ctx.type}
+                  <Text bold>{t.add.labels.type}</Text> {ctx.type}
                 </Text>
                 <Text>
-                  <Text bold>Summary:</Text> {ctx.summary}
+                  <Text bold>{t.add.labels.summary}</Text> {ctx.summary}
                 </Text>
                 <Text>
-                  <Text bold>Tags:</Text> {ctx.tags.join(", ")}
+                  <Text bold>{t.add.labels.tags}</Text> {ctx.tags.join(", ")}
                 </Text>
                 {ctx.project && (
                   <Text>
-                    <Text bold>Project:</Text> {ctx.project}
+                    <Text bold>{t.add.labels.project}</Text> {ctx.project}
                   </Text>
                 )}
                 {ctx.sprint && (
                   <Text>
-                    <Text bold>Sprint:</Text> {ctx.sprint}
+                    <Text bold>{t.add.labels.sprint}</Text> {ctx.sprint}
                   </Text>
                 )}
               </Box>
               <Box marginTop={1}>
-                <Text dimColor>Press Esc to go back</Text>
+                <Text dimColor>{t.common.pressEscToGoBack}</Text>
               </Box>
             </Box>
           );
@@ -347,8 +349,8 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
   const getKeyBindings = () => {
     if (step === "type") {
       return [
-        { key: "Enter", description: "Select" },
-        { key: "Esc", description: "Back" },
+        { key: "Enter", description: t.add.keyHints.select },
+        { key: "Esc", description: t.add.keyHints.back },
       ];
     }
     if (step === "processing") {
@@ -357,14 +359,14 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     if (step === "recording") {
       if (recording.state === "idle") {
         return [
-          { key: "Enter", description: "Start Recording" },
-          { key: "Esc", description: "Back" },
+          { key: "Enter", description: t.add.keyHints.startRecording },
+          { key: "Esc", description: t.add.keyHints.back },
         ];
       }
       if (recording.state === "recording") {
         return [
-          { key: "Enter", description: "Stop Recording" },
-          { key: "Esc", description: "Cancel" },
+          { key: "Enter", description: t.add.keyHints.stopRecording },
+          { key: "Esc", description: t.add.keyHints.cancel },
         ];
       }
       if (recording.state === "processing" || recording.state === "stopping") {
@@ -372,14 +374,14 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       }
     }
     return [
-      { key: "Enter", description: "Submit" },
-      { key: "Esc", description: "Back" },
+      { key: "Enter", description: t.add.keyHints.submit },
+      { key: "Esc", description: t.add.keyHints.back },
     ];
   };
 
   return (
     <Box flexDirection="column">
-      <Header title="Add Context" breadcrumb={["Main", "Add"]} />
+      <Header title={t.add.title} breadcrumb={t.add.breadcrumb} />
       {renderStep()}
       {step !== "processing" && !(step === "recording" && (recording.state === "processing" || recording.state === "stopping")) && (
         <KeyHintBar bindings={getKeyBindings()} />

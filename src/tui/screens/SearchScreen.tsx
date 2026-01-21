@@ -6,6 +6,7 @@ import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { Context } from "../../types/context.types.js";
 import type { SearchResult } from "../../core/search-context.usecase.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface SearchScreenProps {
   navigation: NavigationContext;
@@ -16,13 +17,14 @@ interface SearchScreenProps {
 type Step = "mode" | "query" | "searching" | "results";
 type SearchMode = "semantic" | "exact" | "tag";
 
-const modeItems: MenuItem[] = [
-  { label: "Semantic Search (AI)", value: "semantic" },
-  { label: "Exact Text Match", value: "exact" },
-  { label: "Search by Tag", value: "tag" },
-];
-
 export function SearchScreen({ navigation, services, onSelectContext }: SearchScreenProps) {
+  const { t } = useTranslation();
+
+  const modeItems: MenuItem[] = [
+    { label: t.search.modes.semantic, value: "semantic" },
+    { label: t.search.modes.exact, value: "exact" },
+    { label: t.search.modes.tag, value: "tag" },
+  ];
   const [step, setStep] = useState<Step>("mode");
   const [mode, setMode] = useState<SearchMode>("semantic");
   const [query, setQuery] = useState("");
@@ -98,7 +100,7 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
       case "mode":
         return (
           <Box flexDirection="column">
-            <Text bold>Select search mode:</Text>
+            <Text bold>{t.search.selectMode}</Text>
             <Box marginTop={1}>
               <Menu items={modeItems} onSelect={handleModeSelect} />
             </Box>
@@ -110,10 +112,10 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
           <Box flexDirection="column">
             <Text bold>
               {mode === "semantic"
-                ? "Enter search query:"
+                ? t.search.enterQuery
                 : mode === "exact"
-                ? "Enter exact text to match:"
-                : "Enter tag to search:"}
+                ? t.search.enterExactText
+                : t.search.enterTag}
             </Text>
             <Box marginTop={1}>
               <Text color="cyan">{"> "}</Text>
@@ -127,14 +129,14 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
         );
 
       case "searching":
-        return <Spinner message="Searching..." />;
+        return <Spinner message={t.search.searching} />;
 
       case "results":
         if (error) {
           return (
             <Box flexDirection="column">
               <ErrorBanner message={error} />
-              <Text dimColor>Press Esc to go back</Text>
+              <Text dimColor>{t.common.pressEscToGoBack}</Text>
             </Box>
           );
         }
@@ -142,9 +144,9 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
         if (results.length === 0) {
           return (
             <Box flexDirection="column">
-              <Text>No results found for "{query}"</Text>
+              <Text>{t.search.noResults.replace("{query}", query)}</Text>
               <Box marginTop={1}>
-                <Text dimColor>Press [n] for new search, [Esc] to go back</Text>
+                <Text dimColor>{t.search.newSearchHint}</Text>
               </Box>
             </Box>
           );
@@ -153,7 +155,10 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
         return (
           <Box flexDirection="column">
             <Text bold>
-              Found {results.length} result{results.length > 1 ? "s" : ""} for "{query}":
+              {t.search.foundResults
+                .replace("{count}", String(results.length))
+                .replace("{plural}", results.length > 1 ? "s" : "")
+                .replace("{query}", query)}
             </Text>
             <Box marginTop={1}>
               <ContextList
@@ -173,8 +178,8 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
   const getKeyBindings = () => {
     if (step === "mode") {
       return [
-        { key: "Enter", description: "Select" },
-        { key: "Esc", description: "Back" },
+        { key: "Enter", description: t.search.keyHints.select },
+        { key: "Esc", description: t.search.keyHints.back },
       ];
     }
     if (step === "searching") {
@@ -182,21 +187,21 @@ export function SearchScreen({ navigation, services, onSelectContext }: SearchSc
     }
     if (step === "results") {
       return [
-        { key: "↑↓", description: "Navigate" },
-        { key: "Enter", description: "View" },
-        { key: "n", description: "New search" },
-        { key: "Esc", description: "Back" },
+        { key: "↑↓", description: t.search.keyHints.navigate },
+        { key: "Enter", description: t.search.keyHints.view },
+        { key: "n", description: t.search.keyHints.newSearch },
+        { key: "Esc", description: t.search.keyHints.back },
       ];
     }
     return [
-      { key: "Enter", description: "Search" },
-      { key: "Esc", description: "Back" },
+      { key: "Enter", description: t.search.keyHints.search },
+      { key: "Esc", description: t.search.keyHints.back },
     ];
   };
 
   return (
     <Box flexDirection="column">
-      <Header title="Search Contexts" breadcrumb={["Main", "Search"]} />
+      <Header title={t.search.title} breadcrumb={t.search.breadcrumb} />
       {renderStep()}
       {step !== "searching" && <KeyHintBar bindings={getKeyBindings()} />}
     </Box>

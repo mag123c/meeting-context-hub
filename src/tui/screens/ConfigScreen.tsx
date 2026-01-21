@@ -4,13 +4,14 @@ import TextInput from "ink-text-input";
 import { Header, Menu, KeyHintBar, type MenuItem } from "../components/index.js";
 import type { NavigationContext } from "../App.js";
 import { getApiKeyFromKeychain, setApiKeyInKeychain } from "../../config/keychain.js";
+import { useTranslation, LANGUAGE_OPTIONS, type SupportedLanguage } from "../../i18n/index.js";
 
 interface ConfigScreenProps {
   navigation: NavigationContext;
   onConfigured: () => void;
 }
 
-type Step = "menu" | "input" | "success";
+type Step = "menu" | "input" | "language" | "success";
 type ConfigKey = "ANTHROPIC_API_KEY" | "OPENAI_API_KEY";
 
 interface KeyStatus {
@@ -19,6 +20,7 @@ interface KeyStatus {
 }
 
 export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
+  const { t, language, setLanguage } = useTranslation();
   const [step, setStep] = useState<Step>("menu");
   const [selectedKey, setSelectedKey] = useState<ConfigKey | null>(null);
   const [inputValue, setInputValue] = useState("");
@@ -48,21 +50,35 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
     }
   });
 
+  // Get current language display name
+  const currentLanguageLabel = LANGUAGE_OPTIONS.find((opt) => opt.code === language)?.nativeLabel ?? language;
+
   const menuItems: MenuItem[] = [
     {
-      label: `ANTHROPIC_API_KEY ${keyStatus.anthropic ? "(configured)" : "(not set)"}`,
+      label: `ANTHROPIC_API_KEY (${keyStatus.anthropic ? t.config.configured : t.config.notSet})`,
       value: "ANTHROPIC_API_KEY",
     },
     {
-      label: `OPENAI_API_KEY ${keyStatus.openai ? "(configured)" : "(not set)"}`,
+      label: `OPENAI_API_KEY (${keyStatus.openai ? t.config.configured : t.config.notSet})`,
       value: "OPENAI_API_KEY",
     },
-    { label: "Back", value: "back" },
+    {
+      label: `${t.config.languageLabel}: ${currentLanguageLabel}`,
+      value: "language",
+    },
+    { label: t.common.back, value: "back" },
   ];
+
+  const languageItems: MenuItem[] = LANGUAGE_OPTIONS.map((opt) => ({
+    label: opt.nativeLabel,
+    value: opt.code,
+  }));
 
   const handleMenuSelect = useCallback((item: MenuItem) => {
     if (item.value === "back") {
       navigation.goBack();
+    } else if (item.value === "language") {
+      setStep("language");
     } else {
       setSelectedKey(item.value as ConfigKey);
       setStep("input");
@@ -70,6 +86,11 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
       setError(null);
     }
   }, [navigation]);
+
+  const handleLanguageSelect = useCallback((item: MenuItem) => {
+    setLanguage(item.value as SupportedLanguage);
+    setStep("menu");
+  }, [setLanguage]);
 
   const handleInputSubmit = useCallback((value: string) => {
     if (!value.trim() || !selectedKey) {
@@ -95,7 +116,7 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
         return (
           <Box flexDirection="column">
             <Box marginBottom={1}>
-              <Text>Configure API keys (stored in macOS Keychain):</Text>
+              <Text>{t.config.configureApiKeys}</Text>
             </Box>
             <Menu items={menuItems} onSelect={handleMenuSelect} />
           </Box>
@@ -104,7 +125,7 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
       case "input":
         return (
           <Box flexDirection="column">
-            <Text bold>Enter {selectedKey}:</Text>
+            <Text bold>{t.config.enterKey} {selectedKey}:</Text>
             <Box marginTop={1}>
               <Text color="cyan">{"> "}</Text>
               <TextInput
@@ -120,8 +141,18 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
               </Box>
             )}
             <Box marginTop={1}>
-              <Text dimColor>Input is masked for security</Text>
+              <Text dimColor>{t.config.inputMasked}</Text>
             </Box>
+          </Box>
+        );
+
+      case "language":
+        return (
+          <Box flexDirection="column">
+            <Box marginBottom={1}>
+              <Text bold>{t.config.selectLanguage}</Text>
+            </Box>
+            <Menu items={languageItems} onSelect={handleLanguageSelect} />
           </Box>
         );
 
@@ -129,10 +160,10 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
         return (
           <Box flexDirection="column">
             <Text color="green" bold>
-              {selectedKey} saved successfully!
+              {selectedKey} {t.config.savedSuccess}
             </Text>
             <Box marginTop={1}>
-              <Text dimColor>Returning to menu...</Text>
+              <Text dimColor>{t.config.returningToMenu}</Text>
             </Box>
           </Box>
         );
@@ -146,19 +177,25 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
     if (step === "success") return [];
     if (step === "input") {
       return [
-        { key: "Enter", description: "Save" },
-        { key: "Esc", description: "Cancel" },
+        { key: "Enter", description: t.config.keyHints.save },
+        { key: "Esc", description: t.config.keyHints.cancel },
+      ];
+    }
+    if (step === "language") {
+      return [
+        { key: "Enter", description: t.config.keyHints.select },
+        { key: "Esc", description: t.config.keyHints.back },
       ];
     }
     return [
-      { key: "Enter", description: "Select" },
-      { key: "Esc", description: "Back" },
+      { key: "Enter", description: t.config.keyHints.select },
+      { key: "Esc", description: t.config.keyHints.back },
     ];
   };
 
   return (
     <Box flexDirection="column">
-      <Header title="Configuration" breadcrumb={["Main", "Config"]} />
+      <Header title={t.config.title} breadcrumb={t.config.breadcrumb} />
       {renderContent()}
       {step !== "success" && <KeyHintBar bindings={getKeyBindings()} />}
     </Box>

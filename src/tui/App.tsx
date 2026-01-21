@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import { createServices, type AppServices } from "../core/factories.js";
 import type { Context } from "../types/context.types.js";
+import { I18nProvider, useTranslation } from "../i18n/index.js";
 
 import { MainMenu } from "./screens/MainMenu.js";
 import { AddScreen } from "./screens/AddScreen.js";
@@ -29,8 +30,9 @@ export interface NavigationContext {
   params?: NavigationState["params"];
 }
 
-export function App() {
+function AppContent() {
   const { exit } = useApp();
+  const { t } = useTranslation();
   const [navigation, setNavigation] = useState<NavigationState>({
     screen: "main",
     history: [],
@@ -122,17 +124,17 @@ export function App() {
     if (!services && navigation.screen !== "main") {
       return (
         <Box flexDirection="column">
-          <Header title="Configuration Error" />
+          <Header title={t.errors.configErrorTitle} />
           <Box flexDirection="column" gap={1}>
             <Text color="red" bold>
-              Services not initialized
+              {t.errors.servicesNotInitialized}
             </Text>
-            <Text>{initError || "API keys may not be configured."}</Text>
+            <Text>{initError || t.errors.apiKeysNotConfigured}</Text>
             <Box marginTop={1} flexDirection="column">
-              <Text bold>Select "Config" from main menu to set API keys</Text>
+              <Text bold>{t.errors.selectConfigHint}</Text>
             </Box>
           </Box>
-          <KeyHintBar bindings={[{ key: "Esc", description: "Back" }]} />
+          <KeyHintBar bindings={[{ key: "Esc", description: t.common.back }]} />
         </Box>
       );
     }
@@ -172,4 +174,12 @@ export function App() {
   };
 
   return <Box flexDirection="column">{renderScreen()}</Box>;
+}
+
+export function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
 }

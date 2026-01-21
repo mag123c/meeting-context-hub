@@ -1,6 +1,7 @@
 import { Box, Text } from "ink";
 import InkSpinner from "ink-spinner";
 import type { RecordingState } from "../hooks/useRecording.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface RecordingIndicatorProps {
   state: RecordingState;
@@ -30,11 +31,13 @@ export function RecordingIndicator({
   totalChunks = 0,
   error,
 }: RecordingIndicatorProps) {
+  const { t } = useTranslation();
+
   if (error) {
     return (
       <Box flexDirection="column">
-        <Text color="red">Error: {error}</Text>
-        <Text dimColor>Press Esc to go back</Text>
+        <Text color="red">{t.recording.error} {error}</Text>
+        <Text dimColor>{t.common.pressEscToGoBack}</Text>
       </Box>
     );
   }
@@ -43,12 +46,12 @@ export function RecordingIndicator({
     case "idle":
       return (
         <Box flexDirection="column">
-          <Text bold>Ready to record</Text>
+          <Text bold>{t.recording.readyToRecord}</Text>
           <Box marginTop={1}>
-            <Text dimColor>Press Enter to start recording</Text>
+            <Text dimColor>{t.recording.pressEnterToStart}</Text>
           </Box>
           <Box marginTop={1}>
-            <Text dimColor>No time limit - auto-chunks every 10 minutes</Text>
+            <Text dimColor>{t.recording.noTimeLimit}</Text>
           </Box>
         </Box>
       );
@@ -60,16 +63,16 @@ export function RecordingIndicator({
             <Text color="red" bold>
               {"● "}
             </Text>
-            <Text bold>Recording... </Text>
+            <Text bold>{t.recording.recording} </Text>
             <Text color="yellow">{formatTime(elapsed)}</Text>
           </Box>
           {chunkCount > 1 && (
             <Box marginTop={1}>
-              <Text dimColor>Chunk {chunkCount} (auto-saving every 10 min)</Text>
+              <Text dimColor>{t.recording.chunkInfo.replace("{n}", String(chunkCount))}</Text>
             </Box>
           )}
           <Box marginTop={1}>
-            <Text dimColor>Press Enter to stop recording</Text>
+            <Text dimColor>{t.recording.pressEnterToStop}</Text>
           </Box>
         </Box>
       );
@@ -77,7 +80,7 @@ export function RecordingIndicator({
     case "stopping":
       return (
         <Box>
-          <Text color="yellow">Stopping...</Text>
+          <Text color="yellow">{t.recording.stopping}</Text>
         </Box>
       );
 
@@ -88,12 +91,14 @@ export function RecordingIndicator({
             <Text color="cyan">
               <InkSpinner type="dots" />
             </Text>
-            <Text> Transcribing audio...</Text>
+            <Text> {t.recording.transcribing}</Text>
           </Box>
           {totalChunks > 1 && (
             <Box marginTop={1}>
               <Text dimColor>
-                Processing chunk {transcribedChunks}/{totalChunks}
+                {t.recording.processingChunk
+                  .replace("{current}", String(transcribedChunks))
+                  .replace("{total}", String(totalChunks))}
               </Text>
             </Box>
           )}

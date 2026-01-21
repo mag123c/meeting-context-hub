@@ -5,6 +5,7 @@ import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, ContextList, type MenuI
 import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { Context, ContextType, ListOptions } from "../../types/context.types.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface ListScreenProps {
   navigation: NavigationContext;
@@ -17,22 +18,23 @@ type FilterType = "none" | "tag" | "type" | "project" | "sprint";
 
 const PAGE_SIZE = 10;
 
-const filterItems: MenuItem[] = [
-  { label: "No Filter", value: "none" },
-  { label: "Filter by Tag", value: "tag" },
-  { label: "Filter by Type", value: "type" },
-  { label: "Filter by Project", value: "project" },
-  { label: "Filter by Sprint", value: "sprint" },
-];
-
-const typeItems: MenuItem[] = [
-  { label: "Text", value: "text" },
-  { label: "Image", value: "image" },
-  { label: "Audio", value: "audio" },
-  { label: "File", value: "file" },
-];
-
 export function ListScreen({ navigation, services, onSelectContext }: ListScreenProps) {
+  const { t } = useTranslation();
+
+  const filterItems: MenuItem[] = [
+    { label: t.list.filters.none, value: "none" },
+    { label: t.list.filters.tag, value: "tag" },
+    { label: t.list.filters.type, value: "type" },
+    { label: t.list.filters.project, value: "project" },
+    { label: t.list.filters.sprint, value: "sprint" },
+  ];
+
+  const typeItems: MenuItem[] = [
+    { label: t.list.types.text, value: "text" },
+    { label: t.list.types.image, value: "image" },
+    { label: t.list.types.audio, value: "audio" },
+    { label: t.list.types.file, value: "file" },
+  ];
   const [step, setStep] = useState<Step>("loading");
   const [contexts, setContexts] = useState<Context[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -163,7 +165,7 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
     if (showFilterMenu) {
       return (
         <Box flexDirection="column">
-          <Text bold>Select filter:</Text>
+          <Text bold>{t.list.selectFilter}</Text>
           <Box marginTop={1}>
             <Menu items={filterItems} onSelect={handleFilterSelect} />
           </Box>
@@ -174,7 +176,7 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
     if (showTypeMenu) {
       return (
         <Box flexDirection="column">
-          <Text bold>Select type:</Text>
+          <Text bold>{t.list.selectType}</Text>
           <Box marginTop={1}>
             <Menu items={typeItems} onSelect={handleTypeSelect} />
           </Box>
@@ -183,14 +185,14 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
     }
 
     if (step === "loading") {
-      return <Spinner message="Loading contexts..." />;
+      return <Spinner message={t.list.loadingContexts} />;
     }
 
     if (step === "filter") {
       return (
         <Box flexDirection="column">
           <Text bold>
-            Enter {filterType} to filter:
+            {t.list.enterFilterValue.replace("{filterType}", filterType)}
           </Text>
           <Box marginTop={1}>
             <Text color="cyan">{"> "}</Text>
@@ -208,7 +210,7 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
       return (
         <Box flexDirection="column">
           <ErrorBanner message={error} />
-          <Text dimColor>Press [r] to retry</Text>
+          <Text dimColor>{t.list.retryHint}</Text>
         </Box>
       );
     }
@@ -216,9 +218,9 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
     if (contexts.length === 0) {
       return (
         <Box flexDirection="column">
-          <Text>No contexts found.</Text>
+          <Text>{t.list.noContextsFound}</Text>
           {filterType !== "none" && (
-            <Text dimColor>Press [r] to clear filter</Text>
+            <Text dimColor>{t.list.clearFilterHint}</Text>
           )}
         </Box>
       );
@@ -233,9 +235,14 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
       <Box flexDirection="column">
         <Box marginBottom={1}>
           <Text>
-            Showing {startIndex + 1}-{endIndex} of {contexts.length}
+            {t.list.showing
+              .replace("{start}", String(startIndex + 1))
+              .replace("{end}", String(endIndex))
+              .replace("{total}", String(contexts.length))}
             {filterType !== "none" && (
-              <Text dimColor> (filtered by {filterType}: {filterValue})</Text>
+              <Text dimColor> {t.list.filteredBy
+                .replace("{filterType}", filterType)
+                .replace("{filterValue}", filterValue)}</Text>
             )}
           </Text>
         </Box>
@@ -243,7 +250,9 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
         {totalPages > 1 && (
           <Box marginTop={1}>
             <Text dimColor>
-              Page {page + 1}/{totalPages}
+              {t.list.page
+                .replace("{current}", String(page + 1))
+                .replace("{total}", String(totalPages))}
             </Text>
           </Box>
         )}
@@ -254,32 +263,32 @@ export function ListScreen({ navigation, services, onSelectContext }: ListScreen
   const getKeyBindings = () => {
     if (showFilterMenu || showTypeMenu) {
       return [
-        { key: "Enter", description: "Select" },
-        { key: "Esc", description: "Cancel" },
+        { key: "Enter", description: t.list.keyHints.select },
+        { key: "Esc", description: t.list.keyHints.cancel },
       ];
     }
     if (step === "filter") {
       return [
-        { key: "Enter", description: "Apply" },
-        { key: "Esc", description: "Cancel" },
+        { key: "Enter", description: t.list.keyHints.apply },
+        { key: "Esc", description: t.list.keyHints.cancel },
       ];
     }
     if (step === "loading") {
       return [];
     }
     return [
-      { key: "↑↓", description: "Navigate" },
-      { key: "←→", description: "Page" },
-      { key: "Enter", description: "View" },
-      { key: "f", description: "Filter" },
-      { key: "r", description: "Refresh" },
-      { key: "Esc", description: "Back" },
+      { key: "↑↓", description: t.list.keyHints.navigate },
+      { key: "←→", description: t.list.keyHints.page },
+      { key: "Enter", description: t.list.keyHints.view },
+      { key: "f", description: t.list.keyHints.filter },
+      { key: "r", description: t.list.keyHints.refresh },
+      { key: "Esc", description: t.list.keyHints.back },
     ];
   };
 
   return (
     <Box flexDirection="column">
-      <Header title="List Contexts" breadcrumb={["Main", "List"]} />
+      <Header title={t.list.title} breadcrumb={t.list.breadcrumb} />
       {renderContent()}
       {step !== "loading" && <KeyHintBar bindings={getKeyBindings()} />}
     </Box>

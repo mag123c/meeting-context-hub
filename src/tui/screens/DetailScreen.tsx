@@ -4,6 +4,7 @@ import { Header, Spinner, ErrorBanner, KeyHintBar, ContextList } from "../compon
 import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { Context } from "../../types/context.types.js";
+import { useTranslation } from "../../i18n/index.js";
 
 interface DetailScreenProps {
   navigation: NavigationContext;
@@ -13,17 +14,8 @@ interface DetailScreenProps {
 
 type View = "detail" | "similar-loading" | "similar";
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleString("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export function DetailScreen({ navigation, services, context }: DetailScreenProps) {
+  const { t, formatDateTime } = useTranslation();
   const [view, setView] = useState<View>("detail");
   const [similarContexts, setSimilarContexts] = useState<Context[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -75,9 +67,9 @@ export function DetailScreen({ navigation, services, context }: DetailScreenProp
   if (!context) {
     return (
       <Box flexDirection="column">
-        <Header title="Context Detail" breadcrumb={["Main", "Detail"]} />
-        <Text color="red">No context selected</Text>
-        <KeyHintBar bindings={[{ key: "Esc", description: "Back" }]} />
+        <Header title={t.detail.title} breadcrumb={t.detail.breadcrumb} />
+        <Text color="red">{t.detail.noContextSelected}</Text>
+        <KeyHintBar bindings={[{ key: "Esc", description: t.detail.keyHints.back }]} />
       </Box>
     );
   }
@@ -85,60 +77,60 @@ export function DetailScreen({ navigation, services, context }: DetailScreenProp
   const renderDetail = () => (
     <Box flexDirection="column" gap={1}>
       <Box>
-        <Text bold color="cyan">ID: </Text>
+        <Text bold color="cyan">{t.detail.labels.id} </Text>
         <Text>{context.id}</Text>
       </Box>
 
       <Box>
-        <Text bold color="cyan">Type: </Text>
+        <Text bold color="cyan">{t.detail.labels.type} </Text>
         <Text>{context.type}</Text>
       </Box>
 
       <Box flexDirection="column">
-        <Text bold color="cyan">Summary:</Text>
+        <Text bold color="cyan">{t.detail.labels.summary}</Text>
         <Box paddingLeft={2}>
           <Text>{context.summary}</Text>
         </Box>
       </Box>
 
       <Box>
-        <Text bold color="cyan">Tags: </Text>
-        <Text>{context.tags.length > 0 ? context.tags.join(", ") : "(none)"}</Text>
+        <Text bold color="cyan">{t.detail.labels.tags} </Text>
+        <Text>{context.tags.length > 0 ? context.tags.join(", ") : t.detail.noTags}</Text>
       </Box>
 
       {context.project && (
         <Box>
-          <Text bold color="cyan">Project: </Text>
+          <Text bold color="cyan">{t.detail.labels.project} </Text>
           <Text>{context.project}</Text>
         </Box>
       )}
 
       {context.sprint && (
         <Box>
-          <Text bold color="cyan">Sprint: </Text>
+          <Text bold color="cyan">{t.detail.labels.sprint} </Text>
           <Text>{context.sprint}</Text>
         </Box>
       )}
 
       {context.source && (
         <Box>
-          <Text bold color="cyan">Source: </Text>
+          <Text bold color="cyan">{t.detail.labels.source} </Text>
           <Text>{context.source}</Text>
         </Box>
       )}
 
       <Box>
-        <Text bold color="cyan">Created: </Text>
-        <Text>{formatDate(context.createdAt)}</Text>
+        <Text bold color="cyan">{t.detail.labels.created} </Text>
+        <Text>{formatDateTime(context.createdAt)}</Text>
       </Box>
 
       <Box>
-        <Text bold color="cyan">Updated: </Text>
-        <Text>{formatDate(context.updatedAt)}</Text>
+        <Text bold color="cyan">{t.detail.labels.updated} </Text>
+        <Text>{formatDateTime(context.updatedAt)}</Text>
       </Box>
 
       <Box flexDirection="column" marginTop={1}>
-        <Text bold color="cyan">Content:</Text>
+        <Text bold color="cyan">{t.detail.labels.content}</Text>
         <Box paddingLeft={2} flexDirection="column">
           <Text>
             {context.content.length > 500
@@ -154,13 +146,13 @@ export function DetailScreen({ navigation, services, context }: DetailScreenProp
 
   const renderSimilar = () => {
     if (view === "similar-loading") {
-      return <Spinner message="Finding similar contexts..." />;
+      return <Spinner message={t.detail.findingSimilar} />;
     }
 
     if (similarContexts.length === 0) {
       return (
         <Box flexDirection="column">
-          <Text>No similar contexts found.</Text>
+          <Text>{t.detail.noSimilarFound}</Text>
         </Box>
       );
     }
@@ -169,7 +161,7 @@ export function DetailScreen({ navigation, services, context }: DetailScreenProp
       <Box flexDirection="column">
         <Box marginBottom={1}>
           <Text bold>
-            Similar Contexts ({similarContexts.length}):
+            {t.detail.similarContexts.replace("{count}", String(similarContexts.length))}
           </Text>
         </Box>
         <ContextList
@@ -187,21 +179,21 @@ export function DetailScreen({ navigation, services, context }: DetailScreenProp
     }
     if (view === "similar") {
       return [
-        { key: "↑↓", description: "Navigate" },
-        { key: "Esc", description: "Back to detail" },
+        { key: "↑↓", description: t.detail.keyHints.navigate },
+        { key: "Esc", description: t.detail.keyHints.backToDetail },
       ];
     }
     return [
-      { key: "s", description: "Similar" },
-      { key: "Esc", description: "Back" },
+      { key: "s", description: t.detail.keyHints.similar },
+      { key: "Esc", description: t.detail.keyHints.back },
     ];
   };
 
   return (
     <Box flexDirection="column">
       <Header
-        title="Context Detail"
-        breadcrumb={view === "similar" ? ["Main", "Detail", "Similar"] : ["Main", "Detail"]}
+        title={t.detail.title}
+        breadcrumb={view === "similar" ? t.detail.breadcrumbSimilar : t.detail.breadcrumb}
       />
       {view === "detail" ? renderDetail() : renderSimilar()}
       {view !== "similar-loading" && <KeyHintBar bindings={getKeyBindings()} />}
