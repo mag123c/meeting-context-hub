@@ -1,102 +1,102 @@
 ---
 name: verify
-description: 자체 검증 루프. 빌드/린트 검증. 커밋/PR 전 필수. 실패 시 스스로 수정하고 재검증.
+description: Self-verification loop. Build/lint verification. Required before commit/PR. On failure, self-fix and re-verify.
 ---
 
 # Verify Skill
 
-빌드/린트 검증 및 Self-Healing Loop. 커밋 전 필수 실행.
+Build/lint verification with Self-Healing Loop. Required before commit.
 
-## 워크플로우
+## Workflow
 
 ```
 /verify
     │
-    ├─ Step 1: 빌드 검증
+    ├─ Step 1: Build Verification
     │   └─ pnpm build
-    │       ├─ 성공 → Step 2
-    │       └─ 실패 → 에러 분석 → 코드 수정 → Step 1 재시도
+    │       ├─ Success → Step 2
+    │       └─ Failure → Analyze error → Fix code → Retry Step 1
     │
-    └─ Step 2: 린트 검증
+    └─ Step 2: Lint Verification
         └─ pnpm lint
-            ├─ 성공 → 검증 완료 ✓
-            └─ 에러 → pnpm lint --fix → 재검증
+            ├─ Success → Verification complete ✓
+            └─ Error → pnpm lint --fix → Re-verify
 ```
 
-## 호출 시점
+## When to Call
 
-| 시점 | 필수 여부 |
-|------|----------|
-| `/implement` 완료 후 | **필수** (자동 호출) |
-| 커밋 전 | **필수** |
-| PR 생성 전 | **필수** |
+| Timing | Required |
+|--------|----------|
+| After `/implement` completes | **Required** (auto-called) |
+| Before commit | **Required** |
+| Before PR creation | **Required** |
 
 ## Self-Healing Loop
 
 ```
-코드 수정 → /verify → 실패?
-                        │
-                        ├─ YES → 에러 분석 → 수정 → 재검증 (루프)
-                        │
-                        └─ NO → 검증 완료 ✓
+Code change → /verify → Failure?
+                          │
+                          ├─ YES → Analyze error → Fix → Re-verify (loop)
+                          │
+                          └─ NO → Verification complete ✓
 ```
 
-**핵심 규칙**:
-1. 검증 실패 시 사용자 개입 없이 스스로 수정
-2. 수정 후 반드시 재검증
-3. 동일 에러 **3회 이상** 실패 시 사용자에게 알림
+**Key Rules**:
+1. On verification failure, self-fix without user intervention
+2. Always re-verify after fix
+3. Alert user after **3+ failures** on same error
 
-## 명령어
+## Commands
 
 ```bash
-pnpm build      # 빌드 검증
-pnpm lint       # 린트 검증
-pnpm lint --fix # 린트 자동 수정
+pnpm build      # Build verification
+pnpm lint       # Lint verification
+pnpm lint --fix # Lint auto-fix
 ```
 
-## 에러 처리
+## Error Handling
 
-### 빌드 에러
+### Build Errors
 
-1. 에러 메시지 분석
-2. 원인 파일 식별
-3. 코드 수정
-4. `pnpm build` 재실행
+1. Analyze error message
+2. Identify source file
+3. Fix code
+4. Re-run `pnpm build`
 
-### 린트 에러
+### Lint Errors
 
-1. `pnpm lint --fix` 먼저 시도
-2. 자동 수정 안 되면 수동 수정
-3. `pnpm lint` 재실행
+1. Try `pnpm lint --fix` first
+2. If auto-fix fails, fix manually
+3. Re-run `pnpm lint`
 
-## /implement와의 연계
+## Integration with /implement
 
-`/implement` 스킬 Phase 3에서 자동으로 `/verify` 호출됨:
+`/verify` is auto-called in `/implement` skill Phase 3:
 
 ```
 /implement
-    ├─ Phase 1: 분석
-    ├─ Phase 2: 구현
-    ├─ Phase 3: 검증 ← /verify 자동 호출
-    └─ Phase 4: 마무리
+    ├─ Phase 1: Analysis
+    ├─ Phase 2: Implementation
+    ├─ Phase 3: Verification ← /verify auto-called
+    └─ Phase 4: Finalize
 ```
 
-## 검증 완료 후
+## After Verification
 
-검증 통과 시:
+On verification pass:
 ```
-✓ 빌드 성공
-✓ 린트 통과
+✓ Build successful
+✓ Lint passed
 
-커밋 준비 완료.
+Ready to commit.
 ```
 
-→ `/implement` Phase 4 (마무리) 진행
-→ 또는 수동 커밋
+→ Proceed to `/implement` Phase 4 (Finalize)
+→ Or manual commit
 
-## 규칙
+## Rules
 
-1. **커밋 전 필수**: verify 없이 커밋 금지
-2. **Self-Healing**: 실패 시 스스로 수정
-3. **3회 실패 알림**: 동일 에러 반복 시 사용자 개입 요청
-4. **순서 준수**: build → lint 순서
+1. **Required before commit**: No commit without verify
+2. **Self-Healing**: Self-fix on failure
+3. **3 failure alert**: Request user intervention on repeated same error
+4. **Order**: build → lint order

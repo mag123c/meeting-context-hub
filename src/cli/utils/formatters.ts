@@ -3,7 +3,7 @@ import type { Context, ContextWithSimilarity } from "../../types/context.types.j
 import type { Meeting } from "../../types/meeting.types.js";
 
 /**
- * Context 메타데이터 출력 (add 명령어용)
+ * Format context metadata output (for add command)
  */
 export function formatContextMeta(ctx: Context): void {
   console.log(chalk.green("\nContext created:"));
@@ -23,7 +23,7 @@ export function formatContextMeta(ctx: Context): void {
 }
 
 /**
- * Meeting 결과 출력 (add -m 명령어용)
+ * Format meeting result output (for add -m command)
  */
 export function formatMeetingResult(meeting: Meeting, finalProject?: string, finalSprint?: string): void {
   console.log(chalk.green("\nMeeting summary created:"));
@@ -59,7 +59,7 @@ export function formatMeetingResult(meeting: Meeting, finalProject?: string, fin
 }
 
 /**
- * 검색 결과 출력 (search 명령어용)
+ * Format search result output (for search command)
  */
 export function formatSearchResult(ctx: Context | ContextWithSimilarity): void {
   const similarity = (ctx as ContextWithSimilarity).similarity;
@@ -78,7 +78,7 @@ export function formatSearchResult(ctx: Context | ContextWithSimilarity): void {
 }
 
 /**
- * 문자열 패딩 유틸리티
+ * String padding utility
  */
 export function padEnd(str: string, length: number): string {
   return str.length >= length ? str.slice(0, length) : str + " ".repeat(length - str.length);

@@ -3,11 +3,11 @@
   "version": "2.1.0",
   "entities": {
     "Squad": {
-      "description": "스쿼드 엔티티 - 팀/조직 단위",
+      "description": "Squad entity - Team/organizational unit",
       "table": "squads",
       "fields": {
         "id": { "type": "UUID", "primary": true },
-        "user_id": { "type": "UUID", "fk": "auth.users", "description": "소유자" },
+        "user_id": { "type": "UUID", "fk": "auth.users", "description": "Owner" },
         "name": { "type": "VARCHAR(100)", "required": true },
         "description": { "type": "TEXT", "nullable": true },
         "slack_channel_id": { "type": "VARCHAR(100)", "nullable": true },
@@ -18,7 +18,7 @@
       "rls": true
     },
     "Project": {
-      "description": "프로젝트 엔티티",
+      "description": "Project entity",
       "table": "projects",
       "fields": {
         "id": { "type": "UUID", "primary": true },
@@ -37,7 +37,7 @@
       "rls": true
     },
     "Sprint": {
-      "description": "스프린트 엔티티 - 작업 주기",
+      "description": "Sprint entity - Work cycle",
       "table": "sprints",
       "fields": {
         "id": { "type": "UUID", "primary": true },
@@ -56,7 +56,7 @@
       "rls": true
     },
     "ActionItem": {
-      "description": "액션아이템 엔티티 (독립 테이블)",
+      "description": "Action item entity (independent table)",
       "table": "action_items",
       "fields": {
         "id": { "type": "UUID", "primary": true },
@@ -77,15 +77,15 @@
       "rls": true
     },
     "Meeting": {
-      "description": "회의록 엔티티",
+      "description": "Meeting notes entity",
       "table": "meetings",
       "fields": {
         "id": { "type": "UUID", "primary": true },
         "user_id": { "type": "UUID", "fk": "auth.users" },
         "title": { "type": "TEXT", "required": true },
         "raw_content": { "type": "TEXT", "required": true },
-        "prd_summary": { "type": "JSONB", "nullable": true, "description": "PRD 형식 요약" },
-        "action_items": { "type": "JSONB", "nullable": true, "description": "임베디드 액션 아이템 (레거시)" },
+        "prd_summary": { "type": "JSONB", "nullable": true, "description": "PRD format summary" },
+        "action_items": { "type": "JSONB", "nullable": true, "description": "Embedded action items (legacy)" },
         "obsidian_path": { "type": "TEXT", "nullable": true },
         "sprint_id": { "type": "UUID", "fk": "sprints", "nullable": true },
         "project_id": { "type": "UUID", "fk": "projects", "nullable": true },
@@ -100,7 +100,7 @@
       "rls": true
     },
     "Context": {
-      "description": "컨텍스트 정보 엔티티",
+      "description": "Context information entity",
       "table": "contexts",
       "fields": {
         "id": { "type": "UUID", "primary": true },
@@ -123,7 +123,7 @@
       "rls": true
     },
     "Tag": {
-      "description": "태그 엔티티",
+      "description": "Tag entity",
       "table": "tags",
       "fields": {
         "id": { "type": "UUID", "primary": true },
@@ -136,7 +136,7 @@
         "icon": { "type": "VARCHAR(50)", "nullable": true },
         "created_at": { "type": "TIMESTAMPTZ", "default": "now()" }
       },
-      "usage": "회의록(meeting_tags)과 컨텍스트(context_tags)에 many-to-many 적용",
+      "usage": "Applied to meetings (meeting_tags) and contexts (context_tags) via many-to-many",
       "indexes": ["idx_tags_name", "idx_tags_scope", "idx_tags_type"],
       "rls": true
     }

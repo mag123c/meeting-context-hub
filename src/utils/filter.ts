@@ -1,5 +1,5 @@
 /**
- * Context 필터링 유틸리티
+ * Context filtering utility
  */
 
 import type { Context, ContextWithSimilarity, ListOptions } from "../types/context.types.js";
@@ -7,7 +7,7 @@ import type { Context, ContextWithSimilarity, ListOptions } from "../types/conte
 type FilterableContext = Context | ContextWithSimilarity;
 
 /**
- * Context 배열에 필터 적용
+ * Apply filters to Context array
  */
 export function applyFilters<T extends FilterableContext>(
   contexts: T[],
@@ -39,7 +39,7 @@ export function applyFilters<T extends FilterableContext>(
 }
 
 /**
- * project/sprint 필터만 적용 (이미 태그 필터된 결과에 사용)
+ * Apply only project/sprint filters (for already tag-filtered results)
  */
 export function applyProjectSprintFilters<T extends FilterableContext>(
   contexts: T[],

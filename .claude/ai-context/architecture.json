@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "project": {
+    "name": "Meeting Context Hub",
+    "type": "TypeScript CLI",
+    "runtime": "Node.js 20+",
+    "description": "CLI tool for processing multimodal inputs (text/image/audio/file/meeting) with AI and storing to Obsidian"
+  },
+  "layers": {
+    "cli": {
+      "path": "src/cli/",
+      "description": "User input handling and output formatting",
+      "ctx": "src/cli/CLAUDE.md",
+      "subdirs": {
+        "commands": "CLI command implementations (add, search, list, config)",
+        "utils": "Common CLI utilities (spinner, formatters, error handling)"
+      }
+    },
+    "tui": {
+      "path": "src/tui/",
+      "description": "Interactive TUI using ink (React for CLI)",
+      "ctx": "src/tui/CLAUDE.md",
+      "subdirs": {
+        "components": "Reusable UI components",
+        "screens": "Screen-level components",
+        "hooks": "Custom React hooks"
+      }
+    },
+    "core": {
+      "path": "src/core/",
+      "description": "Application layer - UseCases and factories",
+      "files": {
+        "add-context.usecase.ts": "Add context workflow",
+        "summarize-meeting.usecase.ts": "Meeting summarization",
+        "search-context.usecase.ts": "Context search",
+        "factories.ts": "DI factory"
+      }
+    },
+    "repositories": {
+      "path": "src/repositories/",
+      "description": "Domain layer - Repository interfaces",
+      "files": {
+        "context.repository.ts": "Context repository interface"
+      }
+    },
+    "types": {
+      "path": "src/types/",
+      "description": "Domain layer - Types and Zod schemas",
+      "files": {
+        "context.types.ts": "Context entity types",
+        "context.schema.ts": "Context Zod schemas",
+        "meeting.types.ts": "Meeting types",
+        "meeting.schema.ts": "Meeting Zod schemas",
+        "prompt.types.ts": "Prompt types",
+        "tag.types.ts": "Tag types",
+        "config.types.ts": "Config types"
+      }
+    },
+    "errors": {
+      "path": "src/errors/",
+      "description": "Custom error classes",
+      "ctx": "src/errors/CLAUDE.md"
+    },
+    "ai": {
+      "path": "src/ai/",
+      "description": "AI client abstraction and prompts",
+      "ctx": "src/ai/CLAUDE.md",
+      "subdirs": {
+        "interfaces": "AI client interfaces (ILLMClient, IEmbeddingClient, ITranscriptionClient)",
+        "clients": "Client implementations (Claude, Whisper, Embedding)",
+        "prompts": "Prompt templates with versioning"
+      }
+    },
+    "storage": {
+      "path": "src/storage/",
+      "description": "Storage implementations",
+      "subdirs": {
+        "obsidian": "Obsidian vault storage"
+      }
+    },
+    "input": {
+      "path": "src/input/",
+      "description": "Input handlers for different content types",
+      "files": {
+        "text.handler.ts": "Text input",
+        "image.handler.ts": "Image input (Claude Vision)",
+        "audio.handler.ts": "Audio input (Whisper)",
+        "file.handler.ts": "File input (txt, md, csv, json)",
+        "meeting.handler.ts": "Meeting transcript"
+      }
+    },
+    "utils": {
+      "path": "src/utils/",
+      "description": "Common utility functions",
+      "ctx": "src/utils/CLAUDE.md"
+    },
+    "config": {
+      "path": "src/config/",
+      "description": "Configuration and environment",
+      "files": {
+        "config.ts": "Main config",
+        "keychain.ts": "macOS keychain integration",
+        "env.ts": "Environment variables"
+      }
+    }
+  },
+  "dependencies": {
+    "flow": [
+      "cli → core",
+      "tui → core",
+      "core → repositories",
+      "core → ai/interfaces",
+      "core → storage",
+      "storage → repositories (implements)"
+    ],
+    "principle": "Clean Architecture: outer layers depend on inner layers only"
+  },
+  "external": {
+    "anthropic": {
+      "purpose": "LLM completions, image analysis",
+      "client": "src/ai/clients/claude.client.ts",
+      "envKey": "ANTHROPIC_API_KEY"
+    },
+    "openai": {
+      "purpose": "Embeddings, transcription",
+      "clients": [
+        "src/ai/clients/embedding.client.ts",
+        "src/ai/clients/whisper.client.ts"
+      ],
+      "envKey": "OPENAI_API_KEY"
+    },
+    "obsidian": {
+      "purpose": "Local markdown storage",
+      "implementation": "src/storage/obsidian/",
+      "envKey": "OBSIDIAN_VAULT_PATH"
+    }
+  }
+}

@@ -1,74 +1,74 @@
 ---
 name: mch-wrap
-description: Meeting Context Hub 세션 마무리. 문서 최신화 중심.
+description: Meeting Context Hub session wrap-up. Focus on documentation updates.
 ---
 
 # MCH Wrap
 
-Meeting Context Hub 프로젝트 전용 세션 마무리. 문서 최신화에 집중.
+Meeting Context Hub project-specific session wrap-up. Focus on documentation updates.
 
-## 실행 순서
+## Execution Order
 
-1. git status/diff 확인
-2. 문서 최신화 분석 (Task 에이전트)
-3. 결과 통합 및 사용자 선택
-4. 선택된 작업 실행
+1. Check git status/diff
+2. Analyze documentation updates (Task agent)
+3. Integrate results and user selection
+4. Execute selected actions
 
-## Phase 1: Git 상태
+## Phase 1: Git Status
 
 ```bash
 git status --short
 git diff --stat HEAD~3
 ```
 
-## Phase 2: 문서 최신화 분석
+## Phase 2: Documentation Update Analysis
 
-Task(subagent_type="Explore")로 분석:
+Analyze with Task(subagent_type="Explore"):
 
 ### AI Context (.claude/ai-context/)
 
-| 변경 유형 | 대상 |
-|----------|------|
-| 도메인 용어 | .claude/ai-context/meeting-domain/glossary.json |
-| 엔티티 정의 | .claude/ai-context/meeting-domain/entities.json |
-| 비즈니스 규칙 | .claude/ai-context/meeting-domain/rules.json |
-| Obsidian 설정 | .claude/ai-context/integrations/obsidian.json |
-| Slack 연동 | .claude/ai-context/integrations/slack.json |
-| Notion 연동 | .claude/ai-context/integrations/notion.json |
+| Change Type | Target |
+|-------------|--------|
+| Domain terms | .claude/ai-context/domain/glossary.json |
+| Entity definitions | .claude/ai-context/domain/entities.json |
+| Business rules | .claude/ai-context/domain/rules.json |
+| Obsidian config | .claude/ai-context/integrations/obsidian.json |
+| Slack integration | .claude/ai-context/integrations/slack.json |
+| Notion integration | .claude/ai-context/integrations/notion.json |
 
-### 프로젝트 문서
+### Project Documents
 
-| 변경 유형 | 대상 |
-|----------|------|
-| 아키텍처 | CLAUDE.md → Architecture |
-| 네이밍 컨벤션 | CLAUDE.md → Naming Convention |
-| 핵심 규칙 | CLAUDE.md → Core Rules |
-| 모듈별 가이드 | src/*/CLAUDE.md |
+| Change Type | Target |
+|-------------|--------|
+| Architecture | CLAUDE.md → Architecture section |
+| Naming conventions | CLAUDE.md → Naming Convention section |
+| Core rules | CLAUDE.md → Core Rules section |
+| Module guides | src/*/CLAUDE.md |
 
-### 모듈별 CLAUDE.md
+### Module CLAUDE.md Files
 
-| 모듈 | 체크 항목 |
-|------|----------|
-| repositories/ | 인터페이스 목록, 규칙 |
-| hooks/ | 훅 목록, 사용법 |
-| lib/ai/ | 프롬프트 목록, 버전 |
-| storage/ | 구현체 목록, 전환 방법 |
-| application/ | UseCase 목록 |
+| Module | Check Items |
+|--------|-------------|
+| repositories/ | Interface list, rules |
+| hooks/ | Hook list, usage |
+| lib/ai/ | Prompt list, versions |
+| storage/ | Implementation list, swap method |
+| application/ | UseCase list |
 
-## Phase 3: 사용자 선택
+## Phase 3: User Selection
 
 AskUserQuestion:
-- 문서 업데이트 실행
-- 커밋 생성
-- 둘 다
-- 건너뛰기
+- Execute documentation updates
+- Create commit
+- Both
+- Skip
 
-## Phase 4: 실행
+## Phase 4: Execution
 
-선택된 작업 수행.
+Execute selected actions.
 
-## 추가 체크리스트
+## Additional Checklist
 
-- [ ] Zod 스키마 버전 일관성
-- [ ] 프롬프트 version 필드 업데이트
-- [ ] 환경변수 .env.local.example 동기화
+- [ ] Zod schema version consistency
+- [ ] Prompt version field updates
+- [ ] Environment variable .env.local.example sync

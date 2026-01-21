@@ -4,7 +4,7 @@
   "integration": {
     "name": "Slack",
     "type": "external_api",
-    "description": "Slack 채널/DM에서 컨텍스트 수집"
+    "description": "Collect context from Slack channels/DMs"
   },
   "config": {
     "token": {
@@ -14,17 +14,17 @@
   },
   "operations": {
     "fetch_messages": {
-      "description": "채널/DM 메시지 가져오기",
+      "description": "Fetch channel/DM messages",
       "api": "conversations.history",
       "params": ["channel", "limit", "oldest", "latest"]
     },
     "get_user": {
-      "description": "사용자 정보 조회",
+      "description": "Get user info",
       "api": "users.info",
       "params": ["user"]
     },
     "list_channels": {
-      "description": "접근 가능한 채널 목록",
+      "description": "List accessible channels",
       "api": "conversations.list",
       "params": ["types", "limit"]
     }
@@ -38,11 +38,11 @@
     "endpoint": "/api/sync/slack",
     "methods": {
       "GET": {
-        "description": "채널 목록 조회",
+        "description": "Get channel list",
         "response": "{ channels: [{id, name}] }"
       },
       "POST": {
-        "description": "채널 메시지를 Context로 동기화",
+        "description": "Sync channel messages to Context",
         "request": "{ channelId: string, limit?: number }",
         "response": "{ success: true }"
       }

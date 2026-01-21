@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "naming": {
+    "repository_interface": {
+      "pattern": "{entity}.repository.ts",
+      "example": "context.repository.ts"
+    },
+    "repository_impl": {
+      "pattern": "{entity}.{provider}.ts",
+      "example": "context.obsidian.ts"
+    },
+    "usecase": {
+      "pattern": "{action}-{entity}.usecase.ts",
+      "examples": ["add-context.usecase.ts", "summarize-meeting.usecase.ts"]
+    },
+    "ai_interface": {
+      "pattern": "I{Type}Client",
+      "examples": ["ILLMClient", "IEmbeddingClient", "ITranscriptionClient"]
+    },
+    "ai_client": {
+      "pattern": "{provider}.client.ts",
+      "examples": ["claude.client.ts", "whisper.client.ts"]
+    },
+    "prompt": {
+      "pattern": "{purpose}.prompt.ts",
+      "examples": ["tagging.prompt.ts", "meeting-summary.prompt.ts"]
+    },
+    "types": {
+      "pattern": "{entity}.types.ts",
+      "examples": ["context.types.ts", "meeting.types.ts"]
+    },
+    "schema": {
+      "pattern": "{entity}.schema.ts",
+      "examples": ["context.schema.ts", "meeting.schema.ts"]
+    },
+    "cli_command": {
+      "pattern": "{name}.command.ts",
+      "examples": ["add.command.ts", "search.command.ts"]
+    },
+    "cli_utils": {
+      "pattern": "{purpose}.ts",
+      "examples": ["cli-runner.ts", "formatters.ts"]
+    },
+    "input_handler": {
+      "pattern": "{type}.handler.ts",
+      "examples": ["image.handler.ts", "meeting.handler.ts"]
+    },
+    "error_class": {
+      "pattern": "{Type}Error",
+      "examples": ["NotFoundError", "ValidationError", "AIClientError"]
+    }
+  },
+  "commit": {
+    "format": "{type}: {description}",
+    "types": {
+      "feat": "New feature",
+      "fix": "Bug fix",
+      "refactor": "Code improvement (no feature change)",
+      "docs": "Documentation",
+      "test": "Test addition/modification",
+      "chore": "Build, config, tooling",
+      "style": "Code formatting"
+    },
+    "examples": [
+      "feat: add image analysis feature",
+      "fix: embedding similarity calculation bug",
+      "refactor: extract common spinner utility"
+    ],
+    "rules": [
+      "Use English commit messages",
+      "No Co-Authored-By or AI markers",
+      "No direct commits to main branch"
+    ]
+  },
+  "branch": {
+    "patterns": {
+      "feat/": "New features",
+      "fix/": "Bug fixes",
+      "refactor/": "Code improvements",
+      "docs/": "Documentation",
+      "test/": "Test additions"
+    },
+    "format": "{type}/{kebab-case-description}",
+    "examples": ["feat/meeting-summary", "fix/tag-duplicate"]
+  },
+  "code_style": {
+    "typescript": {
+      "strict": true,
+      "esm": true,
+      "file_extensions": ".ts for source, .js in imports"
+    },
+    "prompts": {
+      "version_field": "All prompts must include version field",
+      "example": "{ version: '1.0', system: '...', template: (input) => `...` }"
+    },
+    "errors": {
+      "base_class": "MCHError",
+      "code_field": "All errors must have code field for programmatic handling"
+    },
+    "documentation": {
+      "new_directory": "Create CLAUDE.md when adding new directory",
+      "comments": "English comments, minimize when code is self-explanatory"
+    }
+  },
+  "architecture_rules": [
+    "Clean Architecture: Repository interface → Storage implementation separation",
+    "Declarative prompts: Include version field in ai/prompts",
+    "Zod schemas: Define in types/ directory",
+    "AI client abstraction: Dependency injection via ai/interfaces",
+    "Unified error handling: MCHError-based custom error classes in errors/",
+    "CLI common functions: Centralize spinner, formatting, error handling in cli/utils"
+  ]
+}

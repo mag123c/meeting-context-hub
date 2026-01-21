@@ -1,142 +1,142 @@
 ---
 name: clarify
-description: 모호한 요구사항 명확화 후 Plan Mode 자동 진입. 세션 첫 프롬프트에 필수 호출.
+description: Clarify ambiguous requirements then auto-enter Plan Mode. Required on first prompt of session.
 ---
 
 # Clarify (Meeting Context Hub)
 
-요구사항을 명확화하고 Plan Mode로 자동 진입하는 스킬.
+Skill for clarifying requirements and auto-entering Plan Mode.
 
-## 워크플로우
+## Workflow
 
 ```
 /clarify
     │
-    ├─ Phase 1: 원본 기록
-    │   └─ 원본 요청 그대로 기록
+    ├─ Phase 1: Record Original
+    │   └─ Record original request as-is
     │
-    ├─ Phase 2: 질문
-    │   └─ AskUserQuestion으로 모호점 해결
+    ├─ Phase 2: Question
+    │   └─ Resolve ambiguities via AskUserQuestion
     │
-    ├─ Phase 3: 요약
-    │   └─ Before/After 비교
+    ├─ Phase 3: Summary
+    │   └─ Before/After comparison
     │
-    └─ Phase 4: Plan Mode 자동 진입
-        └─ EnterPlanMode() 호출
+    └─ Phase 4: Auto-enter Plan Mode
+        └─ Call EnterPlanMode()
 ```
 
-## Phase 1: 원본 기록
+## Phase 1: Record Original
 
 ```markdown
 ## Original Requirement
-"{원본 요청 그대로}"
+"{original request as-is}"
 
-식별된 모호점:
-- Scope: [범위가 불명확한 부분]
-- Behavior: [동작이 불명확한 부분]
-- Data: [데이터 형식이 불명확한 부분]
-- Constraints: [제약조건이 불명확한 부분]
+Identified ambiguities:
+- Scope: [unclear scope areas]
+- Behavior: [unclear behavior areas]
+- Data: [unclear data format areas]
+- Constraints: [unclear constraint areas]
 ```
 
-## Phase 2: 질문
+## Phase 2: Question
 
-AskUserQuestion 도구 사용. 한 번에 여러 질문 가능.
+Use AskUserQuestion tool. Multiple questions allowed at once.
 
-**질문 설계 원칙**:
-- 구체적 > 추상적
-- 선택지 제공 > 열린 질문
-- 한 번에 하나의 관심사
+**Question Design Principles**:
+- Specific > Abstract
+- Provide options > Open questions
+- One concern at a time
 
 ```
 AskUserQuestion:
-question: "어떤 인증 방식을 사용할까요?"
+question: "Which authentication method should we use?"
 options:
-  - label: "Supabase Auth (추천)"
-    description: "이메일/비밀번호 + OAuth"
+  - label: "Supabase Auth (Recommended)"
+    description: "Email/password + OAuth"
   - label: "NextAuth"
-    description: "다양한 프로바이더 지원"
+    description: "Various provider support"
 ```
 
-## Phase 3: 요약
+## Phase 3: Summary
 
 ```markdown
 ## Requirement Clarification Summary
 
 ### Before (Original)
-"{원본 요청}"
+"{original request}"
 
 ### After (Clarified)
-**Goal**: [정확한 목표]
-**Scope**: [포함/제외 범위]
-**Constraints**: [제약조건]
-**Success Criteria**: [완료 기준]
+**Goal**: [precise goal]
+**Scope**: [inclusions/exclusions]
+**Constraints**: [constraints]
+**Success Criteria**: [completion criteria]
 
 **Decisions Made**:
 | Question | Decision |
 |----------|----------|
-| [질문 1] | [결정] |
-| [질문 2] | [결정] |
+| [Question 1] | [Decision] |
+| [Question 2] | [Decision] |
 ```
 
-## Phase 4: Plan Mode 자동 진입
+## Phase 4: Auto-enter Plan Mode
 
-명확화 완료 후 **반드시** EnterPlanMode 호출:
+After clarification, **always** call EnterPlanMode:
 
 ```
-요구사항 명확화 완료. Plan Mode로 진입합니다.
+Requirement clarification complete. Entering Plan Mode.
 ```
-→ `EnterPlanMode()` 호출
+→ Call `EnterPlanMode()`
 
-**중요**: clarify 완료 후 사용자에게 묻지 않고 자동으로 Plan Mode 진입.
+**Important**: After clarify completes, auto-enter Plan Mode without asking user.
 
-## Meeting Context Hub 예시
+## Meeting Context Hub Example
 
-### 입력
+### Input
 ```
-"회의록 요약 기능 구현해줘"
+"Implement meeting summary feature"
 ```
 
-### Phase 2 질문들
+### Phase 2 Questions
 
 ```
 AskUserQuestion:
-1. 요약 형식? → PRD (problem/goal/scope/requirements)
-2. Action Items 포함? → 예, 담당자/기한
-3. 저장 위치? → Supabase + Obsidian
-4. 태그 자동 생성? → 기존 태그 재활용
+1. Summary format? → PRD (problem/goal/scope/requirements)
+2. Include Action Items? → Yes, assignee/deadline
+3. Storage location? → Supabase + Obsidian
+4. Auto-generate tags? → Reuse existing tags
 ```
 
-### Phase 3 요약
+### Phase 3 Summary
 
 ```markdown
 ### Before
-"회의록 요약 기능 구현해줘"
+"Implement meeting summary feature"
 
 ### After
-**Goal**: 회의록 텍스트를 PRD 형식으로 요약 + Action Items 추출
+**Goal**: Summarize meeting text to PRD format + extract Action Items
 **Scope**:
-- 포함: PRD 추출, Action Items, 자동 태깅, Obsidian 저장
-- 제외: 음성 인식, 실시간 녹음
-**Constraints**: Claude API 사용, Zod 스키마 검증
-**Success Criteria**: 회의록 입력 시 PRD + Action Items 생성되어 저장됨
+- Include: PRD extraction, Action Items, auto-tagging, Obsidian storage
+- Exclude: Speech recognition, real-time recording
+**Constraints**: Use Claude API, Zod schema validation
+**Success Criteria**: Meeting input generates PRD + Action Items saved
 ```
 
 ### Phase 4
 
 ```
-요구사항 명확화 완료. Plan Mode로 진입합니다.
+Requirement clarification complete. Entering Plan Mode.
 ```
-→ EnterPlanMode() 호출
+→ Call EnterPlanMode()
 
-## 규칙
+## Rules
 
-1. **가정 금지**: 불명확하면 질문하기
-2. **PRD 수준**: 구현 가능할 정도로 구체화
-3. **자동 진입**: 명확화 후 반드시 EnterPlanMode 호출
-4. **Plan 참조**: 기존 PLAN.md, implementation-plan.md 확인
+1. **No assumptions**: Question if unclear
+2. **PRD level**: Specific enough to implement
+3. **Auto-enter**: Always call EnterPlanMode after clarification
+4. **Reference plans**: Check existing PLAN.md, implementation-plan.md
 
-## 다음 단계
+## Next Steps
 
-Plan Mode에서 계획 작성 후:
-- 사용자 승인
-- `/implement` 스킬로 구현 시작
+After Plan Mode:
+- User approval
+- Start implementation with `/implement` skill
