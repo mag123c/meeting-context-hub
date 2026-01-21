@@ -28,6 +28,7 @@ mch add -i ./image.png      # Image (Claude Vision)
 mch add -a ./audio.mp3      # Audio (Whisper)
 mch add -f ./data.csv       # File (txt, md, csv, json)
 mch add -m ./meeting.txt    # Meeting (PRD summary + Action Items)
+mch add --project "Name" --category "Type"  # Manual hierarchy
 
 mch search "keyword"        # Semantic search (embedding)
 mch search --exact "text"   # Exact text match
@@ -35,6 +36,13 @@ mch search --similar <id>   # Similar documents
 
 mch list                    # All contexts
 mch list --tag "meeting"    # Filter by tag
+mch list --project "Name"   # Filter by project
+mch list --category "Type"  # Filter by category
+
+mch migrate --preview       # Show legacy files count
+mch migrate --dry-run       # Preview migration changes
+mch migrate --to-uncategorized  # Move to Uncategorized/General
+mch migrate                 # AI-powered migration
 
 mch config show             # Show config
 mch config set <KEY> <val>  # Set API key
@@ -72,5 +80,7 @@ See `.claude/ai-context/` for detailed knowledge:
 | TUI layer | `src/tui/CLAUDE.md` |
 | Config | `src/config/CLAUDE.md` |
 | Input handlers | `src/input/CLAUDE.md` |
+| Core (UseCases) | `src/core/CLAUDE.md` |
+| Types | `src/types/CLAUDE.md` |
 | Errors | `src/errors/CLAUDE.md` |
 | Utils | `src/utils/CLAUDE.md` |

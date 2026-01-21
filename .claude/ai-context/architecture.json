@@ -13,7 +13,7 @@
       "description": "User input handling and output formatting",
       "ctx": "src/cli/CLAUDE.md",
       "subdirs": {
-        "commands": "CLI command implementations (add, search, list, config)",
+        "commands": "CLI command implementations (add, search, list, config, migrate)",
         "utils": "Common CLI utilities (spinner, formatters, error handling)"
       }
     },
@@ -29,11 +29,14 @@
     },
     "core": {
       "path": "src/core/",
-      "description": "Application layer - UseCases and factories",
+      "description": "Application layer - UseCases, Services, and factories",
+      "ctx": "src/core/CLAUDE.md",
       "files": {
-        "add-context.usecase.ts": "Add context workflow",
+        "add-context.usecase.ts": "Add context workflow with hierarchy",
         "summarize-meeting.usecase.ts": "Meeting summarization",
         "search-context.usecase.ts": "Context search",
+        "hierarchy.service.ts": "AI-powered hierarchy classification",
+        "migrate-hierarchy.usecase.ts": "Legacy file migration",
         "factories.ts": "DI factory"
       }
     },
@@ -47,9 +50,11 @@
     "types": {
       "path": "src/types/",
       "description": "Domain layer - Types and Zod schemas",
+      "ctx": "src/types/CLAUDE.md",
       "files": {
-        "context.types.ts": "Context entity types",
+        "context.types.ts": "Context entity types (with project/category)",
         "context.schema.ts": "Context Zod schemas",
+        "hierarchy.types.ts": "Hierarchy classification types",
         "meeting.types.ts": "Meeting types",
         "meeting.schema.ts": "Meeting Zod schemas",
         "prompt.types.ts": "Prompt types",

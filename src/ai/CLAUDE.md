@@ -10,6 +10,15 @@ LLM, embedding, and transcription client abstraction with prompt management.
 | `clients/` | Implementations (Claude, OpenAI, Whisper) |
 | `prompts/` | Prompt templates with versioning |
 
+## Prompts
+
+| File | Purpose |
+|------|---------|
+| `tagging.prompt.ts` | Extract tags, project, sprint from content |
+| `summarize.prompt.ts` | Generate content summary |
+| `meeting-summary.prompt.ts` | Extract meeting summary, action items |
+| `hierarchy-classification.prompt.ts` | Classify content into project/category |
+
 ## Interfaces
 
 | Interface | Implementation | Purpose |

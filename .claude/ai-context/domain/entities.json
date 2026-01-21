@@ -151,5 +151,35 @@
       "primary_key": ["context_id", "tag_id"]
     }
   },
-  "hierarchy": "Squad → Project → Sprint → Meeting/Context/ActionItem"
+  "hierarchy": "Squad → Project → Sprint → Meeting/Context/ActionItem",
+  "local_entities": {
+    "HierarchyPlacement": {
+      "description": "AI classification result for context placement (local CLI only)",
+      "source": "src/types/hierarchy.types.ts",
+      "fields": {
+        "project": { "type": "string", "description": "Project name (e.g., 'ProjectA', 'Uncategorized')" },
+        "category": { "type": "string", "description": "Category name (e.g., 'Backend', 'Meeting', 'General')" },
+        "isNewProject": { "type": "boolean", "description": "Whether this creates a new project" },
+        "isNewCategory": { "type": "boolean", "description": "Whether this creates a new category" },
+        "confidence": { "type": "number", "description": "AI confidence score (0-1)" }
+      }
+    },
+    "HierarchyCache": {
+      "description": "Hierarchy state stored in hierarchy.json (local CLI only)",
+      "file": "vault/mch/hierarchy.json",
+      "fields": {
+        "version": { "type": "number", "description": "Cache format version" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" },
+        "projects": { "type": "HierarchyProject[]", "description": "Array of project entries" }
+      }
+    },
+    "HierarchyProject": {
+      "description": "Project entry in hierarchy cache",
+      "fields": {
+        "name": { "type": "string", "description": "Project name" },
+        "categories": { "type": "string[]", "description": "List of category names" }
+      }
+    }
+  },
+  "local_hierarchy": "vault/mch/{project}/{category}/{filename}.md"
 }
