@@ -112,12 +112,27 @@
         "env.ts": "Environment variables",
         "constants.ts": "Application constants (AI, similarity, storage)"
       }
+    },
+    "i18n": {
+      "path": "src/i18n/",
+      "description": "Internationalization system for multi-language support",
+      "ctx": "src/i18n/CLAUDE.md",
+      "subdirs": {
+        "locales": "Translation files (en.ts, ko.ts) and locale registry"
+      },
+      "files": {
+        "types.ts": "Type definitions (SupportedLanguage, Translations, LanguageOption)",
+        "context.tsx": "React Context (I18nProvider, useTranslation hook)",
+        "storage.ts": "Language preference persistence (~/.config/mch/preferences.json)",
+        "index.ts": "Public exports"
+      }
     }
   },
   "dependencies": {
     "flow": [
       "cli → core",
       "tui → core",
+      "tui → i18n",
       "core → repositories",
       "core → ai/interfaces",
       "core → storage",

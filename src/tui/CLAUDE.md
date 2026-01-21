@@ -34,6 +34,7 @@ Interactive TUI using ink (React for CLI).
 | `useAsyncAction` | Async state management |
 | `useNavigation` | Screen navigation |
 | `useRecording` | Recording state, timer, chunk tracking |
+| `useTranslation` | i18n context (t, language, setLanguage, formatDate, formatDateTime) |
 
 ## Screens
 
@@ -54,3 +55,24 @@ Interactive TUI using ink (React for CLI).
 | `Enter` | Select/confirm |
 | `Esc` | Back |
 | `q` | Exit (main menu only) |
+
+## Internationalization (i18n)
+
+All TUI components use the i18n system via `useTranslation` hook from `src/i18n/`.
+
+```typescript
+const { t, language, setLanguage, formatDate, formatDateTime } = useTranslation();
+
+// Access translations
+<Text>{t.mainMenu.addContext}</Text>
+
+// Format dates (locale-aware)
+<Text>{formatDate(context.createdAt)}</Text>
+
+// Change language (persists to ~/.config/mch/preferences.json)
+setLanguage("ko");
+```
+
+**Supported Languages:** English (`en`), Korean (`ko`)
+
+**Environment Override:** `MCH_LANGUAGE=ko mch` forces Korean regardless of stored preference.
