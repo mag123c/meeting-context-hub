@@ -9,6 +9,7 @@ export interface Frontmatter {
   embedding?: number[];
   source?: string;
   project?: string;
+  category?: string;
   sprint?: string;
   createdAt: string;
   updatedAt: string;
@@ -34,6 +35,9 @@ export function contextToMarkdown(context: Context): string {
   if (context.project) {
     frontmatter.project = context.project;
   }
+  if (context.category) {
+    frontmatter.category = context.category;
+  }
   if (context.sprint) {
     frontmatter.sprint = context.sprint;
   }
@@ -54,6 +58,7 @@ export function markdownToContext(markdown: string): Context {
     embedding: fm.embedding,
     source: fm.source,
     project: fm.project,
+    category: fm.category,
     sprint: fm.sprint,
     createdAt: new Date(fm.createdAt),
     updatedAt: new Date(fm.updatedAt),

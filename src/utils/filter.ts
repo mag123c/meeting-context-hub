@@ -31,6 +31,10 @@ export function applyFilters<T extends FilterableContext>(
     filtered = filtered.filter((ctx) => ctx.project === options.project);
   }
 
+  if (options.category) {
+    filtered = filtered.filter((ctx) => ctx.category === options.category);
+  }
+
   if (options.sprint) {
     filtered = filtered.filter((ctx) => ctx.sprint === options.sprint);
   }
@@ -39,11 +43,11 @@ export function applyFilters<T extends FilterableContext>(
 }
 
 /**
- * Apply only project/sprint filters (for already tag-filtered results)
+ * Apply only project/sprint/category filters (for already tag-filtered results)
  */
 export function applyProjectSprintFilters<T extends FilterableContext>(
   contexts: T[],
-  options?: Pick<ListOptions, "project" | "sprint">
+  options?: Pick<ListOptions, "project" | "category" | "sprint">
 ): T[] {
   if (!options) return contexts;
 
@@ -51,6 +55,10 @@ export function applyProjectSprintFilters<T extends FilterableContext>(
 
   if (options.project) {
     filtered = filtered.filter((ctx) => ctx.project === options.project);
+  }
+
+  if (options.category) {
+    filtered = filtered.filter((ctx) => ctx.category === options.category);
   }
 
   if (options.sprint) {

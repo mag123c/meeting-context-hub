@@ -6,18 +6,22 @@ import { MeetingSummarySchema } from "../types/meeting.schema.js";
 import { meetingSummaryPrompt } from "../ai/prompts/meeting-summary.prompt.js";
 import { taggingPrompt } from "../ai/prompts/tagging.prompt.js";
 import { extractJsonFromMarkdown, safeJsonParse, addRelatedLinks, formatMeetingMarkdown } from "../utils/index.js";
+import type { HierarchyService } from "./hierarchy.service.js";
+
+const DEFAULT_MEETING_CATEGORY = "Meeting";
 
 export interface SummarizeMeetingDeps {
   llmClient: ILLMClient;
   embeddingClient: IEmbeddingClient;
   contextRepository: ContextRepository;
+  hierarchyService?: HierarchyService;
 }
 
 export class SummarizeMeetingUseCase {
   constructor(private deps: SummarizeMeetingDeps) {}
 
   async execute(input: CreateMeetingInput): Promise<Meeting> {
-    const { llmClient, embeddingClient, contextRepository } = this.deps;
+    const { llmClient, embeddingClient, contextRepository, hierarchyService } = this.deps;
 
     // 1. Extract meeting summary + tags in parallel
     const [summaryResponse, tagResponse] = await Promise.all([
@@ -29,11 +33,33 @@ export class SummarizeMeetingUseCase {
     const parsed = safeJsonParse(tagResponse, { tags: [] });
     const tags: string[] = Array.isArray(parsed) ? parsed : (parsed.tags || []);
 
-    // 2. Determine project/sprint: CLI option > AI extraction
-    const project = input.project || (meetingSummary.project ?? undefined);
+    // 2. Determine project/sprint/category: CLI option > AI extraction
+    let project = input.project || (meetingSummary.project ?? undefined);
     const sprint = input.sprint || (meetingSummary.sprint ?? undefined);
+    let category = input.category;
 
-    // 3. Generate embedding (based on summary text)
+    // 3. If hierarchy service available, classify and ensure folder structure
+    if (hierarchyService) {
+      // For meetings, default to "Meeting" category if not specified
+      if (!category) {
+        category = DEFAULT_MEETING_CATEGORY;
+      }
+
+      // Use AI to determine project if not specified
+      if (!project) {
+        const placement = await hierarchyService.classify(
+          meetingSummary.summary,
+          tags,
+          "meeting"
+        );
+        project = placement.project;
+      }
+
+      // Ensure folder structure exists
+      await hierarchyService.ensureFolderPath(project || "Uncategorized", category);
+    }
+
+    // 4. Generate embedding (based on summary text)
     const embeddingText = this.buildEmbeddingText(meetingSummary);
     const embedding = await embeddingClient.embed(embeddingText);
 
@@ -60,6 +86,7 @@ export class SummarizeMeetingUseCase {
       embedding,
       source: input.source,
       project,
+      category,
       sprint,
       createdAt: now,
       updatedAt: now,

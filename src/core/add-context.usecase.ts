@@ -5,18 +5,21 @@ import type { ILLMClient, IEmbeddingClient } from "../ai/interfaces/index.js";
 import { taggingPrompt } from "../ai/prompts/tagging.prompt.js";
 import { summarizePrompt } from "../ai/prompts/summarize.prompt.js";
 import { parseMetadata, addRelatedLinks } from "../utils/index.js";
+import type { HierarchyService } from "./hierarchy.service.js";
 
 export class AddContextUseCase {
   constructor(
     private repository: ContextRepository,
     private llm: ILLMClient,
-    private embedding: IEmbeddingClient
+    private embedding: IEmbeddingClient,
+    private hierarchyService?: HierarchyService
   ) {}
 
   async execute(input: CreateContextInput): Promise<Context> {
     let tags: string[];
-    let project: string | undefined = input.project; // CLI option takes priority
-    let sprint: string | undefined = input.sprint;   // CLI option takes priority
+    let project: string | undefined = input.project;   // CLI option takes priority
+    let category: string | undefined = input.category; // CLI option takes priority
+    let sprint: string | undefined = input.sprint;     // CLI option takes priority
     let summary: string;
     let embeddingVector: number[];
 
@@ -45,6 +48,22 @@ export class AddContextUseCase {
       if (!sprint) sprint = metadata.sprint;
     }
 
+    // AI-based hierarchy classification (if service available and not already specified)
+    if (this.hierarchyService && (!project || !category)) {
+      const placement = await this.hierarchyService.classify(
+        summary || input.content.slice(0, 500),
+        tags,
+        input.type
+      );
+
+      // Only use AI classification if CLI options not provided
+      if (!project) project = placement.project;
+      if (!category) category = placement.category;
+
+      // Ensure folder structure exists
+      await this.hierarchyService.ensureFolderPath(project, category);
+    }
+
     const now = new Date();
     const context: Context = {
       id: randomUUID(),
@@ -55,6 +74,7 @@ export class AddContextUseCase {
       embedding: embeddingVector,
       source: input.source,
       project,
+      category,
       sprint,
       createdAt: now,
       updatedAt: now,

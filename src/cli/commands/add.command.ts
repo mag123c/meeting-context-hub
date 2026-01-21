@@ -13,7 +13,8 @@ export function createAddCommand(): Command {
     .option("-a, --audio <path>", "Add audio file (Whisper)")
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
     .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
-    .option("--project <name>", "Project name")
+    .option("--project <name>", "Project name (hierarchy: level 1)")
+    .option("--category <name>", "Category name (hierarchy: level 2)")
     .option("--sprint <name>", "Sprint identifier")
     .action(async (options) => {
       await withSpinner(async (spinner) => {
@@ -25,6 +26,7 @@ export function createAddCommand(): Command {
           const meetingInput = await handleMeetingInput(options.meeting);
 
           if (options.project) meetingInput.project = options.project;
+          if (options.category) meetingInput.category = options.category;
           if (options.sprint) meetingInput.sprint = options.sprint;
 
           spinner.text = "Analyzing meeting (extracting summary, action items)...";
@@ -64,9 +66,10 @@ export function createAddCommand(): Command {
         }
 
         if (options.project) input.project = options.project;
+        if (options.category) input.category = options.category;
         if (options.sprint) input.sprint = options.sprint;
 
-        spinner.start("Processing context (tagging, summarizing, embedding)...");
+        spinner.start("Processing context (tagging, summarizing, embedding, classifying)...");
         const context = await services.addContextUseCase.execute(input);
         spinner.succeed("Context saved!");
 

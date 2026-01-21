@@ -10,6 +10,7 @@ export function createListCommand(): Command {
     .option("--tag <tags>", "Filter by tags (comma-separated)")
     .option("--type <type>", "Filter by type (text, image, audio, file)")
     .option("--project <name>", "Filter by project name")
+    .option("--category <name>", "Filter by category name")
     .option("--sprint <name>", "Filter by sprint identifier")
     .option("-l, --limit <n>", "Limit results", "20")
     .option("-o, --offset <n>", "Offset for pagination", "0")
@@ -22,6 +23,7 @@ export function createListCommand(): Command {
           tags?: string[];
           type?: ContextType;
           project?: string;
+          category?: string;
           sprint?: string;
           limit?: number;
           offset?: number;
@@ -38,6 +40,9 @@ export function createListCommand(): Command {
         }
         if (options.project) {
           listOptions.project = options.project;
+        }
+        if (options.category) {
+          listOptions.category = options.category;
         }
         if (options.sprint) {
           listOptions.sprint = options.sprint;

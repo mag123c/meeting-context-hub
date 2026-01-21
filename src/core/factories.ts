@@ -5,6 +5,7 @@ import { TextHandler, ImageHandler, AudioHandler, FileHandler } from "../input/i
 import { AddContextUseCase } from "./add-context.usecase.js";
 import { SearchContextUseCase } from "./search-context.usecase.js";
 import { SummarizeMeetingUseCase } from "./summarize-meeting.usecase.js";
+import { HierarchyService } from "./hierarchy.service.js";
 
 export interface AppServices {
   config: Config;
@@ -12,6 +13,7 @@ export interface AppServices {
   claude: ClaudeClient;
   whisper: WhisperClient;
   embedding: EmbeddingClient;
+  hierarchyService: HierarchyService;
   textHandler: TextHandler;
   imageHandler: ImageHandler;
   audioHandler: AudioHandler;
@@ -33,18 +35,20 @@ export function createServices(): AppServices {
   const claude = new ClaudeClient(config.anthropicApiKey);
   const whisper = new WhisperClient(config.openaiApiKey);
   const embedding = new EmbeddingClient(config.openaiApiKey);
+  const hierarchyService = new HierarchyService(obsidianPath, claude);
 
   const textHandler = new TextHandler();
   const imageHandler = new ImageHandler(claude);
   const audioHandler = new AudioHandler(whisper);
   const fileHandler = new FileHandler();
 
-  const addContextUseCase = new AddContextUseCase(repository, claude, embedding);
+  const addContextUseCase = new AddContextUseCase(repository, claude, embedding, hierarchyService);
   const searchContextUseCase = new SearchContextUseCase(repository, embedding);
   const summarizeMeetingUseCase = new SummarizeMeetingUseCase({
     llmClient: claude,
     embeddingClient: embedding,
     contextRepository: repository,
+    hierarchyService,
   });
 
   services = {
@@ -53,6 +57,7 @@ export function createServices(): AppServices {
     claude,
     whisper,
     embedding,
+    hierarchyService,
     textHandler,
     imageHandler,
     audioHandler,

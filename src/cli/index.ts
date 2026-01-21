@@ -9,6 +9,7 @@ import {
   createSearchCommand,
   createListCommand,
   createConfigCommand,
+  createMigrateCommand,
 } from "./commands/index.js";
 
 // 업데이트 알림 체크 (비동기, 논블로킹)
@@ -32,6 +33,7 @@ if (process.argv.length === 2) {
   program.addCommand(createSearchCommand());
   program.addCommand(createListCommand());
   program.addCommand(createConfigCommand());
+  program.addCommand(createMigrateCommand());
 
   program.on("command:*", () => {
     console.error(chalk.red("Invalid command: " + program.args.join(" ")));

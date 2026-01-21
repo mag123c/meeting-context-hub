@@ -31,6 +31,7 @@ export interface Meeting {
 export interface CreateMeetingInput {
   transcript: string;
   source?: string;
-  project?: string;  // Project name
-  sprint?: string;   // Sprint identifier
+  project?: string;   // Project name (hierarchy: level 1)
+  category?: string;  // Category name (hierarchy: level 2)
+  sprint?: string;    // Sprint identifier
 }
