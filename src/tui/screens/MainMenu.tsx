@@ -1,5 +1,5 @@
 import { Box } from "ink";
-import { Header, Menu, KeyHintBar, type MenuItem } from "../components/index.js";
+import { Banner, Menu, KeyHintBar, type MenuItem } from "../components/index.js";
 import type { NavigationContext, Screen } from "../App.js";
 import { useTranslation } from "../../i18n/index.js";
 
@@ -50,8 +50,7 @@ export function MainMenu({
 
   return (
     <Box flexDirection="column">
-      <Header
-        title={t.mainMenu.title}
+      <Banner
         version={version}
         updateAvailable={updateAvailable}
         latestVersion={latestVersion || undefined}

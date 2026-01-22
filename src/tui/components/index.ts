@@ -1,4 +1,5 @@
 export { Header } from "./Header.js";
+export { Banner } from "./Banner.js";
 export { Spinner } from "./Spinner.js";
 export { Menu, type MenuItem } from "./Menu.js";
 export { KeyHint, KeyHintBar, type KeyBinding } from "./KeyHint.js";
