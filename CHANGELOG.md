@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mag123c/meeting-context-hub/compare/v1.3.0...v1.4.0) (2026-01-22)
+
+
+### Features
+
+* **tui:** add ASCII art banner to main menu ([4c2cacc](https://github.com/mag123c/meeting-context-hub/commit/4c2cacc410e6155bf2876872a9aca0ab16a9f02a))
+
 # [1.3.0](https://github.com/mag123c/meeting-context-hub/compare/v1.2.0...v1.3.0) (2026-01-22)
 
 
