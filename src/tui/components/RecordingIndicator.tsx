@@ -9,6 +9,7 @@ interface RecordingIndicatorProps {
   chunkCount?: number;
   transcribedChunks?: number;
   totalChunks?: number;
+  failedChunks?: number;
   error?: string | null;
 }
 
@@ -29,6 +30,7 @@ export function RecordingIndicator({
   chunkCount = 0,
   transcribedChunks = 0,
   totalChunks = 0,
+  failedChunks = 0,
   error,
 }: RecordingIndicatorProps) {
   const { t } = useTranslation();
@@ -112,6 +114,15 @@ export function RecordingIndicator({
               <Text dimColor>
                 {t.recording.processingChunk
                   .replace("{current}", String(transcribedChunks))
+                  .replace("{total}", String(totalChunks))}
+              </Text>
+            </Box>
+          )}
+          {failedChunks > 0 && (
+            <Box marginTop={1}>
+              <Text color="yellow">
+                {t.recording.partialFailure
+                  .replace("{failed}", String(failedChunks))
                   .replace("{total}", String(totalChunks))}
               </Text>
             </Box>

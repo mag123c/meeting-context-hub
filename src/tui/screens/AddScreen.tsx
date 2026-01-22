@@ -17,13 +17,16 @@ interface AddScreenProps {
   services: AppServices;
 }
 
-type Step = "type" | "content" | "recording" | "project" | "sprint" | "processing" | "result";
+type Step = "type" | "content" | "recording" | "recording-mode" | "project" | "sprint" | "processing" | "result";
+
+type RecordingMode = "audio" | "meeting";
 
 interface FormData {
   type: ContextType | "meeting" | "record";
   content: string;
   project: string;
   sprint: string;
+  recordingMode: RecordingMode;
 }
 
 export function AddScreen({ navigation, services }: AddScreenProps) {
@@ -43,6 +46,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     content: "",
     project: "",
     sprint: "",
+    recordingMode: "audio",
   });
   const [result, setResult] = useState<Context | Meeting | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +70,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
             try {
               const transcriptionResult = await recording.transcribe(paths);
               setFormData((prev) => ({ ...prev, content: transcriptionResult.content }));
-              setStep("project");
+              setStep("recording-mode"); // Go to recording mode selection
             } catch {
               setError(recording.error || "Transcription failed");
               setStep("result");
@@ -93,6 +97,9 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       } else if (step === "result" || step === "processing") {
         // Can't go back during processing or after result
         if (step === "result") navigation.goBack();
+      } else if (step === "recording-mode") {
+        // For recording-mode, go back to type selection (can't go back to recording)
+        setStep("type");
       } else {
         // Go to previous step
         const stepOrder: Step[] = ["type", "content", "project", "sprint"];
@@ -119,6 +126,11 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     setStep("project");
   }, []);
 
+  const handleRecordingModeSelect = useCallback((item: MenuItem) => {
+    setFormData((prev) => ({ ...prev, recordingMode: item.value as RecordingMode }));
+    setStep("project");
+  }, []);
+
   const handleProjectSubmit = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, project: value }));
     setStep("sprint");
@@ -129,7 +141,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
     setStep("processing");
 
     try {
-      const { type, content, project, sprint } = { ...formData, sprint: value };
+      const { type, content, project, sprint, recordingMode } = { ...formData, sprint: value };
 
       let processedContent = content;
       let source: string | undefined;
@@ -165,6 +177,19 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
           }
         } else {
           source = "microphone-recording";
+        }
+
+        // Handle meeting mode for recordings
+        if (recordingMode === "meeting") {
+          const meetingResult = await services.summarizeMeetingUseCase.execute({
+            transcript: processedContent,
+            source: source,
+            project: project || undefined,
+            sprint: sprint || undefined,
+          });
+          setResult(meetingResult);
+          setStep("result");
+          return;
         }
       } else if (type === "file") {
         const fileResult = await services.fileHandler.handle(content);
@@ -246,7 +271,24 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
                 chunkCount={recording.chunkCount}
                 transcribedChunks={recording.transcribedChunks}
                 totalChunks={recording.totalChunks}
+                failedChunks={recording.failedChunks}
                 error={recording.error}
+              />
+            </Box>
+          </Box>
+        );
+
+      case "recording-mode":
+        return (
+          <Box flexDirection="column">
+            <Text bold>{t.add.selectRecordingMode}</Text>
+            <Box marginTop={1}>
+              <Menu
+                items={[
+                  { label: t.add.recordingModes.audio, value: "audio" },
+                  { label: t.add.recordingModes.meeting, value: "meeting" },
+                ]}
+                onSelect={handleRecordingModeSelect}
               />
             </Box>
           </Box>
@@ -370,7 +412,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
   };
 
   const getKeyBindings = () => {
-    if (step === "type") {
+    if (step === "type" || step === "recording-mode") {
       return [
         { key: "Enter", description: t.add.keyHints.select },
         { key: "Esc", description: t.add.keyHints.back },

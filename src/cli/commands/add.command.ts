@@ -13,6 +13,7 @@ export function createAddCommand(): Command {
     .option("-a, --audio <path>", "Add audio file (Whisper)")
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
     .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
+    .option("--summarize-as-meeting", "Process audio as meeting transcript (PRD summary)")
     .option("--project <name>", "Project name (hierarchy: level 1)")
     .option("--category <name>", "Category name (hierarchy: level 2)")
     .option("--sprint <name>", "Sprint identifier")
@@ -31,6 +32,28 @@ export function createAddCommand(): Command {
 
           spinner.text = "Analyzing meeting (extracting summary, action items)...";
           const meeting = await services.summarizeMeetingUseCase.execute(meetingInput);
+          spinner.succeed("Meeting processed and saved!");
+
+          const finalProject = options.project || meeting.summary.project;
+          const finalSprint = options.sprint || meeting.summary.sprint;
+          formatMeetingResult(meeting, finalProject, finalSprint);
+          return;
+        }
+
+        // Audio + meeting summarization option
+        if (options.audio && options.summarizeAsMeeting) {
+          spinner.start("Transcribing audio with Whisper...");
+          const audioResult = await services.audioHandler.handle(options.audio);
+          spinner.succeed("Audio transcribed");
+
+          spinner.start("Analyzing meeting (extracting summary, action items)...");
+          const meeting = await services.summarizeMeetingUseCase.execute({
+            transcript: audioResult.content,
+            source: audioResult.source,
+            project: options.project,
+            category: options.category,
+            sprint: options.sprint,
+          });
           spinner.succeed("Meeting processed and saved!");
 
           const finalProject = options.project || meeting.summary.project;

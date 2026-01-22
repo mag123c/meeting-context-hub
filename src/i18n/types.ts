@@ -75,6 +75,11 @@ export interface Translations {
     processing: string;
     meetingSavedSuccess: string;
     contextSavedSuccess: string;
+    selectRecordingMode: string;
+    recordingModes: {
+      audio: string;
+      meeting: string;
+    };
     labels: {
       id: string;
       title: string;
@@ -226,6 +231,9 @@ export interface Translations {
     installWith: string;
     savingRecording: string;
     recordingSaved: string;
+    partialFailure: string;
+    retrying: string;
+    allChunksFailed: string;
   };
   contextCard: {
     tags: string;

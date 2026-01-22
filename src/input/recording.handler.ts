@@ -6,6 +6,10 @@ import type { WriteStream } from "fs";
 import type { Readable } from "stream";
 import type { WhisperClient } from "../ai/clients/whisper.client.js";
 import type { CreateContextInput } from "../types/context.types.js";
+import type {
+  ChunkTranscriptionResult,
+  TranscriptionResult,
+} from "../types/transcription.types.js";
 import {
   RecordingDependencyError,
   RecordingStreamError,
@@ -21,6 +25,9 @@ import { mergeWavFiles } from "../utils/audio-merge.js";
 const CHUNK_DURATION_MS = 10 * 60 * 1000;
 // Check interval for chunk rotation
 const CHECK_INTERVAL_MS = 1000;
+// Retry configuration for transcription
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
 
 export interface RecordingController {
   stop: () => void;
@@ -195,31 +202,92 @@ export class RecordingHandler {
     }
   }
 
-  async transcribe(chunkPaths: string[]): Promise<CreateContextInput> {
-    const transcriptions: string[] = [];
+  /**
+   * Transcribe a single chunk with exponential backoff retry
+   */
+  private async transcribeChunkWithRetry(
+    chunkPath: string,
+    chunkIndex: number
+  ): Promise<ChunkTranscriptionResult> {
+    let lastError: string | undefined;
 
-    // Process chunks sequentially
-    for (const chunkPath of chunkPaths) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         // Check if file exists and has content
         const stats = statSync(chunkPath);
-        if (stats.size > 44) { // WAV header is 44 bytes
-          const text = await this.whisper.transcribe(chunkPath);
-          if (text.trim()) {
-            transcriptions.push(text.trim());
-          }
+        if (stats.size <= 44) {
+          // WAV header is 44 bytes, file is empty
+          return {
+            chunkIndex,
+            chunkPath,
+            success: true,
+            text: "",
+            attempts: attempt,
+          };
         }
+
+        const text = await this.whisper.transcribe(chunkPath);
+        return {
+          chunkIndex,
+          chunkPath,
+          success: true,
+          text: text.trim(),
+          attempts: attempt,
+        };
       } catch (err) {
-        console.error(`Failed to transcribe chunk ${chunkPath}:`, err);
-        // Continue with other chunks
+        lastError = err instanceof Error ? err.message : String(err);
+
+        // If not the last attempt, wait with exponential backoff
+        if (attempt < MAX_RETRIES) {
+          const backoffMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        }
       }
     }
 
-    const combinedContent = transcriptions.join("\n\n");
+    // All retries failed
+    return {
+      chunkIndex,
+      chunkPath,
+      success: false,
+      error: lastError,
+      attempts: MAX_RETRIES,
+    };
+  }
+
+  /**
+   * Transcribe all chunks with retry logic and partial success support
+   */
+  async transcribeWithRetry(chunkPaths: string[]): Promise<TranscriptionResult> {
+    const results: ChunkTranscriptionResult[] = [];
+
+    for (let i = 0; i < chunkPaths.length; i++) {
+      const result = await this.transcribeChunkWithRetry(chunkPaths[i], i);
+      results.push(result);
+    }
+
+    return {
+      combinedText: results
+        .filter((r) => r.success && r.text)
+        .map((r) => r.text)
+        .join("\n\n"),
+      chunks: results,
+      successCount: results.filter((r) => r.success).length,
+      failedCount: results.filter((r) => !r.success).length,
+      totalChunks: chunkPaths.length,
+    };
+  }
+
+  /**
+   * Legacy transcribe method for backward compatibility
+   * @deprecated Use transcribeWithRetry for better error handling
+   */
+  async transcribe(chunkPaths: string[]): Promise<CreateContextInput> {
+    const result = await this.transcribeWithRetry(chunkPaths);
 
     return {
       type: "audio",
-      content: combinedContent,
+      content: result.combinedText,
       source: `recording-${this.sessionId}`,
     };
   }

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { RecordingHandler, RecordingController } from "../../input/recording.handler.js";
 import type { CreateContextInput } from "../../types/context.types.js";
+import type { TranscriptionResult } from "../../types/transcription.types.js";
 
 export type RecordingState = "idle" | "recording" | "stopping" | "processing";
 
@@ -13,6 +14,8 @@ export interface UseRecordingResult {
   chunkPaths: string[];
   transcribedChunks: number;
   totalChunks: number;
+  failedChunks: number;
+  transcriptionResult: TranscriptionResult | null;
   startRecording: () => void;
   stopRecording: () => string[]; // Returns paths for immediate use
   transcribe: (paths?: string[]) => Promise<CreateContextInput>;
@@ -33,6 +36,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
   const [chunkPaths, setChunkPaths] = useState<string[]>([]);
   const [transcribedChunks, setTranscribedChunks] = useState(0);
   const [totalChunks, setTotalChunks] = useState(0);
+  const [failedChunks, setFailedChunks] = useState(0);
+  const [transcriptionResult, setTranscriptionResult] = useState<TranscriptionResult | null>(null);
 
   const controllerRef = useRef<RecordingController | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,6 +55,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
       setError(null);
       setTranscribedChunks(0);
       setTotalChunks(0);
+      setFailedChunks(0);
+      setTranscriptionResult(null);
       controllerRef.current = handler.startRecording();
       setChunkPaths([]);
       setChunkCount(1);
@@ -107,24 +114,28 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     setState("processing");
     setTranscribedChunks(0);
     setTotalChunks(pathsToTranscribe.length);
+    setFailedChunks(0);
+    setTranscriptionResult(null);
 
     try {
-      // Custom transcription with progress tracking
-      const transcriptions: string[] = [];
+      // Use new transcribeWithRetry for better error handling
+      const result = await handler.transcribeWithRetry(pathsToTranscribe);
 
-      for (let i = 0; i < pathsToTranscribe.length; i++) {
-        setTranscribedChunks(i + 1);
-        const result = await handler.transcribe([pathsToTranscribe[i]]);
-        if (result.content.trim()) {
-          transcriptions.push(result.content.trim());
-        }
+      // Update states with result
+      setTranscribedChunks(result.totalChunks);
+      setFailedChunks(result.failedCount);
+      setTranscriptionResult(result);
+
+      // Check if all chunks failed
+      if (result.successCount === 0 && result.totalChunks > 0) {
+        const errorMsg = "All audio chunks failed to transcribe";
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
-
-      const combinedContent = transcriptions.join("\n\n");
 
       return {
         type: "audio",
-        content: combinedContent,
+        content: result.combinedText,
         source: `recording-${Date.now()}`,
       };
     } catch (err) {
@@ -156,6 +167,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     setError(null);
     setTranscribedChunks(0);
     setTotalChunks(0);
+    setFailedChunks(0);
+    setTranscriptionResult(null);
   }, [handler, chunkPaths, clearTimer]);
 
   const cleanup = useCallback(async () => {
@@ -169,6 +182,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     setCurrentChunkElapsed(0);
     setTranscribedChunks(0);
     setTotalChunks(0);
+    setFailedChunks(0);
+    setTranscriptionResult(null);
   }, [handler, chunkPaths]);
 
   const saveAndCleanup = useCallback(async (vaultPath: string, paths?: string[]): Promise<string> => {
@@ -186,6 +201,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
       setCurrentChunkElapsed(0);
       setTranscribedChunks(0);
       setTotalChunks(0);
+      setFailedChunks(0);
+      setTranscriptionResult(null);
       return savedPath;
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to save recording";
@@ -212,6 +229,8 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     chunkPaths,
     transcribedChunks,
     totalChunks,
+    failedChunks,
+    transcriptionResult,
     startRecording,
     stopRecording,
     transcribe,

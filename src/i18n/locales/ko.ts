@@ -71,6 +71,11 @@ export const ko: Translations = {
     processing: "콘텐츠 처리 중...",
     meetingSavedSuccess: "회의가 성공적으로 저장되었습니다!",
     contextSavedSuccess: "컨텍스트가 성공적으로 저장되었습니다!",
+    selectRecordingMode: "녹음을 어떻게 처리하시겠습니까?",
+    recordingModes: {
+      audio: "간단한 오디오 (빠른 요약)",
+      meeting: "회의 기록 (PRD 요약 및 액션 아이템)",
+    },
     labels: {
       id: "ID:",
       title: "제목:",
@@ -222,6 +227,9 @@ export const ko: Translations = {
     installWith: "설치 명령:",
     savingRecording: "녹음 파일 저장 중...",
     recordingSaved: "{path}에 녹음 저장됨",
+    partialFailure: "{failed}/{total}개 청크 변환 실패. 콘텐츠가 불완전할 수 있습니다.",
+    retrying: "청크 {current}/{total} 재시도 중...",
+    allChunksFailed: "모든 오디오 청크 변환 실패.",
   },
   contextCard: {
     tags: "태그:",

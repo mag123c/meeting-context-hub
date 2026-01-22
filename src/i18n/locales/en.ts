@@ -71,6 +71,11 @@ export const en: Translations = {
     processing: "Processing content...",
     meetingSavedSuccess: "Meeting saved successfully!",
     contextSavedSuccess: "Context saved successfully!",
+    selectRecordingMode: "How would you like to process this recording?",
+    recordingModes: {
+      audio: "Simple Audio (quick summary)",
+      meeting: "Meeting Transcript (PRD summary with action items)",
+    },
     labels: {
       id: "ID:",
       title: "Title:",
@@ -222,6 +227,9 @@ export const en: Translations = {
     installWith: "Install with:",
     savingRecording: "Saving recording...",
     recordingSaved: "Recording saved to {path}",
+    partialFailure: "{failed}/{total} chunks failed. Content may be incomplete.",
+    retrying: "Retrying chunk {current}/{total}...",
+    allChunksFailed: "All audio chunks failed to transcribe.",
   },
   contextCard: {
     tags: "Tags:",
