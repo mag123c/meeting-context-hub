@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mag123c/meeting-context-hub/compare/v1.4.0...v1.5.0) (2026-01-22)
+
+
+### Features
+
+* **tui:** add update banner and auto-exit after update ([831e4e9](https://github.com/mag123c/meeting-context-hub/commit/831e4e9e38d968218d7cf4a902d2bf600153b25f))
+
 # [1.4.0](https://github.com/mag123c/meeting-context-hub/compare/v1.3.0...v1.4.0) (2026-01-22)
 
 
