@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/mag123c/meeting-context-hub/compare/v1.6.0...v1.7.0) (2026-01-22)
+
+
+### Features
+
+* **recording:** add transcription retry logic and audio-to-meeting flow ([6e13ca9](https://github.com/mag123c/meeting-context-hub/commit/6e13ca9efca55c062cfd0393b0ebce7c18f1eee9))
+
 # [1.6.0](https://github.com/mag123c/meeting-context-hub/compare/v1.5.0...v1.6.0) (2026-01-22)
 
 
