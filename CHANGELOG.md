@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/mag123c/meeting-context-hub/compare/v1.8.0...v1.8.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* **tui:** clear terminal on startup for clean UI ([f8d5ada](https://github.com/mag123c/meeting-context-hub/commit/f8d5ada73eb7834f43f397ec672fdd2f8659673e))
+
 # [1.8.0](https://github.com/mag123c/meeting-context-hub/compare/v1.7.0...v1.8.0) (2026-01-22)
 
 
