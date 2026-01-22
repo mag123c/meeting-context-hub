@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/mag123c/meeting-context-hub/compare/v1.7.0...v1.8.0) (2026-01-22)
+
+
+### Features
+
+* **tui:** add file path autocomplete with @ trigger and clipboard support ([0f813ed](https://github.com/mag123c/meeting-context-hub/commit/0f813edaa46b5a5e4239f579ab94e12d1b6f387d))
+
 # [1.7.0](https://github.com/mag123c/meeting-context-hub/compare/v1.6.0...v1.7.0) (2026-01-22)
 
 
