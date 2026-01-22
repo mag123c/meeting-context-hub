@@ -9,8 +9,25 @@ Configuration, environment, and secure credential management.
 | `config.ts` | Main config loader, Obsidian path resolution, validation |
 | `keychain.ts` | macOS Keychain integration (secure API key storage) |
 | `env.ts` | Environment variables, defaults |
+| `storage.ts` | Config file persistence (`~/.config/mch/config.json`) |
 | `constants.ts` | Application constants |
 | `api-key-check.ts` | Non-throwing API key availability check |
+
+## Vault Path Resolution
+
+**Priority:** `OBSIDIAN_VAULT_PATH` env > stored config > default (`~/Documents/mch`)
+
+| Function | Purpose |
+|----------|---------|
+| `getStoredVaultPath()` | Read vault path from config.json |
+| `setStoredVaultPath(path)` | Save vault path to config.json |
+| `isVaultPathFromEnv()` | Check if set via environment variable |
+
+**Config file:** `~/.config/mch/config.json`
+
+```json
+{ "vaultPath": "/path/to/vault" }
+```
 
 ## API Key Check (api-key-check.ts)
 

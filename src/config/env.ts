@@ -13,9 +13,6 @@ export function getRequiredEnv(key: string): string {
   return value;
 }
 
-export const DEFAULT_OBSIDIAN_PATH = resolve(
-  homedir(),
-  "Library/Mobile Documents/iCloud~md~obsidian/Documents"
-);
+export const DEFAULT_OBSIDIAN_PATH = resolve(homedir(), "Documents", "mch");
 
 export const DEFAULT_MCH_FOLDER = "mch";

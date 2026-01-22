@@ -15,6 +15,7 @@ import {
   validateRecording,
   getRecordingInfo,
 } from "../utils/preflight/index.js";
+import { mergeWavFiles } from "../utils/audio-merge.js";
 
 // 10 minutes per chunk (safe margin under 25MB Whisper limit)
 const CHUNK_DURATION_MS = 10 * 60 * 1000;
@@ -237,6 +238,27 @@ export class RecordingHandler {
     );
 
     await Promise.all(deletePromises);
+  }
+
+  /**
+   * Save recording chunks to the vault recordings directory.
+   * Merges all chunks into a single WAV file.
+   *
+   * @param chunkPaths - Array of chunk file paths
+   * @param vaultPath - Path to the Obsidian vault
+   * @returns Path to the saved recording file
+   */
+  async saveRecordings(chunkPaths: string[], vaultPath: string): Promise<string> {
+    const recordingsDir = join(vaultPath, "recordings");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const outputPath = join(recordingsDir, `recording-${timestamp}.wav`);
+
+    await mergeWavFiles(chunkPaths, outputPath);
+
+    // Cleanup temp files after saving
+    await this.cleanup(chunkPaths);
+
+    return outputPath;
   }
 
   isRecording(): boolean {

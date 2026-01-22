@@ -35,7 +35,7 @@ Interactive TUI using ink (React for CLI).
 | `useServices` | Access AppServices |
 | `useAsyncAction` | Async state management |
 | `useNavigation` | Screen navigation |
-| `useRecording` | Recording state, timer, chunk tracking |
+| `useRecording` | Recording state, timer, chunk tracking, saveAndCleanup |
 | `useTranslation` | i18n context (t, language, setLanguage, formatDate, formatDateTime) |
 | `useApiKeyGuard` | API key validation before screen navigation |
 
@@ -54,11 +54,21 @@ Screens requiring API keys are protected by `useApiKeyGuard` hook.
 
 | Screen | Purpose |
 |--------|---------|
-| `MainMenu` | Add/Search/List/Exit |
-| `AddScreen` | Multi-step context add |
+| `MainMenu` | Add/Search/List/Config/Exit |
+| `AddScreen` | Multi-step context add (with recording save) |
 | `SearchScreen` | Semantic/exact/tag search |
 | `ListScreen` | List + filter + pagination |
 | `DetailScreen` | Detail + similar docs |
+| `ConfigScreen` | API keys, vault path, language settings |
+
+### ConfigScreen
+
+- **API Keys**: Anthropic/OpenAI (stored in macOS Keychain)
+- **Vault Path**: Obsidian vault location (stored in `~/.config/mch/config.json`)
+  - Validates directory exists
+  - Supports `~` expansion
+  - Disabled when set via `OBSIDIAN_VAULT_PATH` env
+- **Language**: English/Korean selection
 
 ## Keyboard
 

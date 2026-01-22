@@ -9,3 +9,9 @@ export {
   type ApiKeyStatus,
   type ApiKeyProvider,
 } from "./api-key-check.js";
+export {
+  getStoredVaultPath,
+  setStoredVaultPath,
+  isVaultPathFromEnv,
+  type MchConfig,
+} from "./storage.js";

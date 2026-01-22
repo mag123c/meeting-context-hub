@@ -41,6 +41,12 @@ export interface Translations {
     returningToMenu: string;
     languageLabel: string;
     selectLanguage: string;
+    vaultPath: string;
+    vaultPathHint: string;
+    vaultPathInvalid: string;
+    vaultPathSaved: string;
+    currentVaultPath: string;
+    enterVaultPath: string;
     keyHints: {
       save: string;
       cancel: string;
@@ -218,6 +224,8 @@ export interface Translations {
     processingChunk: string;
     dependencyMissing: string;
     installWith: string;
+    savingRecording: string;
+    recordingSaved: string;
   };
   contextCard: {
     tags: string;

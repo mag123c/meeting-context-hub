@@ -18,6 +18,7 @@ export interface UseRecordingResult {
   transcribe: (paths?: string[]) => Promise<CreateContextInput>;
   cancel: () => Promise<void>;
   cleanup: () => Promise<void>;
+  saveAndCleanup: (vaultPath: string, paths?: string[]) => Promise<string>; // Save to vault and cleanup
 }
 
 // 10 minutes per chunk
@@ -170,6 +171,29 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     setTotalChunks(0);
   }, [handler, chunkPaths]);
 
+  const saveAndCleanup = useCallback(async (vaultPath: string, paths?: string[]): Promise<string> => {
+    const pathsToSave = paths || chunkPaths;
+    if (pathsToSave.length === 0) {
+      throw new Error("No recording to save");
+    }
+
+    try {
+      const savedPath = await handler.saveRecordings(pathsToSave, vaultPath);
+      setChunkPaths([]);
+      setState("idle");
+      setElapsed(0);
+      setChunkCount(0);
+      setCurrentChunkElapsed(0);
+      setTranscribedChunks(0);
+      setTotalChunks(0);
+      return savedPath;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to save recording";
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  }, [handler, chunkPaths]);
+
   useEffect(() => {
     return () => {
       clearTimer();
@@ -193,5 +217,6 @@ export function useRecording(handler: RecordingHandler): UseRecordingResult {
     transcribe,
     cancel,
     cleanup,
+    saveAndCleanup,
   };
 }

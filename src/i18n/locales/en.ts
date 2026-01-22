@@ -37,6 +37,12 @@ export const en: Translations = {
     returningToMenu: "Returning to menu...",
     languageLabel: "Language",
     selectLanguage: "Select language:",
+    vaultPath: "Obsidian Vault Path",
+    vaultPathHint: "Directory where contexts are saved",
+    vaultPathInvalid: "Directory does not exist",
+    vaultPathSaved: "Vault path saved",
+    currentVaultPath: "Current path:",
+    enterVaultPath: "Enter vault path:",
     keyHints: {
       save: "Save",
       cancel: "Cancel",
@@ -214,6 +220,8 @@ export const en: Translations = {
     processingChunk: "Processing chunk {current}/{total}",
     dependencyMissing: "Recording unavailable - {binary} not installed",
     installWith: "Install with:",
+    savingRecording: "Saving recording...",
+    recordingSaved: "Recording saved to {path}",
   },
   contextCard: {
     tags: "Tags:",

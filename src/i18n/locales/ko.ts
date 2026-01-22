@@ -37,6 +37,12 @@ export const ko: Translations = {
     returningToMenu: "메뉴로 돌아가는 중...",
     languageLabel: "언어",
     selectLanguage: "언어 선택:",
+    vaultPath: "Obsidian Vault 경로",
+    vaultPathHint: "컨텍스트가 저장되는 디렉토리",
+    vaultPathInvalid: "디렉토리가 존재하지 않습니다",
+    vaultPathSaved: "Vault 경로 저장됨",
+    currentVaultPath: "현재 경로:",
+    enterVaultPath: "Vault 경로 입력:",
     keyHints: {
       save: "저장",
       cancel: "취소",
@@ -214,6 +220,8 @@ export const ko: Translations = {
     processingChunk: "청크 처리 중 {current}/{total}",
     dependencyMissing: "녹음 불가 - {binary} 미설치",
     installWith: "설치 명령:",
+    savingRecording: "녹음 파일 저장 중...",
+    recordingSaved: "{path}에 녹음 저장됨",
   },
   contextCard: {
     tags: "태그:",

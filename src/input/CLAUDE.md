@@ -32,6 +32,7 @@ All handlers implement this interface for consistency.
 - **Unlimited duration**: No time limit for recording
 - **Sequential transcription**: Chunks processed one by one, combined into single text
 - **Error recovery**: Stream errors auto-stop recording, accessible via `getError()`
+- **Recording save**: Merges chunks and saves to `{vault}/recordings/`
 
 ```typescript
 const controller = handler.startRecording();
@@ -39,8 +40,16 @@ const controller = handler.startRecording();
 controller.stop();
 if (controller.getError()) { /* handle error */ }
 const result = await handler.transcribe(controller.getChunkPaths());
-await handler.cleanup(chunkPaths);
+// Save to vault (merges chunks, cleans up temp files)
+const savedPath = await handler.saveRecordings(chunkPaths, vaultPath);
 ```
+
+### Recording Save Flow
+
+1. Temp chunks: `/tmp/mch-rec-{sessionId}-{n}.wav`
+2. After transcription: merge chunks via `utils/audio-merge.ts`
+3. Save to: `{vault}/recordings/recording-{timestamp}.wav`
+4. Auto-cleanup temp files
 
 ## Pre-flight Validation
 

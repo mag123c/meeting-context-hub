@@ -13,6 +13,7 @@ Common utility functions.
 | `meeting-formatter.ts` | Meeting markdown formatter for Obsidian |
 | `path-sanitizer.ts` | Path sanitization and traversal prevention |
 | `atomic-file.ts` | Atomic file writes and file locking |
+| `audio-merge.ts` | WAV file merging for multi-chunk recordings |
 
 ## Pre-flight Validation (`preflight/`)
 

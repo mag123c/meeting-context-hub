@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { Box, Text, useInput } from "ink";
@@ -10,6 +10,7 @@ import type { AppServices } from "../../core/factories.js";
 import type { ContextType, Context } from "../../types/context.types.js";
 import type { Meeting } from "../../types/meeting.types.js";
 import { useTranslation } from "../../i18n/index.js";
+import { loadConfig } from "../../config/index.js";
 
 interface AddScreenProps {
   navigation: NavigationContext;
@@ -48,6 +49,9 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
 
   const recording = useRecording(services.recordingHandler);
 
+  // Store chunk paths for later saving
+  const recordingChunkPathsRef = useRef<string[]>([]);
+
   // Handle keyboard input
   useInput((_, key) => {
     // Handle recording step
@@ -58,6 +62,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         } else if (recording.state === "recording") {
           void (async () => {
             const paths = recording.stopRecording(); // Get paths directly (avoids React state timing issue)
+            recordingChunkPathsRef.current = paths; // Store for later saving
             try {
               const transcriptionResult = await recording.transcribe(paths);
               setFormData((prev) => ({ ...prev, content: transcriptionResult.content }));
@@ -73,6 +78,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       if (key.escape) {
         if (recording.state === "recording" || recording.state === "idle") {
           void recording.cancel();
+          recordingChunkPathsRef.current = [];
           setStep("type");
         }
         return;
@@ -140,9 +146,26 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
       } else if (type === "record") {
         // Content already transcribed, just use it
         processedContent = content;
-        source = "microphone-recording";
-        // Clean up temp files after processing
-        await recording.cleanup();
+
+        // Save recording to vault's recordings directory
+        if (recordingChunkPathsRef.current.length > 0) {
+          try {
+            const config = loadConfig();
+            const savedPath = await recording.saveAndCleanup(
+              config.obsidianVaultPath,
+              recordingChunkPathsRef.current
+            );
+            source = savedPath;
+            recordingChunkPathsRef.current = [];
+          } catch (saveErr) {
+            // If save fails, still clean up and continue
+            console.error("Failed to save recording:", saveErr);
+            await recording.cleanup();
+            source = "microphone-recording";
+          }
+        } else {
+          source = "microphone-recording";
+        }
       } else if (type === "file") {
         const fileResult = await services.fileHandler.handle(content);
         processedContent = fileResult.content;

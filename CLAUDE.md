@@ -19,6 +19,23 @@ mch search "keyword"
 mch list --tag "meeting"
 ```
 
+## Configuration
+
+### Vault Path
+
+Default storage: `~/Documents/mch`
+
+Priority: `OBSIDIAN_VAULT_PATH` env > `~/.config/mch/config.json` > default
+
+```bash
+# TUI: Config → Obsidian Vault Path
+mch  # Interactive config in TUI
+```
+
+### Recording Files
+
+Audio recordings are saved to `{vault}/recordings/recording-{timestamp}.wav`
+
 ## CLI Commands
 
 ```bash
