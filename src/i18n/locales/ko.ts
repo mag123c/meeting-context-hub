@@ -219,4 +219,15 @@ export const ko: Translations = {
     tags: "태그:",
     noTags: "없음",
   },
+  update: {
+    newVersionAvailable: "새 버전 {version} 사용 가능",
+    updatePromptTitle: "업데이트 가능",
+    currentVersion: "현재 버전:",
+    latestVersion: "최신 버전:",
+    updateQuestion: "지금 업데이트하시겠습니까? (Y/n)",
+    updating: "업데이트 중...",
+    updateSuccess: "업데이트 완료! 새 버전을 사용하려면 다시 시작하세요.",
+    updateFailed: "업데이트 실패: {error}",
+    pressEnterToClose: "Enter를 눌러 닫기",
+  },
 };

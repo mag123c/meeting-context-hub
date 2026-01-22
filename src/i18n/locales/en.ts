@@ -219,4 +219,15 @@ export const en: Translations = {
     tags: "Tags:",
     noTags: "none",
   },
+  update: {
+    newVersionAvailable: "New version {version} available",
+    updatePromptTitle: "Update Available",
+    currentVersion: "Current version:",
+    latestVersion: "Latest version:",
+    updateQuestion: "Update now? (Y/n)",
+    updating: "Updating...",
+    updateSuccess: "Update complete! Restart to use the new version.",
+    updateFailed: "Update failed: {error}",
+    pressEnterToClose: "Press Enter to close",
+  },
 };

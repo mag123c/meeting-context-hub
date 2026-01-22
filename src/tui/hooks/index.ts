@@ -8,3 +8,4 @@ export {
   type ApiKeyGuardState,
   type UseApiKeyGuardResult,
 } from "./useApiKeyGuard.js";
+export { useUpdate, type UpdateState, type UseUpdateResult } from "./useUpdate.js";

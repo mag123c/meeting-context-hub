@@ -10,8 +10,8 @@ import { SearchScreen } from "./screens/SearchScreen.js";
 import { ListScreen } from "./screens/ListScreen.js";
 import { DetailScreen } from "./screens/DetailScreen.js";
 import { ConfigScreen } from "./screens/ConfigScreen.js";
-import { Header, KeyHintBar, ErrorBoundary, ApiKeyPrompt } from "./components/index.js";
-import { useApiKeyGuard } from "./hooks/index.js";
+import { Header, KeyHintBar, ErrorBoundary, ApiKeyPrompt, UpdatePrompt } from "./components/index.js";
+import { useApiKeyGuard, useUpdate } from "./hooks/index.js";
 
 export type Screen = "main" | "add" | "search" | "list" | "detail" | "config";
 
@@ -31,7 +31,12 @@ export interface NavigationContext {
   params?: NavigationState["params"];
 }
 
-function AppContent() {
+interface AppContentProps {
+  version: string;
+  packageName: string;
+}
+
+function AppContent({ version, packageName }: AppContentProps) {
   const { exit } = useApp();
   const { t } = useTranslation();
   const [navigation, setNavigation] = useState<NavigationState>({
@@ -43,6 +48,9 @@ function AppContent() {
 
   // API key guard
   const apiKeyGuard = useApiKeyGuard();
+
+  // Update checker
+  const updateChecker = useUpdate({ packageName, version });
 
   // Services initialization (re-runs when configVersion changes)
   const { services, initError } = useMemo<{
@@ -130,11 +138,32 @@ function AppContent() {
   };
 
   const renderScreen = () => {
+    // Show update prompt if active
+    if (updateChecker.showPrompt) {
+      return (
+        <Box flexDirection="column">
+          <Header
+            title={t.mainMenu.title}
+            version={version}
+          />
+          <UpdatePrompt
+            currentVersion={version}
+            latestVersion={updateChecker.latestVersion!}
+            updateState={updateChecker.updateState}
+            updateError={updateChecker.updateError}
+            onConfirm={updateChecker.confirmUpdate}
+            onCancel={updateChecker.cancelUpdate}
+            onClose={updateChecker.closeResult}
+          />
+        </Box>
+      );
+    }
+
     // Show API key prompt if guard is active
     if (apiKeyGuard.guardState.showPrompt) {
       return (
         <Box flexDirection="column">
-          <Header title={t.mainMenu.title} />
+          <Header title={t.mainMenu.title} version={version} />
           <ApiKeyPrompt
             missingKeys={apiKeyGuard.guardState.missingKeys}
             onConfirm={handleApiKeyConfirm}
@@ -175,7 +204,16 @@ function AppContent() {
 
     switch (navigation.screen) {
       case "main":
-        return <MainMenu navigation={navigationContext} onExit={exit} />;
+        return (
+          <MainMenu
+            navigation={navigationContext}
+            onExit={exit}
+            version={version}
+            updateAvailable={updateChecker.updateAvailable}
+            latestVersion={updateChecker.latestVersion}
+            onUpdate={updateChecker.promptUpdate}
+          />
+        );
       case "add":
         return <AddScreen navigation={navigationContext} services={services!} />;
       case "search":
@@ -210,11 +248,16 @@ function AppContent() {
   return <Box flexDirection="column">{renderScreen()}</Box>;
 }
 
-export function App() {
+interface AppProps {
+  version: string;
+  packageName: string;
+}
+
+export function App({ version, packageName }: AppProps) {
   return (
     <ErrorBoundary>
       <I18nProvider>
-        <AppContent />
+        <AppContent version={version} packageName={packageName} />
       </I18nProvider>
     </ErrorBoundary>
   );

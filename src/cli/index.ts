@@ -19,7 +19,9 @@ updateNotifier({ pkg }).notify();
 
 // TUI 모드: 인자 없이 실행 시 (mch)
 if (process.argv.length === 2) {
-  import("../tui/index.js").then(({ startTUI }) => startTUI());
+  import("../tui/index.js").then(({ startTUI }) =>
+    startTUI({ version: pkg.version, packageName: pkg.name })
+  );
 } else {
   // CLI 모드: 인자가 있을 때 (mch add, mch search 등)
   const program = new Command();

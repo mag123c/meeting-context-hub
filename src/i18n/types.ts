@@ -223,6 +223,17 @@ export interface Translations {
     tags: string;
     noTags: string;
   };
+  update: {
+    newVersionAvailable: string;
+    updatePromptTitle: string;
+    currentVersion: string;
+    latestVersion: string;
+    updateQuestion: string;
+    updating: string;
+    updateSuccess: string;
+    updateFailed: string;
+    pressEnterToClose: string;
+  };
 }
 
 export interface LanguageOption {

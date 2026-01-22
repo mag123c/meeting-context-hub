@@ -6,9 +6,20 @@ import { useTranslation } from "../../i18n/index.js";
 interface MainMenuProps {
   navigation: NavigationContext;
   onExit: () => void;
+  version?: string;
+  updateAvailable?: boolean;
+  latestVersion?: string | null;
+  onUpdate?: () => void;
 }
 
-export function MainMenu({ navigation, onExit }: MainMenuProps) {
+export function MainMenu({
+  navigation,
+  onExit,
+  version,
+  updateAvailable,
+  latestVersion,
+  onUpdate,
+}: MainMenuProps) {
   const { t } = useTranslation();
 
   const menuItems: MenuItem[] = [
@@ -16,6 +27,9 @@ export function MainMenu({ navigation, onExit }: MainMenuProps) {
     { label: t.mainMenu.search, value: "search" },
     { label: t.mainMenu.listAll, value: "list" },
     { label: t.mainMenu.config, value: "config" },
+    ...(updateAvailable && latestVersion
+      ? [{ label: `⬆ Update (v${latestVersion})`, value: "update" }]
+      : []),
     { label: t.mainMenu.exit, value: "exit" },
   ];
 
@@ -27,6 +41,8 @@ export function MainMenu({ navigation, onExit }: MainMenuProps) {
   const handleSelect = (item: MenuItem) => {
     if (item.value === "exit") {
       onExit();
+    } else if (item.value === "update") {
+      onUpdate?.();
     } else {
       navigation.navigate(item.value as Screen);
     }
@@ -34,7 +50,12 @@ export function MainMenu({ navigation, onExit }: MainMenuProps) {
 
   return (
     <Box flexDirection="column">
-      <Header title={t.mainMenu.title} />
+      <Header
+        title={t.mainMenu.title}
+        version={version}
+        updateAvailable={updateAvailable}
+        latestVersion={latestVersion || undefined}
+      />
       <Menu items={menuItems} onSelect={handleSelect} />
       <KeyHintBar bindings={keyBindings} />
     </Box>
