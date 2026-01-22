@@ -7,5 +7,7 @@ export interface TUIConfig {
 }
 
 export function startTUI(config: TUIConfig) {
+  // Clear terminal before starting TUI for clean UI
+  console.clear();
   render(<App version={config.version} packageName={config.packageName} />);
 }
