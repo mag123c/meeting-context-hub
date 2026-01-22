@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/mag123c/meeting-context-hub/compare/v1.5.0...v1.6.0) (2026-01-22)
+
+
+### Features
+
+* **config:** add vault path configuration and recording save ([40b199c](https://github.com/mag123c/meeting-context-hub/commit/40b199ccc8fd89c07f20b038eb173c3c97e25063))
+
 # [1.5.0](https://github.com/mag123c/meeting-context-hub/compare/v1.4.0...v1.5.0) (2026-01-22)
 
 
