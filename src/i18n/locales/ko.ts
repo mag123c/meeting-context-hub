@@ -229,5 +229,7 @@ export const ko: Translations = {
     updateSuccess: "업데이트 완료! 새 버전을 사용하려면 다시 시작하세요.",
     updateFailed: "업데이트 실패: {error}",
     pressEnterToClose: "Enter를 눌러 닫기",
+    pressEnterToExit: "Enter를 눌러 종료 후 재시작",
+    pressUToUpdate: "[U] 업데이트",
   },
 };

@@ -1,5 +1,5 @@
 import { Box } from "ink";
-import { Banner, Menu, KeyHintBar, type MenuItem } from "../components/index.js";
+import { Banner, Menu, KeyHintBar, UpdateBanner, type MenuItem } from "../components/index.js";
 import type { NavigationContext, Screen } from "../App.js";
 import { useTranslation } from "../../i18n/index.js";
 
@@ -50,11 +50,10 @@ export function MainMenu({
 
   return (
     <Box flexDirection="column">
-      <Banner
-        version={version}
-        updateAvailable={updateAvailable}
-        latestVersion={latestVersion || undefined}
-      />
+      {updateAvailable && latestVersion && onUpdate && (
+        <UpdateBanner latestVersion={latestVersion} onUpdate={onUpdate} />
+      )}
+      <Banner version={version} />
       <Menu items={menuItems} onSelect={handleSelect} />
       <KeyHintBar bindings={keyBindings} />
     </Box>

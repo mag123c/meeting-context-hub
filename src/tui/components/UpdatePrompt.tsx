@@ -3,7 +3,7 @@
  * Shows when a new version is available and handles the update process
  */
 
-import { Box, Text, useInput } from "ink";
+import { Box, Text, useInput, useApp } from "ink";
 import { useTranslation } from "../../i18n/index.js";
 import { KeyHintBar } from "./KeyHint.js";
 import { Spinner } from "./Spinner.js";
@@ -19,6 +19,36 @@ interface UpdatePromptProps {
   onClose: () => void;
 }
 
+// Compact banner for top of screen
+interface UpdateBannerProps {
+  latestVersion: string;
+  onUpdate: () => void;
+}
+
+export function UpdateBanner({ latestVersion, onUpdate }: UpdateBannerProps) {
+  const { t } = useTranslation();
+
+  useInput((input) => {
+    if (input === "u" || input === "U") {
+      onUpdate();
+    }
+  });
+
+  return (
+    <Box
+      borderStyle="single"
+      borderColor="yellow"
+      paddingX={1}
+      marginBottom={1}
+    >
+      <Text color="yellow" bold>
+        ⬆ {t.update.newVersionAvailable.replace("{version}", latestVersion)}
+      </Text>
+      <Text dimColor>  {t.update.pressUToUpdate}</Text>
+    </Box>
+  );
+}
+
 export function UpdatePrompt({
   currentVersion,
   latestVersion,
@@ -29,10 +59,18 @@ export function UpdatePrompt({
   onClose,
 }: UpdatePromptProps) {
   const { t } = useTranslation();
+  const { exit } = useApp();
 
   useInput((input, key) => {
-    if (updateState === "success" || updateState === "error") {
-      // After update completes, any key closes
+    if (updateState === "success") {
+      // After successful update, exit app so user restarts with new version
+      if (key.return) {
+        exit();
+      }
+      return;
+    }
+
+    if (updateState === "error") {
       if (key.return) {
         onClose();
       }
@@ -68,7 +106,7 @@ export function UpdatePrompt({
             ✓ {t.update.updateSuccess}
           </Text>
           <Box marginTop={1}>
-            <Text dimColor>{t.update.pressEnterToClose}</Text>
+            <Text dimColor>{t.update.pressEnterToExit}</Text>
           </Box>
         </Box>
       );
@@ -106,7 +144,15 @@ export function UpdatePrompt({
   };
 
   const renderKeyHints = () => {
-    if (updateState === "success" || updateState === "error") {
+    if (updateState === "success") {
+      return (
+        <KeyHintBar
+          bindings={[{ key: "Enter", description: t.update.pressEnterToExit }]}
+        />
+      );
+    }
+
+    if (updateState === "error") {
       return (
         <KeyHintBar
           bindings={[{ key: "Enter", description: t.update.pressEnterToClose }]}

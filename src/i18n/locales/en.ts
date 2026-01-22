@@ -229,5 +229,7 @@ export const en: Translations = {
     updateSuccess: "Update complete! Restart to use the new version.",
     updateFailed: "Update failed: {error}",
     pressEnterToClose: "Press Enter to close",
+    pressEnterToExit: "Press Enter to exit and restart",
+    pressUToUpdate: "[U] to update",
   },
 };

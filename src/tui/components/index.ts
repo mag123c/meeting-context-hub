@@ -8,4 +8,4 @@ export { ErrorBoundary } from "./ErrorBoundary.js";
 export { ContextCard, ContextList } from "./ContextCard.js";
 export { RecordingIndicator } from "./RecordingIndicator.js";
 export { ApiKeyPrompt } from "./ApiKeyPrompt.js";
-export { UpdatePrompt } from "./UpdatePrompt.js";
+export { UpdatePrompt, UpdateBanner } from "./UpdatePrompt.js";

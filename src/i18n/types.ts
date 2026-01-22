@@ -233,6 +233,8 @@ export interface Translations {
     updateSuccess: string;
     updateFailed: string;
     pressEnterToClose: string;
+    pressEnterToExit: string;
+    pressUToUpdate: string;
   };
 }
 
