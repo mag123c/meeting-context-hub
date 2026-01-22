@@ -65,6 +65,7 @@ export const ko: Translations = {
     enterContent: "내용 입력:",
     enterTranscriptPath: "기록 파일 경로 입력:",
     enterFilePath: "{type} 파일 경로 입력:",
+    fileInputHint: "팁: @ 또는 /로 자동완성, 드래그 앤 드롭, Ctrl+V로 붙여넣기",
     recordAudio: "오디오 녹음",
     projectName: "프로젝트 이름 (선택사항, Enter로 건너뛰기):",
     sprintIdentifier: "스프린트 식별자 (선택사항, Enter로 건너뛰기):",

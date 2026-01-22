@@ -9,3 +9,4 @@ export { ContextCard, ContextList } from "./ContextCard.js";
 export { RecordingIndicator } from "./RecordingIndicator.js";
 export { ApiKeyPrompt } from "./ApiKeyPrompt.js";
 export { UpdatePrompt, UpdateBanner } from "./UpdatePrompt.js";
+export { AutocompleteInput, type AutocompleteInputProps } from "./AutocompleteInput.js";

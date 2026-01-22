@@ -65,6 +65,7 @@ export const en: Translations = {
     enterContent: "Enter content:",
     enterTranscriptPath: "Enter transcript file path:",
     enterFilePath: "Enter {type} file path:",
+    fileInputHint: "Tip: Type @ or / for autocomplete, drag & drop, or Ctrl+V to paste",
     recordAudio: "Record Audio",
     projectName: "Project name (optional, press Enter to skip):",
     sprintIdentifier: "Sprint identifier (optional, press Enter to skip):",

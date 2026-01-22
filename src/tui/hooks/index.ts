@@ -9,3 +9,5 @@ export {
   type UseApiKeyGuardResult,
 } from "./useApiKeyGuard.js";
 export { useUpdate, type UpdateState, type UseUpdateResult } from "./useUpdate.js";
+export { useFileCompletion, type UseFileCompletionOptions, type UseFileCompletionResult } from "./useFileCompletion.js";
+export { useDropDetection, type UseDropDetectionOptions, type UseDropDetectionResult } from "./useDropDetection.js";

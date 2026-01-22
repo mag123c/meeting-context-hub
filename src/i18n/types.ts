@@ -69,6 +69,7 @@ export interface Translations {
     enterContent: string;
     enterTranscriptPath: string;
     enterFilePath: string;
+    fileInputHint: string;
     recordAudio: string;
     projectName: string;
     sprintIdentifier: string;

@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
-import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, RecordingIndicator, type MenuItem } from "../components/index.js";
-import { useRecording } from "../hooks/index.js";
+import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, RecordingIndicator, AutocompleteInput, type MenuItem } from "../components/index.js";
+import { useRecording, useFileCompletion } from "../hooks/index.js";
 import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { ContextType, Context } from "../../types/context.types.js";
@@ -55,6 +55,41 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
 
   // Store chunk paths for later saving
   const recordingChunkPathsRef = useRef<string[]>([]);
+
+  // File completion for different types
+  const imageCompletion = useFileCompletion({
+    extensions: ["png", "jpg", "jpeg", "gif", "webp", "bmp"],
+  });
+  const audioCompletion = useFileCompletion({
+    extensions: ["mp3", "wav", "m4a", "ogg", "flac", "aac"],
+  });
+  const fileCompletion = useFileCompletion({
+    extensions: ["txt", "md", "csv", "json"],
+  });
+  const meetingCompletion = useFileCompletion({
+    extensions: ["txt", "md"],
+  });
+
+  // Get the appropriate completion hook based on type
+  const getCompletionForType = useMemo(() => {
+    return (type: string) => {
+      switch (type) {
+        case "image":
+          return imageCompletion;
+        case "audio":
+          return audioCompletion;
+        case "file":
+          return fileCompletion;
+        case "meeting":
+          return meetingCompletion;
+        default:
+          return null;
+      }
+    };
+  }, [imageCompletion, audioCompletion, fileCompletion, meetingCompletion]);
+
+  // Check if current type needs file input
+  const needsFileInput = ["image", "audio", "file", "meeting"].includes(formData.type);
 
   // Handle keyboard input
   useInput((_, key) => {
@@ -239,7 +274,8 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
           </Box>
         );
 
-      case "content":
+      case "content": {
+        const completion = getCompletionForType(formData.type);
         return (
           <Box flexDirection="column">
             <Text bold>
@@ -249,16 +285,34 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
                 ? t.add.enterTranscriptPath
                 : t.add.enterFilePath.replace("{type}", formData.type)}
             </Text>
+            {needsFileInput && (
+              <Text dimColor>
+                {t.add.fileInputHint}
+              </Text>
+            )}
             <Box marginTop={1}>
-              <Text color="cyan">{"> "}</Text>
-              <TextInput
-                value={formData.content}
-                onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
-                onSubmit={handleContentSubmit}
-              />
+              {needsFileInput && completion ? (
+                <AutocompleteInput
+                  value={formData.content}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
+                  onSubmit={handleContentSubmit}
+                  getSuggestions={completion.getSuggestions}
+                  placeholder={formData.type === "meeting" ? "transcript.txt" : `file.${formData.type === "image" ? "png" : formData.type === "audio" ? "mp3" : "txt"}`}
+                />
+              ) : (
+                <>
+                  <Text color="cyan">{"> "}</Text>
+                  <TextInput
+                    value={formData.content}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, content: value }))}
+                    onSubmit={handleContentSubmit}
+                  />
+                </>
+              )}
             </Box>
           </Box>
         );
+      }
 
       case "recording":
         return (
