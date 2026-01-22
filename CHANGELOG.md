@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/mag123c/meeting-context-hub/compare/v1.2.0...v1.3.0) (2026-01-22)
+
+
+### Features
+
+* **tui:** add version display and auto-update functionality ([43ce2bc](https://github.com/mag123c/meeting-context-hub/commit/43ce2bc81e2ee549bf5ca6d7dc5be09428e3e986))
+
 # [1.2.0](https://github.com/mag123c/meeting-context-hub/compare/v1.1.1...v1.2.0) (2026-01-21)
 
 
