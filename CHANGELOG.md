@@ -1,3 +1,15 @@
+# [1.11.0](https://github.com/mag123c/meeting-context-hub/compare/v1.10.1...v1.11.0) (2026-01-23)
+
+
+### Bug Fixes
+
+* **audio:** update WAV header after merge and use actual file size ([740de59](https://github.com/mag123c/meeting-context-hub/commit/740de59b0bbccbc57e8b05105f648cdef03a2b8d))
+
+
+### Features
+
+* **tui:** dynamic horizontal line width using terminal size ([f69e682](https://github.com/mag123c/meeting-context-hub/commit/f69e6824d83299ad9e0a9d65317eff9137dbfed8))
+
 ## [1.10.1](https://github.com/mag123c/meeting-context-hub/compare/v1.10.0...v1.10.1) (2026-01-23)
 
 
