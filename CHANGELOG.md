@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/mag123c/meeting-context-hub/compare/v1.14.0...v1.14.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **tui:** separate Tab/Enter behavior in AutocompleteInput ([dc470c3](https://github.com/mag123c/meeting-context-hub/commit/dc470c3284d55e21dbbd53e07fd1201088f5b1f3))
+
 # [1.14.0](https://github.com/mag123c/meeting-context-hub/compare/v1.13.3...v1.14.0) (2026-01-23)
 
 
