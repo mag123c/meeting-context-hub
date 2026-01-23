@@ -253,6 +253,7 @@ export interface Translations {
     updateQuestion: string;
     updating: string;
     updateSuccess: string;
+    restarting: string;
     updateFailed: string;
     pressEnterToClose: string;
     pressEnterToExit: string;

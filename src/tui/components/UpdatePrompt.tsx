@@ -106,7 +106,7 @@ export function UpdatePrompt({
             ✓ {t.update.updateSuccess}
           </Text>
           <Box marginTop={1}>
-            <Text dimColor>{t.update.pressEnterToExit}</Text>
+            <Text color="cyan">{t.update.restarting}</Text>
           </Box>
         </Box>
       );
@@ -145,11 +145,8 @@ export function UpdatePrompt({
 
   const renderKeyHints = () => {
     if (updateState === "success") {
-      return (
-        <KeyHintBar
-          bindings={[{ key: "Enter", description: t.update.pressEnterToExit }]}
-        />
-      );
+      // No key hints needed - auto-restarting
+      return null;
     }
 
     if (updateState === "error") {
