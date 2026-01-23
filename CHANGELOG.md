@@ -1,3 +1,10 @@
+## [1.12.2](https://github.com/mag123c/meeting-context-hub/compare/v1.12.1...v1.12.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* **audio:** yield to event loop during splitting for UI updates ([b3a2710](https://github.com/mag123c/meeting-context-hub/commit/b3a271036d9bc2d51eaf974e60e096199faaed93))
+
 ## [1.12.1](https://github.com/mag123c/meeting-context-hub/compare/v1.12.0...v1.12.1) (2026-01-23)
 
 
