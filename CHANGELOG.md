@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/mag123c/meeting-context-hub/compare/v1.8.1...v1.8.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* **tui:** Enter always submits, preserve @ during input ([311e316](https://github.com/mag123c/meeting-context-hub/commit/311e316ee0f7027e5b30ac1efcd69a184a0ac2d2))
+
 ## [1.8.1](https://github.com/mag123c/meeting-context-hub/compare/v1.8.0...v1.8.1) (2026-01-22)
 
 
