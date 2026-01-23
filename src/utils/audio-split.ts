@@ -20,6 +20,13 @@ const TARGET_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB
 // Using 1 second as minimum for safety margin
 const MIN_CHUNK_SECONDS = 1;
 
+/**
+ * Yield control to event loop to allow UI updates
+ */
+function yieldToEventLoop(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve));
+}
+
 interface WavHeader {
   sampleRate: number;
   channels: number;
@@ -211,9 +218,10 @@ export async function splitWavFile(
       remaining -= chunkDataSize;
       chunkIndex++;
 
-      // Report progress
+      // Report progress and yield to event loop for UI updates
       const processed = totalDataSize - remaining;
       onProgress?.(Math.round((processed / totalDataSize) * 100));
+      await yieldToEventLoop();
     }
   } finally {
     closeSync(fd);
