@@ -15,6 +15,9 @@ import {
 // Whisper API limit
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
+// Parallel transcription concurrency limit
+const TRANSCRIPTION_CONCURRENCY = 3;
+
 export type AudioProgressPhase = "validating" | "splitting" | "transcribing";
 
 export interface AudioProgress {
@@ -113,29 +116,34 @@ export class AudioHandler {
 
       onProgress?.({ phase: "splitting", current: 1, total: 1, percent: 100 });
 
-      // Transcribe all chunks sequentially
-      const transcriptions: string[] = [];
+      // Transcribe chunks in parallel batches (preserves order)
       const total = chunkPaths.length;
+      const results: string[] = new Array(total);
+      let completed = 0;
 
-      for (let i = 0; i < chunkPaths.length; i++) {
-        onProgress?.({
-          phase: "transcribing",
-          current: i,
-          total,
-          percent: Math.round((i / total) * 100),
+      for (let i = 0; i < total; i += TRANSCRIPTION_CONCURRENCY) {
+        const batch = chunkPaths.slice(i, i + TRANSCRIPTION_CONCURRENCY);
+        const batchResults = await Promise.all(
+          batch.map((path) => this.whisper.transcribe(path))
+        );
+
+        // Store results in correct order
+        batch.forEach((_, idx) => {
+          results[i + idx] = batchResults[idx];
         });
 
-        const text = await this.whisper.transcribe(chunkPaths[i]);
-        if (text.trim()) {
-          transcriptions.push(text.trim());
-        }
+        completed += batch.length;
+        onProgress?.({
+          phase: "transcribing",
+          current: completed,
+          total,
+          percent: Math.round((completed / total) * 100),
+        });
       }
-
-      onProgress?.({ phase: "transcribing", current: total, total, percent: 100 });
 
       return {
         type: "audio",
-        content: transcriptions.join("\n\n"),
+        content: results.filter((t) => t.trim()).join("\n\n"),
         source: absolutePath,
       };
     } finally {

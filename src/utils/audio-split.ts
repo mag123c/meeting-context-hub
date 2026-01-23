@@ -78,11 +78,16 @@ function parseWavHeader(filePath: string): WavHeader {
   const bitsPerSample = buffer.readUInt16LE(34);
   const bytesPerSecond = sampleRate * channels * (bitsPerSample / 8);
 
+  // Use actual file size instead of header value
+  // This handles cases where WAV header wasn't updated after merging
+  const stats = statSync(filePath);
+  const actualDataSize = stats.size - dataOffset;
+
   return {
     sampleRate,
     channels,
     bitsPerSample,
-    dataSize,
+    dataSize: actualDataSize,  // Use actual size, not header value
     dataOffset,
     bytesPerSecond,
   };

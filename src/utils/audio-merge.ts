@@ -1,5 +1,29 @@
-import { createReadStream, createWriteStream, existsSync, mkdirSync, statSync } from "fs";
+import { createReadStream, createWriteStream, existsSync, mkdirSync, statSync, openSync, writeSync, closeSync } from "fs";
 import { dirname } from "path";
+
+/**
+ * Update WAV header to reflect actual file size after merging.
+ * WAV headers contain size information that must be updated after concatenation.
+ */
+function updateWavHeader(filePath: string): void {
+  const stats = statSync(filePath);
+  const dataSize = stats.size - 44;
+
+  const fd = openSync(filePath, "r+");
+  const buffer = Buffer.alloc(4);
+
+  try {
+    // Update RIFF chunk size (offset 4): total file size - 8
+    buffer.writeUInt32LE(stats.size - 8, 0);
+    writeSync(fd, buffer, 0, 4, 4);
+
+    // Update data chunk size (offset 40): data size
+    buffer.writeUInt32LE(dataSize, 0);
+    writeSync(fd, buffer, 0, 4, 40);
+  } finally {
+    closeSync(fd);
+  }
+}
 
 /**
  * Merge multiple WAV files into a single file.
@@ -47,8 +71,11 @@ export async function mergeWavFiles(inputPaths: string[], outputPath: string): P
 
     const processNextFile = () => {
       if (currentIndex >= validPaths.length) {
-        outputStream.end();
-        resolve();
+        outputStream.end(() => {
+          // Update WAV header with correct sizes after all data is written
+          updateWavHeader(outputPath);
+          resolve();
+        });
         return;
       }
 

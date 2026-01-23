@@ -395,11 +395,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
               <Spinner message={phaseLabel} />
               {audioProgress.phase === "transcribing" && audioProgress.total > 1 && (
                 <Box marginTop={1} flexDirection="column">
-                  <Text>
-                    <Text color="cyan">{audioProgress.current}</Text>
-                    <Text dimColor> / {audioProgress.total} chunks</Text>
-                    <Text color="yellow"> ({audioProgress.percent}%)</Text>
-                  </Text>
+                  <Text color="yellow">{audioProgress.percent}%</Text>
                   <Box marginTop={0}>
                     <Text dimColor>
                       {"["}
