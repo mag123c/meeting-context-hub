@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/mag123c/meeting-context-hub/compare/v1.13.0...v1.13.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **embedding:** use conservative token limit for Korean text ([d2f33e7](https://github.com/mag123c/meeting-context-hub/commit/d2f33e714f1c202941ed5dd7a4d238c486daa230))
+
 # [1.13.0](https://github.com/mag123c/meeting-context-hub/compare/v1.12.2...v1.13.0) (2026-01-23)
 
 
