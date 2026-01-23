@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/mag123c/meeting-context-hub/compare/v1.9.0...v1.9.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **tui:** directory navigation in autocomplete input ([5e78daa](https://github.com/mag123c/meeting-context-hub/commit/5e78daa6f78560f87372979d746455dce6041ea7))
+
 # [1.9.0](https://github.com/mag123c/meeting-context-hub/compare/v1.8.2...v1.9.0) (2026-01-23)
 
 
