@@ -121,11 +121,16 @@ function createWavHeader(header: WavHeader, dataSize: number): Buffer {
   return buffer;
 }
 
+export type SplitProgressCallback = (percent: number) => void;
+
 /**
  * Split a large WAV file into smaller chunks for Whisper API
  * Returns array of chunk file paths (in temp directory)
  */
-export async function splitWavFile(filePath: string): Promise<string[]> {
+export async function splitWavFile(
+  filePath: string,
+  onProgress?: SplitProgressCallback
+): Promise<string[]> {
   const stats = statSync(filePath);
 
   // If file is already small enough, validate duration and return as-is
@@ -159,6 +164,9 @@ export async function splitWavFile(filePath: string): Promise<string[]> {
     let offset = header.dataOffset;
     let remaining = header.dataSize;
     let chunkIndex = 0;
+    const totalDataSize = header.dataSize;
+
+    onProgress?.(0);
 
     while (remaining > 0) {
       // If remaining data is too short, skip it (will be silence or noise)
@@ -202,6 +210,10 @@ export async function splitWavFile(filePath: string): Promise<string[]> {
       offset += chunkDataSize;
       remaining -= chunkDataSize;
       chunkIndex++;
+
+      // Report progress
+      const processed = totalDataSize - remaining;
+      onProgress?.(Math.round((processed / totalDataSize) * 100));
     }
   } finally {
     closeSync(fd);

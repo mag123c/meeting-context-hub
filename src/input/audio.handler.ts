@@ -98,10 +98,12 @@ export class AudioHandler {
 
     try {
       // Split the file
-      onProgress?.({ phase: "splitting", current: 0, total: 1, percent: 0 });
+      onProgress?.({ phase: "splitting", current: 0, total: 100, percent: 0 });
 
       if (isWav) {
-        chunkPaths = await splitWavFile(absolutePath);
+        chunkPaths = await splitWavFile(absolutePath, (percent) => {
+          onProgress?.({ phase: "splitting", current: percent, total: 100, percent });
+        });
       } else {
         // Non-WAV formats require ffmpeg
         if (!isFfmpegAvailable()) {

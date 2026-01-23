@@ -390,10 +390,14 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
             audioProgress.phase === "splitting" ? t.add.progress?.splitting ?? "Splitting audio..." :
             t.add.progress?.transcribing ?? "Transcribing...";
 
+          const showProgress =
+            (audioProgress.phase === "splitting" && audioProgress.percent > 0) ||
+            (audioProgress.phase === "transcribing" && audioProgress.total > 1);
+
           return (
             <Box flexDirection="column">
               <Spinner message={phaseLabel} />
-              {audioProgress.phase === "transcribing" && audioProgress.total > 1 && (
+              {showProgress && (
                 <Box marginTop={1} flexDirection="column">
                   <Text color="yellow">{audioProgress.percent}%</Text>
                   <Box marginTop={0}>
