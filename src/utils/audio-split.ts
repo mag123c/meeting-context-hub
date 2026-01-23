@@ -123,8 +123,14 @@ function createWavHeader(header: WavHeader, dataSize: number): Buffer {
 export async function splitWavFile(filePath: string): Promise<string[]> {
   const stats = statSync(filePath);
 
-  // If file is already small enough, return as-is
+  // If file is already small enough, validate duration and return as-is
   if (stats.size <= MAX_CHUNK_SIZE) {
+    const duration = getWavDuration(filePath);
+    if (duration < MIN_CHUNK_SECONDS) {
+      throw new Error(
+        `Audio file is too short (${duration.toFixed(2)}s). Minimum length: ${MIN_CHUNK_SECONDS} second.`
+      );
+    }
     return [filePath];
   }
 
@@ -212,6 +218,19 @@ export function isFfmpegAvailable(): boolean {
 }
 
 /**
+ * Get WAV file duration in seconds
+ */
+export function getWavDuration(filePath: string): number {
+  try {
+    const header = parseWavHeader(filePath);
+    return header.dataSize / header.bytesPerSecond;
+  } catch {
+    // If we can't parse, assume it's valid
+    return MIN_CHUNK_SECONDS + 1;
+  }
+}
+
+/**
  * Split audio file using ffmpeg (for MP3, M4A, etc.)
  * Falls back to this when WAV split is not possible
  */
@@ -234,13 +253,21 @@ export async function splitAudioWithFfmpeg(
     { stdio: "pipe" }
   );
 
-  // Find all generated chunks
+  // Find all generated chunks and filter out short ones
   const chunks: string[] = [];
   let i = 0;
   while (true) {
     const chunkPath = join(tempDir, `chunk-${String(i).padStart(3, "0")}.wav`);
     if (!existsSync(chunkPath)) break;
-    chunks.push(chunkPath);
+
+    // Check chunk duration - skip if too short
+    const duration = getWavDuration(chunkPath);
+    if (duration >= MIN_CHUNK_SECONDS) {
+      chunks.push(chunkPath);
+    } else {
+      // Clean up short chunk
+      try { unlinkSync(chunkPath); } catch { /* ignore */ }
+    }
     i++;
   }
 
