@@ -4,10 +4,10 @@ import { AIClientError, TextLengthError, EmptyInputError } from "../../errors/in
 
 // OpenAI embedding limits
 // text-embedding-3-small has 8192 token limit
-// Conservative estimate: ~3 chars per token for mixed content
-const MAX_TOKENS = 8000; // Leave some margin
-const CHARS_PER_TOKEN = 3;
-const MAX_TEXT_LENGTH = MAX_TOKENS * CHARS_PER_TOKEN; // ~24000 chars
+// Korean text has ~1.5 chars per token (much denser than English ~4 chars/token)
+const MAX_TOKENS = 7500; // Leave margin for safety
+const CHARS_PER_TOKEN = 1.5; // Conservative for Korean/mixed content
+const MAX_TEXT_LENGTH = Math.floor(MAX_TOKENS * CHARS_PER_TOKEN); // ~11250 chars
 const MAX_BATCH_SIZE = 100; // Maximum texts per batch
 
 // Retry configuration
