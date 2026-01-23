@@ -24,13 +24,22 @@ interface InputHandler<TOutput> {
 
 All handlers implement this interface for consistency.
 
+## Audio Handler
+
+`AudioHandler` processes audio files with parallel transcription:
+
+- **Large file support**: Files >25MB automatically split into chunks
+- **Parallel transcription**: 3 chunks processed concurrently (faster)
+- **Order preservation**: Results combined in correct order
+- **Progress callback**: Reports transcription progress percentage
+
 ## Recording Handler
 
 `RecordingHandler` supports live microphone recording with auto-chunking:
 
 - **Auto-chunk**: 10-minute chunks (stays under Whisper 25MB limit)
 - **Unlimited duration**: No time limit for recording
-- **Sequential transcription**: Chunks processed one by one, combined into single text
+- **Parallel transcription**: 3 chunks processed concurrently
 - **Error recovery**: Stream errors auto-stop recording, accessible via `getError()`
 - **Recording save**: Merges chunks and saves to `{vault}/recordings/`
 

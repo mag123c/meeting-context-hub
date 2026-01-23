@@ -19,15 +19,23 @@ Interactive TUI using ink (React for CLI).
 
 | Component | Purpose |
 |-----------|---------|
-| `Header` | Title + breadcrumb |
+| `Header` | Title + breadcrumb (responsive width) |
+| `Banner` | ASCII logo + version (responsive width) |
 | `Menu` | ink-select-input wrapper |
 | `Spinner` | Loading state |
-| `KeyHint`, `KeyHintBar` | Keyboard shortcuts |
+| `KeyHint`, `KeyHintBar` | Keyboard shortcuts (responsive width) |
 | `ContextCard`, `ContextList` | Context display |
 | `RecordingIndicator` | Recording state + timer + chunk progress |
 | `ErrorBoundary` | Error catching boundary for TUI |
 | `ApiKeyPrompt` | Prompt when required API keys missing |
 | `AutocompleteInput` | File path autocomplete with @/~/absolute triggers |
+| `UpdatePrompt`, `UpdateBanner` | Version update UI |
+
+### Terminal Width Awareness
+
+Components use `useStdout()` to get terminal width for responsive UI:
+- Horizontal separators (─) fill terminal width
+- Fallback: 80 columns if stdout unavailable
 
 ## Hooks
 

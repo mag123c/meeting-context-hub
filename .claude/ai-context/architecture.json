@@ -92,8 +92,8 @@
         "interfaces.ts": "Generic InputHandler interface",
         "text.handler.ts": "Text input",
         "image.handler.ts": "Image input (Claude Vision, 15MB limit)",
-        "audio.handler.ts": "Audio input (Whisper, 25MB limit)",
-        "recording.handler.ts": "Live recording (binary check, mic permission)",
+        "audio.handler.ts": "Audio input (Whisper, 25MB limit, parallel 3-chunk batches)",
+        "recording.handler.ts": "Live recording (binary check, mic permission, parallel transcription)",
         "file.handler.ts": "File input (txt, md, csv, json, 10MB limit)",
         "meeting.handler.ts": "Meeting transcript (improved path detection)"
       }
@@ -107,7 +107,9 @@
       },
       "files": {
         "path-sanitizer.ts": "Path sanitization and directory traversal prevention",
-        "atomic-file.ts": "Atomic file writes with locking"
+        "atomic-file.ts": "Atomic file writes with locking",
+        "audio-merge.ts": "WAV file merging with header correction",
+        "audio-split.ts": "WAV splitting with progress callback"
       }
     },
     "config": {

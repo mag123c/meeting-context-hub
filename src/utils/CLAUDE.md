@@ -76,14 +76,30 @@ Splits large audio files for Whisper API (25MB limit).
 
 | Function | Purpose |
 |----------|---------|
-| `splitWavFile()` | Binary WAV splitting (no ffmpeg needed) |
+| `splitWavFile()` | Binary WAV splitting with progress callback |
 | `splitAudioWithFfmpeg()` | Non-WAV format splitting (requires ffmpeg) |
 | `isFfmpegAvailable()` | Check ffmpeg installation |
 | `cleanupChunks()` | Remove temporary chunk files |
 | `needsSplitting()` | Check if file exceeds 25MB |
 | `getEstimatedChunkCount()` | Estimate number of chunks |
+| `getWavDuration()` | Get WAV file duration in seconds |
 
 **Notes:**
 - WAV files split directly using binary parsing
 - Non-WAV (MP3, M4A) requires `brew install ffmpeg`
 - Chunks saved to temp directory, cleaned up after transcription
+- Uses actual file size instead of WAV header value (handles incorrectly-updated headers)
+- Yields to event loop after each chunk for UI responsiveness
+
+## Audio Merging (`audio-merge.ts`)
+
+Merges multiple WAV files into one.
+
+| Function | Purpose |
+|----------|---------|
+| `mergeWavFiles()` | Concatenate WAV files with header correction |
+| `updateWavHeader()` | Fix RIFF/data chunk sizes after merge |
+
+**Notes:**
+- Updates RIFF chunk size (offset 4) and data chunk size (offset 40)
+- Called after stream completion to ensure correct file sizes

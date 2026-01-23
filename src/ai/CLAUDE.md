@@ -61,9 +61,11 @@ client.setLanguage(undefined);  // Switch to auto-detect
 
 ### EmbeddingClient
 
-- Text validation: max 30KB, non-empty
+- Auto-truncates to ~11,250 chars (7500 tokens × 1.5 chars/token)
+- Korean text optimization (1.5 chars/token vs English 4 chars/token)
+- Long texts truncated with "..." indicator (no error thrown)
 - Batch limit: 100 texts per request
-- Throws `TextLengthError`, `EmptyInputError` for invalid input
+- Throws `EmptyInputError` for empty input
 
 ## Usage
 
