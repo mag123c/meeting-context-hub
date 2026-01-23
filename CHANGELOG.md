@@ -1,3 +1,17 @@
+# [1.14.0](https://github.com/mag123c/meeting-context-hub/compare/v1.13.3...v1.14.0) (2026-01-23)
+
+
+### Bug Fixes
+
+* **embedding:** Korean text uses 1:1 char/token ratio (limit to 8000 chars) ([377098f](https://github.com/mag123c/meeting-context-hub/commit/377098fbbb1a28003546e9e789c69cdbbef6d893))
+* **test:** update embedding test to expect truncated text ([1f3e3d6](https://github.com/mag123c/meeting-context-hub/commit/1f3e3d6d0445ff8bcf6c85453685859ec19b695c))
+
+
+### Features
+
+* **audio:** always process audio as meeting (PRD summary) ([fa99527](https://github.com/mag123c/meeting-context-hub/commit/fa995277bd9cce663bfa5a2bd953fcd40594b685))
+* **config:** add directory autocomplete for vault path setting ([d3c8e2e](https://github.com/mag123c/meeting-context-hub/commit/d3c8e2e99f10ed9314f75fdf93a18971338c2c98))
+
 ## [1.13.3](https://github.com/mag123c/meeting-context-hub/compare/v1.13.2...v1.13.3) (2026-01-23)
 
 
