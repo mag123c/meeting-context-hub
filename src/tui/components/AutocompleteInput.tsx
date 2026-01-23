@@ -72,7 +72,11 @@ export function AutocompleteInput({
       const selected = suggestions[selectedIndex];
       onChange(selected);
       setCursorPosition(selected.length);
-      setShowSuggestions(false);
+      // Keep suggestions open for directories (ends with /)
+      // This allows continuing to navigate into the directory
+      if (!selected.endsWith("/")) {
+        setShowSuggestions(false);
+      }
       return;
     }
 
@@ -93,8 +97,24 @@ export function AutocompleteInput({
       return;
     }
 
-    // Handle Enter - always submit (use Tab to select suggestion)
+    // Handle Enter - submit file, navigate into directory
     if (key.return) {
+      // If value is a directory (ends with /), don't submit - trigger autocomplete refresh
+      if (value.endsWith("/")) {
+        // Force refresh suggestions by toggling showSuggestions
+        setShowSuggestions(true);
+        return;
+      }
+      // If showing suggestions and selected item is a directory, navigate into it
+      if (showSuggestions && suggestions.length > 0) {
+        const selected = suggestions[selectedIndex];
+        if (selected.endsWith("/")) {
+          onChange(selected);
+          setCursorPosition(selected.length);
+          // Keep suggestions open
+          return;
+        }
+      }
       setShowSuggestions(false);
       onSubmit(value);
       return;
