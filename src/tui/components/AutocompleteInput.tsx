@@ -93,18 +93,10 @@ export function AutocompleteInput({
       return;
     }
 
-    // Handle Enter - submit or select
+    // Handle Enter - always submit (use Tab to select suggestion)
     if (key.return) {
-      if (showSuggestions && suggestions.length > 0) {
-        // If suggestions are shown, select current one
-        const selected = suggestions[selectedIndex];
-        onChange(selected);
-        setCursorPosition(selected.length);
-        setShowSuggestions(false);
-      } else {
-        // Otherwise submit
-        onSubmit(value);
-      }
+      setShowSuggestions(false);
+      onSubmit(value);
       return;
     }
 
@@ -129,11 +121,10 @@ export function AutocompleteInput({
       return;
     }
 
-    // Handle regular character input
+    // Handle regular character input (no normalization - preserve @ prefix)
     if (input && !key.ctrl && !key.meta) {
       const newValue = value.slice(0, cursorPosition) + input + value.slice(cursorPosition);
-      const normalizedValue = normalizePath(newValue);
-      onChange(normalizedValue);
+      onChange(newValue);
       setCursorPosition(cursorPosition + input.length);
     }
   });
