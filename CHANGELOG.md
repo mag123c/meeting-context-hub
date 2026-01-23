@@ -1,3 +1,10 @@
+## [1.12.1](https://github.com/mag123c/meeting-context-hub/compare/v1.12.0...v1.12.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **embedding:** auto-truncate long texts to fit token limit ([c45aa96](https://github.com/mag123c/meeting-context-hub/commit/c45aa96cd2343baebb89a30b79b8e22a6d488b30))
+
 # [1.12.0](https://github.com/mag123c/meeting-context-hub/compare/v1.11.0...v1.12.0) (2026-01-23)
 
 
