@@ -7,6 +7,7 @@ export interface UseFileCompletionOptions {
   basePath?: string;
   extensions?: string[];
   showHidden?: boolean;
+  directoriesOnly?: boolean;
 }
 
 export interface UseFileCompletionResult {
@@ -14,7 +15,7 @@ export interface UseFileCompletionResult {
 }
 
 export function useFileCompletion(options: UseFileCompletionOptions = {}): UseFileCompletionResult {
-  const { basePath = process.cwd(), extensions, showHidden = false } = options;
+  const { basePath = process.cwd(), extensions, showHidden = false, directoriesOnly = false } = options;
 
   const getSuggestions = useCallback(
     async (input: string): Promise<string[]> => {
@@ -112,9 +113,15 @@ export function useFileCompletion(options: UseFileCompletionOptions = {}): UseFi
               // Ignore stat errors
             }
 
+            const isDir = displayPath.endsWith("/");
+
+            // Filter directories only if specified
+            if (directoriesOnly && !isDir) {
+              return null;
+            }
+
             // Filter by extension if specified
             if (extensions && extensions.length > 0) {
-              const isDir = displayPath.endsWith("/");
               if (!isDir) {
                 const ext = displayPath.split(".").pop()?.toLowerCase();
                 if (!ext || !extensions.includes(ext)) {

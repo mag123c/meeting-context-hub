@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { existsSync } from "fs";
 import { Box, Text, useInput } from "ink";
 import TextInput from "ink-text-input";
-import { Header, Menu, KeyHintBar, type MenuItem } from "../components/index.js";
+import { Header, Menu, KeyHintBar, AutocompleteInput, type MenuItem } from "../components/index.js";
+import { useFileCompletion } from "../hooks/index.js";
 import type { NavigationContext } from "../App.js";
 import { getApiKeyFromKeychain, setApiKeyInKeychain } from "../../config/keychain.js";
 import { getStoredVaultPath, setStoredVaultPath, isVaultPathFromEnv, DEFAULT_OBSIDIAN_PATH } from "../../config/index.js";
@@ -31,6 +32,9 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [currentVaultPath, setCurrentVaultPath] = useState<string>("");
   const [successType, setSuccessType] = useState<SuccessType>("apiKey");
+
+  // Directory autocomplete for vault path
+  const directoryCompletion = useFileCompletion({ directoriesOnly: true });
 
   // Check current key status and vault path
   useEffect(() => {
@@ -223,11 +227,12 @@ export function ConfigScreen({ navigation, onConfigured }: ConfigScreenProps) {
               <Text dimColor>{t.config.currentVaultPath} {currentVaultPath}</Text>
             </Box>
             <Box marginTop={1}>
-              <Text color="cyan">{"> "}</Text>
-              <TextInput
+              <AutocompleteInput
                 value={inputValue}
                 onChange={setInputValue}
                 onSubmit={handleVaultPathSubmit}
+                getSuggestions={directoryCompletion.getSuggestions}
+                placeholder="~/mch"
               />
             </Box>
             {error && (
