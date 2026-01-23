@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/mag123c/meeting-context-hub/compare/v1.11.0...v1.12.0) (2026-01-23)
+
+
+### Features
+
+* **audio:** add progress percentage for splitting phase ([00bab1b](https://github.com/mag123c/meeting-context-hub/commit/00bab1bb967d4e5a7a484530566cacf2175b236d))
+
 # [1.11.0](https://github.com/mag123c/meeting-context-hub/compare/v1.10.1...v1.11.0) (2026-01-23)
 
 
