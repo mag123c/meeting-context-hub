@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/mag123c/meeting-context-hub/compare/v1.9.3...v1.10.0) (2026-01-23)
+
+
+### Features
+
+* **tui:** add progress indicator for audio transcription ([6489441](https://github.com/mag123c/meeting-context-hub/commit/6489441228ff7598abcc46102e640eb0d91f0ce5))
+
 ## [1.9.3](https://github.com/mag123c/meeting-context-hub/compare/v1.9.2...v1.9.3) (2026-01-23)
 
 
