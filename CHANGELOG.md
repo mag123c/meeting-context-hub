@@ -1,3 +1,10 @@
+## [1.9.2](https://github.com/mag123c/meeting-context-hub/compare/v1.9.1...v1.9.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* **preflight:** fallback to openSync when accessSync fails on macOS ([2afb984](https://github.com/mag123c/meeting-context-hub/commit/2afb984edb1efcade7fe65f7dae4b29d8569b6a4))
+
 ## [1.9.1](https://github.com/mag123c/meeting-context-hub/compare/v1.9.0...v1.9.1) (2026-01-23)
 
 
