@@ -27,6 +27,7 @@ Interactive TUI using ink (React for CLI).
 | `RecordingIndicator` | Recording state + timer + chunk progress |
 | `ErrorBoundary` | Error catching boundary for TUI |
 | `ApiKeyPrompt` | Prompt when required API keys missing |
+| `AutocompleteInput` | File path autocomplete with @/~/absolute triggers |
 
 ## Hooks
 
@@ -38,6 +39,8 @@ Interactive TUI using ink (React for CLI).
 | `useRecording` | Recording state, timer, chunk tracking, saveAndCleanup |
 | `useTranslation` | i18n context (t, language, setLanguage, formatDate, formatDateTime) |
 | `useApiKeyGuard` | API key validation before screen navigation |
+| `useFileCompletion` | File/directory path completion with extension filtering |
+| `useDropDetection` | Drag-and-drop path detection and normalization |
 
 ## API Key Guard
 
