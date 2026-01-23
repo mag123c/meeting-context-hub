@@ -90,6 +90,11 @@ export interface Translations {
       sprint: string;
       type: string;
     };
+    progress: {
+      validating: string;
+      splitting: string;
+      transcribing: string;
+    };
     keyHints: {
       select: string;
       back: string;

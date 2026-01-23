@@ -15,12 +15,29 @@ import {
 // Whisper API limit
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
+export type AudioProgressPhase = "validating" | "splitting" | "transcribing";
+
+export interface AudioProgress {
+  phase: AudioProgressPhase;
+  current: number;
+  total: number;
+  percent: number;
+}
+
+export type AudioProgressCallback = (progress: AudioProgress) => void;
+
 export class AudioHandler {
   constructor(private whisper: WhisperClient) {}
 
-  async handle(audioPath: string): Promise<CreateContextInput> {
+  async handle(
+    audioPath: string,
+    onProgress?: AudioProgressCallback
+  ): Promise<CreateContextInput> {
     const absolutePath = resolve(audioPath);
     const extension = audioPath.toLowerCase().split(".").pop() || "";
+
+    // Report validation phase
+    onProgress?.({ phase: "validating", current: 0, total: 1, percent: 0 });
 
     // Run basic preflight validation (existence, permissions, format)
     // Skip size check here - we'll handle large files with splitting
@@ -48,11 +65,15 @@ export class AudioHandler {
       throw new Error(validation.error);
     }
 
+    onProgress?.({ phase: "validating", current: 1, total: 1, percent: 100 });
+
     // Check if file needs splitting
     const stats = statSync(absolutePath);
     if (stats.size <= MAX_FILE_SIZE) {
       // Small file - direct transcription
+      onProgress?.({ phase: "transcribing", current: 0, total: 1, percent: 0 });
       const transcription = await this.whisper.transcribe(absolutePath);
+      onProgress?.({ phase: "transcribing", current: 1, total: 1, percent: 100 });
       return {
         type: "audio",
         content: transcription,
@@ -61,18 +82,21 @@ export class AudioHandler {
     }
 
     // Large file - split and transcribe
-    return this.handleLargeFile(absolutePath, extension);
+    return this.handleLargeFile(absolutePath, extension, onProgress);
   }
 
   private async handleLargeFile(
     absolutePath: string,
-    extension: string
+    extension: string,
+    onProgress?: AudioProgressCallback
   ): Promise<CreateContextInput> {
     let chunkPaths: string[] = [];
     const isWav = extension === "wav";
 
     try {
       // Split the file
+      onProgress?.({ phase: "splitting", current: 0, total: 1, percent: 0 });
+
       if (isWav) {
         chunkPaths = await splitWavFile(absolutePath);
       } else {
@@ -87,14 +111,27 @@ export class AudioHandler {
         chunkPaths = await splitAudioWithFfmpeg(absolutePath);
       }
 
+      onProgress?.({ phase: "splitting", current: 1, total: 1, percent: 100 });
+
       // Transcribe all chunks sequentially
       const transcriptions: string[] = [];
-      for (const chunkPath of chunkPaths) {
-        const text = await this.whisper.transcribe(chunkPath);
+      const total = chunkPaths.length;
+
+      for (let i = 0; i < chunkPaths.length; i++) {
+        onProgress?.({
+          phase: "transcribing",
+          current: i,
+          total,
+          percent: Math.round((i / total) * 100),
+        });
+
+        const text = await this.whisper.transcribe(chunkPaths[i]);
         if (text.trim()) {
           transcriptions.push(text.trim());
         }
       }
+
+      onProgress?.({ phase: "transcribing", current: total, total, percent: 100 });
 
       return {
         type: "audio",

@@ -70,6 +70,11 @@ export const en: Translations = {
     projectName: "Project name (optional, press Enter to skip):",
     sprintIdentifier: "Sprint identifier (optional, press Enter to skip):",
     processing: "Processing content...",
+    progress: {
+      validating: "Validating file...",
+      splitting: "Splitting audio...",
+      transcribing: "Transcribing...",
+    },
     meetingSavedSuccess: "Meeting saved successfully!",
     contextSavedSuccess: "Context saved successfully!",
     selectRecordingMode: "How would you like to process this recording?",

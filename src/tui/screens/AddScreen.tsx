@@ -9,6 +9,7 @@ import type { NavigationContext } from "../App.js";
 import type { AppServices } from "../../core/factories.js";
 import type { ContextType, Context } from "../../types/context.types.js";
 import type { Meeting } from "../../types/meeting.types.js";
+import type { AudioProgress } from "../../input/audio.handler.js";
 import { useTranslation } from "../../i18n/index.js";
 import { loadConfig } from "../../config/index.js";
 
@@ -50,6 +51,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
   });
   const [result, setResult] = useState<Context | Meeting | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [audioProgress, setAudioProgress] = useState<AudioProgress | null>(null);
 
   const recording = useRecording(services.recordingHandler);
 
@@ -187,7 +189,10 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         processedContent = imageResult.content;
         source = imageResult.source;
       } else if (type === "audio") {
-        const audioResult = await services.audioHandler.handle(content);
+        const audioResult = await services.audioHandler.handle(content, (progress) => {
+          setAudioProgress(progress);
+        });
+        setAudioProgress(null);
         processedContent = audioResult.content;
         source = audioResult.source;
       } else if (type === "record") {
@@ -379,6 +384,35 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         );
 
       case "processing":
+        if (audioProgress) {
+          const phaseLabel =
+            audioProgress.phase === "validating" ? t.add.progress?.validating ?? "Validating..." :
+            audioProgress.phase === "splitting" ? t.add.progress?.splitting ?? "Splitting audio..." :
+            t.add.progress?.transcribing ?? "Transcribing...";
+
+          return (
+            <Box flexDirection="column">
+              <Spinner message={phaseLabel} />
+              {audioProgress.phase === "transcribing" && audioProgress.total > 1 && (
+                <Box marginTop={1} flexDirection="column">
+                  <Text>
+                    <Text color="cyan">{audioProgress.current}</Text>
+                    <Text dimColor> / {audioProgress.total} chunks</Text>
+                    <Text color="yellow"> ({audioProgress.percent}%)</Text>
+                  </Text>
+                  <Box marginTop={0}>
+                    <Text dimColor>
+                      {"["}
+                      <Text color="green">{"█".repeat(Math.floor(audioProgress.percent / 5))}</Text>
+                      <Text dimColor>{"░".repeat(20 - Math.floor(audioProgress.percent / 5))}</Text>
+                      {"]"}
+                    </Text>
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          );
+        }
         return <Spinner message={t.add.processing} />;
 
       case "result":

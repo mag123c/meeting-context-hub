@@ -86,6 +86,11 @@ export const ko: Translations = {
       sprint: "스프린트:",
       type: "유형:",
     },
+    progress: {
+      validating: "파일 검증 중...",
+      splitting: "오디오 분할 중...",
+      transcribing: "변환 중...",
+    },
     keyHints: {
       select: "선택",
       back: "뒤로",
