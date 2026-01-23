@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/mag123c/meeting-context-hub/compare/v1.12.2...v1.13.0) (2026-01-23)
+
+
+### Features
+
+* **update:** auto-restart after successful update ([2e541dd](https://github.com/mag123c/meeting-context-hub/commit/2e541ddee95b66c5ac0b077ebea7ab59fc811887))
+
 ## [1.12.2](https://github.com/mag123c/meeting-context-hub/compare/v1.12.1...v1.12.2) (2026-01-23)
 
 
