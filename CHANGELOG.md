@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/mag123c/meeting-context-hub/compare/v1.8.2...v1.9.0) (2026-01-23)
+
+
+### Features
+
+* **audio:** auto-split large audio files for Whisper API ([ced0d2c](https://github.com/mag123c/meeting-context-hub/commit/ced0d2c6f106b650d122394109c4a80aee14cb8a))
+
 ## [1.8.2](https://github.com/mag123c/meeting-context-hub/compare/v1.8.1...v1.8.2) (2026-01-23)
 
 
