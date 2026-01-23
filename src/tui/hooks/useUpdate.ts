@@ -7,23 +7,6 @@ import { useState, useEffect, useCallback } from "react";
 import { spawn } from "child_process";
 import updateNotifier from "update-notifier";
 
-/**
- * Restart the application by spawning a new process and exiting
- */
-function restartApp(): void {
-  // Use a subshell that waits briefly then starts mch
-  // This ensures the new process starts after the current one exits
-  const child = spawn("/bin/sh", ["-c", "sleep 0.5 && exec mch"], {
-    detached: true,
-    stdio: "ignore",
-    env: process.env,
-  });
-  child.unref();
-
-  // Exit current process
-  process.exit(0);
-}
-
 export type UpdateState = "idle" | "updating" | "success" | "error";
 
 export interface UseUpdateResult {
@@ -115,10 +98,6 @@ export function useUpdate({ packageName, version }: UseUpdateOptions): UseUpdate
     child.on("close", (code) => {
       if (code === 0) {
         setUpdateState("success");
-        // Auto-restart after brief delay to show success message
-        setTimeout(() => {
-          restartApp();
-        }, 1500);
       } else {
         setUpdateState("error");
         setUpdateError(errorOutput.trim() || `Exit code: ${code}`);
