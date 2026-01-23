@@ -1,3 +1,10 @@
+## [1.13.2](https://github.com/mag123c/meeting-context-hub/compare/v1.13.1...v1.13.2) (2026-01-23)
+
+
+### Bug Fixes
+
+* **update:** properly detach restart process from terminal ([be9313c](https://github.com/mag123c/meeting-context-hub/commit/be9313c397b3ab922348aff26a2bdbb88680eb8b))
+
 ## [1.13.1](https://github.com/mag123c/meeting-context-hub/compare/v1.13.0...v1.13.1) (2026-01-23)
 
 
