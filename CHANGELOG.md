@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/mag123c/meeting-context-hub/compare/v1.10.0...v1.10.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* **audio:** filter short chunks and validate duration before Whisper API ([5d78162](https://github.com/mag123c/meeting-context-hub/commit/5d78162297fc5a355eb6dad86bb5785ecf57240b))
+
 # [1.10.0](https://github.com/mag123c/meeting-context-hub/compare/v1.9.3...v1.10.0) (2026-01-23)
 
 
