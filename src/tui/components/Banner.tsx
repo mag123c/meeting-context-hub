@@ -1,4 +1,4 @@
-import { Box, Text } from "ink";
+import { Box, Text, useStdout } from "ink";
 
 interface BannerProps {
   version?: string;
@@ -14,6 +14,9 @@ const ASCII_LOGO = [
 ];
 
 export function Banner({ version }: BannerProps) {
+  const { stdout } = useStdout();
+  const terminalWidth = stdout?.columns || 80;
+
   return (
     <Box flexDirection="column" marginBottom={1}>
       <Box>
@@ -39,7 +42,7 @@ export function Banner({ version }: BannerProps) {
         <Text color="cyan" bold>{ASCII_LOGO[5]}</Text>
       </Box>
       <Box>
-        <Text dimColor>{"─".repeat(50)}</Text>
+        <Text dimColor>{"─".repeat(terminalWidth - 2)}</Text>
       </Box>
     </Box>
   );

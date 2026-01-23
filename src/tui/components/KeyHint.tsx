@@ -1,4 +1,4 @@
-import { Box, Text } from "ink";
+import { Box, Text, useStdout } from "ink";
 
 export interface KeyBinding {
   key: string;
@@ -10,18 +10,24 @@ interface KeyHintProps {
 }
 
 export function KeyHint({ bindings: _ }: KeyHintProps) {
+  const { stdout } = useStdout();
+  const terminalWidth = stdout?.columns || 80;
+
   return (
     <Box marginTop={1}>
-      <Text dimColor>{"─".repeat(40)}</Text>
+      <Text dimColor>{"─".repeat(terminalWidth - 2)}</Text>
     </Box>
   );
 }
 
 export function KeyHintBar({ bindings }: KeyHintProps) {
+  const { stdout } = useStdout();
+  const terminalWidth = stdout?.columns || 80;
+
   return (
     <Box flexDirection="column" marginTop={1}>
       <Box>
-        <Text dimColor>{"─".repeat(40)}</Text>
+        <Text dimColor>{"─".repeat(terminalWidth - 2)}</Text>
       </Box>
       <Box gap={2}>
         {bindings.map((binding, index) => (

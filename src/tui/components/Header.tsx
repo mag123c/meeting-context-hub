@@ -1,4 +1,4 @@
-import { Box, Text } from "ink";
+import { Box, Text, useStdout } from "ink";
 import { useTranslation } from "../../i18n/index.js";
 
 interface HeaderProps {
@@ -11,6 +11,8 @@ interface HeaderProps {
 
 export function Header({ title, breadcrumb, version, updateAvailable, latestVersion }: HeaderProps) {
   const { t } = useTranslation();
+  const { stdout } = useStdout();
+  const terminalWidth = stdout?.columns || 80;
 
   return (
     <Box flexDirection="column" marginBottom={1}>
@@ -35,7 +37,7 @@ export function Header({ title, breadcrumb, version, updateAvailable, latestVers
         </Box>
       )}
       <Box>
-        <Text dimColor>{"─".repeat(40)}</Text>
+        <Text dimColor>{"─".repeat(terminalWidth - 2)}</Text>
       </Box>
     </Box>
   );
