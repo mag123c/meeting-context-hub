@@ -390,9 +390,7 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
             audioProgress.phase === "splitting" ? t.add.progress?.splitting ?? "Splitting audio..." :
             t.add.progress?.transcribing ?? "Transcribing...";
 
-          const showProgress =
-            (audioProgress.phase === "splitting" && audioProgress.percent > 0) ||
-            (audioProgress.phase === "transcribing" && audioProgress.total > 1);
+          const showProgress = audioProgress.phase === "transcribing" && audioProgress.total > 1;
 
           return (
             <Box flexDirection="column">
