@@ -172,16 +172,24 @@ export function validateFilePreflight(
   }
 
   // 4. Read permission check
+  // Note: accessSync can fail on macOS due to extended attributes (com.apple.macl, com.apple.provenance)
+  // even when the file is readable. We try openSync as a fallback which is more reliable.
   try {
     accessSync(absolutePath, constants.R_OK);
   } catch {
-    issues.push({
-      code: PREFLIGHT_ERROR_CODES.FILE_NO_READ_PERMISSION,
-      severity: "error",
-      message: `Cannot read file (permission denied): ${absolutePath}`,
-      solution: "Check file permissions or run with appropriate privileges",
-    });
-    return { valid: false, issues };
+    // Fallback: try to actually open the file for reading
+    try {
+      const fd = openSync(absolutePath, "r");
+      closeSync(fd);
+    } catch {
+      issues.push({
+        code: PREFLIGHT_ERROR_CODES.FILE_NO_READ_PERMISSION,
+        severity: "error",
+        message: `Cannot read file (permission denied): ${absolutePath}`,
+        solution: "Check file permissions or run with appropriate privileges",
+      });
+      return { valid: false, issues };
+    }
   }
 
   // 5. File size check

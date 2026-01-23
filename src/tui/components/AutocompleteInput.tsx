@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Box, Text, useInput } from "ink";
 import clipboardy from "clipboardy";
 
@@ -25,26 +25,46 @@ export function AutocompleteInput({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(value.length);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Track last fetched value to avoid duplicate fetches
+  const lastFetchedValue = useRef<string>("");
 
   // Check if autocomplete should be active
-  const isAutocompleteActive = value.startsWith(prefix) || value.startsWith("/") || value.startsWith("~");
+  // Support: @, /, ~, ./, ../
+  const isAutocompleteActive =
+    value.startsWith(prefix) ||
+    value.startsWith("/") ||
+    value.startsWith("~") ||
+    value.startsWith("./") ||
+    value.startsWith("../");
+
+  // Fetch suggestions for a given path
+  const fetchSuggestions = useCallback(async (path: string) => {
+    if (lastFetchedValue.current === path) return;
+    lastFetchedValue.current = path;
+
+    setIsLoading(true);
+    try {
+      const results = await getSuggestions(path);
+      setSuggestions(results.slice(0, maxSuggestions));
+      setSelectedIndex(0);
+      setShowSuggestions(results.length > 0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getSuggestions, maxSuggestions]);
 
   // Update suggestions when value changes
   useEffect(() => {
-    const updateSuggestions = async () => {
-      if (isAutocompleteActive && value.length > 0) {
-        const results = await getSuggestions(value);
-        setSuggestions(results.slice(0, maxSuggestions));
-        setSelectedIndex(0);
-        setShowSuggestions(results.length > 0);
-      } else {
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    };
-
-    void updateSuggestions();
-  }, [value, getSuggestions, isAutocompleteActive, maxSuggestions]);
+    if (isAutocompleteActive && value.length > 0) {
+      void fetchSuggestions(value);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      lastFetchedValue.current = "";
+    }
+  }, [value, fetchSuggestions, isAutocompleteActive]);
 
   // Handle paste from clipboard (Ctrl+V detection via rapid input)
   const handlePaste = useCallback(async () => {
@@ -72,11 +92,21 @@ export function AutocompleteInput({
       const selected = suggestions[selectedIndex];
       onChange(selected);
       setCursorPosition(selected.length);
-      // Keep suggestions open for directories (ends with /)
-      // This allows continuing to navigate into the directory
-      if (!selected.endsWith("/")) {
+
+      // For directories, immediately fetch new suggestions
+      if (selected.endsWith("/")) {
+        lastFetchedValue.current = ""; // Reset to force fetch
+        void fetchSuggestions(selected);
+      } else {
         setShowSuggestions(false);
       }
+      return;
+    }
+
+    // Handle Tab without suggestions - try to trigger autocomplete
+    if (key.tab && !showSuggestions && value.length > 0) {
+      lastFetchedValue.current = ""; // Reset to force fetch
+      void fetchSuggestions(value);
       return;
     }
 
@@ -99,22 +129,32 @@ export function AutocompleteInput({
 
     // Handle Enter - submit file, navigate into directory
     if (key.return) {
-      // If value is a directory (ends with /), don't submit - trigger autocomplete refresh
-      if (value.endsWith("/")) {
-        // Force refresh suggestions by toggling showSuggestions
-        setShowSuggestions(true);
-        return;
-      }
-      // If showing suggestions and selected item is a directory, navigate into it
+      // If showing suggestions, use selected item
       if (showSuggestions && suggestions.length > 0) {
         const selected = suggestions[selectedIndex];
         if (selected.endsWith("/")) {
+          // Directory: navigate into it
           onChange(selected);
           setCursorPosition(selected.length);
-          // Keep suggestions open
+          lastFetchedValue.current = ""; // Reset to force fetch
+          void fetchSuggestions(selected);
+          return;
+        } else {
+          // File: submit it
+          setShowSuggestions(false);
+          onSubmit(selected);
           return;
         }
       }
+
+      // If value is a directory path, fetch its contents
+      if (value.endsWith("/")) {
+        lastFetchedValue.current = ""; // Reset to force fetch
+        void fetchSuggestions(value);
+        return;
+      }
+
+      // Submit the current value
       setShowSuggestions(false);
       onSubmit(value);
       return;
@@ -173,31 +213,41 @@ export function AutocompleteInput({
         </Text>
       </Box>
 
+      {/* Loading indicator */}
+      {isLoading && (
+        <Box marginLeft={2}>
+          <Text dimColor>Loading...</Text>
+        </Box>
+      )}
+
       {/* Suggestions dropdown */}
-      {showSuggestions && suggestions.length > 0 && (
+      {!isLoading && showSuggestions && suggestions.length > 0 && (
         <Box flexDirection="column" marginTop={0} marginLeft={2}>
           <Box>
             <Text dimColor>{"┌" + "─".repeat(Math.max(...suggestions.map(s => s.length), 20) + 2) + "┐"}</Text>
           </Box>
-          {suggestions.map((suggestion, index) => (
-            <Box key={suggestion}>
-              <Text dimColor>│ </Text>
-              <Text
-                backgroundColor={index === selectedIndex ? "blue" : undefined}
-                color={index === selectedIndex ? "white" : undefined}
-              >
-                {suggestion.padEnd(Math.max(...suggestions.map(s => s.length), 20))}
-              </Text>
-              <Text dimColor> │</Text>
-            </Box>
-          ))}
+          {suggestions.map((suggestion, index) => {
+            const isDir = suggestion.endsWith("/");
+            return (
+              <Box key={suggestion}>
+                <Text dimColor>│ </Text>
+                <Text
+                  backgroundColor={index === selectedIndex ? "blue" : undefined}
+                  color={index === selectedIndex ? "white" : isDir ? "cyan" : undefined}
+                >
+                  {suggestion.padEnd(Math.max(...suggestions.map(s => s.length), 20))}
+                </Text>
+                <Text dimColor> │</Text>
+              </Box>
+            );
+          })}
           <Box>
             <Text dimColor>{"└" + "─".repeat(Math.max(...suggestions.map(s => s.length), 20) + 2) + "┘"}</Text>
           </Box>
           <Box gap={2} marginTop={0}>
             <Text dimColor>
-              <Text color="yellow">[Tab]</Text> Select
-              <Text color="yellow">[↑↓]</Text> Navigate
+              <Text color="yellow">[Tab/Enter]</Text> Select{" "}
+              <Text color="yellow">[↑↓]</Text> Navigate{" "}
               <Text color="yellow">[Esc]</Text> Cancel
             </Text>
           </Box>

@@ -14,6 +14,7 @@ Common utility functions.
 | `path-sanitizer.ts` | Path sanitization and traversal prevention |
 | `atomic-file.ts` | Atomic file writes and file locking |
 | `audio-merge.ts` | WAV file merging for multi-chunk recordings |
+| `audio-split.ts` | WAV/audio splitting for files >25MB (Whisper API limit) |
 
 ## Pre-flight Validation (`preflight/`)
 
@@ -68,3 +69,21 @@ Safe file writes with rollback capability.
 | `withFileLock()` | Execute with auto lock/unlock |
 | `safeReadFile()` | Read with null on ENOENT |
 | `generateUniqueFilename()` | Avoid filename collisions |
+
+## Audio Splitting (`audio-split.ts`)
+
+Splits large audio files for Whisper API (25MB limit).
+
+| Function | Purpose |
+|----------|---------|
+| `splitWavFile()` | Binary WAV splitting (no ffmpeg needed) |
+| `splitAudioWithFfmpeg()` | Non-WAV format splitting (requires ffmpeg) |
+| `isFfmpegAvailable()` | Check ffmpeg installation |
+| `cleanupChunks()` | Remove temporary chunk files |
+| `needsSplitting()` | Check if file exceeds 25MB |
+| `getEstimatedChunkCount()` | Estimate number of chunks |
+
+**Notes:**
+- WAV files split directly using binary parsing
+- Non-WAV (MP3, M4A) requires `brew install ffmpeg`
+- Chunks saved to temp directory, cleaned up after transcription

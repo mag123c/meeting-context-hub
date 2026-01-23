@@ -13,6 +13,8 @@ export function getRequiredEnv(key: string): string {
   return value;
 }
 
-export const DEFAULT_OBSIDIAN_PATH = resolve(homedir(), "Documents", "mch");
+// Note: ~/Documents has macOS security restrictions (Full Disk Access required)
+// Using ~/mch for better compatibility across platforms
+export const DEFAULT_OBSIDIAN_PATH = resolve(homedir(), "mch");
 
 export const DEFAULT_MCH_FOLDER = "mch";

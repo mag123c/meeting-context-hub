@@ -15,7 +15,9 @@ Configuration, environment, and secure credential management.
 
 ## Vault Path Resolution
 
-**Priority:** `OBSIDIAN_VAULT_PATH` env > stored config > default (`~/Documents/mch`)
+**Priority:** `OBSIDIAN_VAULT_PATH` env > stored config > default (`~/mch`)
+
+**Note:** `~/Documents` has macOS security restrictions requiring Full Disk Access.
 
 | Function | Purpose |
 |----------|---------|

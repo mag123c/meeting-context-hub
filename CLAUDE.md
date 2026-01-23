@@ -23,7 +23,7 @@ mch list --tag "meeting"
 
 ### Vault Path
 
-Default storage: `~/Documents/mch`
+Default storage: `~/mch` (changed from `~/Documents/mch` due to macOS security restrictions)
 
 Priority: `OBSIDIAN_VAULT_PATH` env > `~/.config/mch/config.json` > default
 
