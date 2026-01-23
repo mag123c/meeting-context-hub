@@ -3,7 +3,11 @@ import type { IEmbeddingClient } from "../interfaces/index.js";
 import { AIClientError, TextLengthError, EmptyInputError } from "../../errors/index.js";
 
 // OpenAI embedding limits
-const MAX_TEXT_LENGTH = 30 * 1024; // 30KB - safe limit for text-embedding-3-small
+// text-embedding-3-small has 8192 token limit
+// Conservative estimate: ~3 chars per token for mixed content
+const MAX_TOKENS = 8000; // Leave some margin
+const CHARS_PER_TOKEN = 3;
+const MAX_TEXT_LENGTH = MAX_TOKENS * CHARS_PER_TOKEN; // ~24000 chars
 const MAX_BATCH_SIZE = 100; // Maximum texts per batch
 
 // Retry configuration
@@ -46,17 +50,25 @@ export class EmbeddingClient implements IEmbeddingClient {
   }
 
   /**
-   * Validate text input
+   * Truncate text to fit within token limit
+   * Preserves beginning of text (usually most relevant)
+   */
+  private truncateText(text: string): string {
+    if (text.length <= MAX_TEXT_LENGTH) {
+      return text;
+    }
+    // Truncate and add indicator
+    return text.slice(0, MAX_TEXT_LENGTH - 3) + "...";
+  }
+
+  /**
+   * Validate text input (after truncation)
    */
   private validateText(text: string, index?: number): void {
     const label = index !== undefined ? `Text at index ${index}` : "Text";
 
     if (!text || text.trim().length === 0) {
       throw new EmptyInputError(label.toLowerCase());
-    }
-
-    if (text.length > MAX_TEXT_LENGTH) {
-      throw new TextLengthError(text.length, MAX_TEXT_LENGTH, "embedding");
     }
   }
 
@@ -98,12 +110,13 @@ export class EmbeddingClient implements IEmbeddingClient {
   }
 
   async embed(text: string): Promise<number[]> {
-    this.validateText(text);
+    const truncatedText = this.truncateText(text);
+    this.validateText(truncatedText);
 
     return this.withRetry(async () => {
       const response = await this.client.embeddings.create({
         model: "text-embedding-3-small",
-        input: text,
+        input: truncatedText,
       });
       return response.data[0].embedding;
     }, "Embedding generation");
@@ -121,13 +134,14 @@ export class EmbeddingClient implements IEmbeddingClient {
       );
     }
 
-    // Validate all texts
-    texts.forEach((text, index) => this.validateText(text, index));
+    // Truncate and validate all texts
+    const truncatedTexts = texts.map((text) => this.truncateText(text));
+    truncatedTexts.forEach((text, index) => this.validateText(text, index));
 
     return this.withRetry(async () => {
       const response = await this.client.embeddings.create({
         model: "text-embedding-3-small",
-        input: texts,
+        input: truncatedTexts,
       });
       return response.data.map((d) => d.embedding);
     }, "Batch embedding generation");
