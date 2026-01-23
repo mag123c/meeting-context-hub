@@ -16,6 +16,9 @@ import { execSync } from "child_process";
 const MAX_CHUNK_SIZE = 25 * 1024 * 1024; // 25MB
 // Safe chunk size (with margin)
 const TARGET_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB
+// Minimum audio length for Whisper API (0.1 seconds)
+// Using 1 second as minimum for safety margin
+const MIN_CHUNK_SECONDS = 1;
 
 interface WavHeader {
   sampleRate: number;
@@ -138,13 +141,28 @@ export async function splitWavFile(filePath: string): Promise<string[]> {
 
   const fd = openSync(filePath, "r");
 
+  // Minimum bytes for a valid chunk (1 second of audio)
+  const minChunkBytes = header.bytesPerSecond * MIN_CHUNK_SECONDS;
+
   try {
     let offset = header.dataOffset;
     let remaining = header.dataSize;
     let chunkIndex = 0;
 
     while (remaining > 0) {
-      const chunkDataSize = Math.min(bytesPerChunk, remaining);
+      // If remaining data is too short, skip it (will be silence or noise)
+      if (remaining < minChunkBytes) {
+        break;
+      }
+
+      // If this would leave a tiny remainder, include it in this chunk
+      let chunkDataSize = Math.min(bytesPerChunk, remaining);
+      const wouldRemain = remaining - chunkDataSize;
+      if (wouldRemain > 0 && wouldRemain < minChunkBytes) {
+        // Include the remainder in this chunk (still under 25MB limit)
+        chunkDataSize = remaining;
+      }
+
       const chunkPath = join(tempDir, `chunk-${chunkIndex}.wav`);
 
       // Create chunk file
