@@ -1,3 +1,10 @@
+## [1.9.3](https://github.com/mag123c/meeting-context-hub/compare/v1.9.2...v1.9.3) (2026-01-23)
+
+
+### Bug Fixes
+
+* **audio:** skip short chunks that Whisper API rejects ([8776523](https://github.com/mag123c/meeting-context-hub/commit/8776523dca989cf07c40c6a182782f28c897213a))
+
 ## [1.9.2](https://github.com/mag123c/meeting-context-hub/compare/v1.9.1...v1.9.2) (2026-01-23)
 
 
