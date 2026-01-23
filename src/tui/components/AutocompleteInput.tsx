@@ -127,34 +127,8 @@ export function AutocompleteInput({
       return;
     }
 
-    // Handle Enter - submit file, navigate into directory
+    // Handle Enter - always submit current value
     if (key.return) {
-      // If showing suggestions, use selected item
-      if (showSuggestions && suggestions.length > 0) {
-        const selected = suggestions[selectedIndex];
-        if (selected.endsWith("/")) {
-          // Directory: navigate into it
-          onChange(selected);
-          setCursorPosition(selected.length);
-          lastFetchedValue.current = ""; // Reset to force fetch
-          void fetchSuggestions(selected);
-          return;
-        } else {
-          // File: submit it
-          setShowSuggestions(false);
-          onSubmit(selected);
-          return;
-        }
-      }
-
-      // If value is a directory path, fetch its contents
-      if (value.endsWith("/")) {
-        lastFetchedValue.current = ""; // Reset to force fetch
-        void fetchSuggestions(value);
-        return;
-      }
-
-      // Submit the current value
       setShowSuggestions(false);
       onSubmit(value);
       return;
@@ -246,7 +220,8 @@ export function AutocompleteInput({
           </Box>
           <Box gap={2} marginTop={0}>
             <Text dimColor>
-              <Text color="yellow">[Tab/Enter]</Text> Select{" "}
+              <Text color="yellow">[Tab]</Text> Select{" "}
+              <Text color="yellow">[Enter]</Text> Confirm{" "}
               <Text color="yellow">[↑↓]</Text> Navigate{" "}
               <Text color="yellow">[Esc]</Text> Cancel
             </Text>
