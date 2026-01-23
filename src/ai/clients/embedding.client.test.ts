@@ -40,8 +40,9 @@ describe("EmbeddingClient", () => {
       });
     });
 
-    it("긴 텍스트도 임베딩 가능", async () => {
+    it("긴 텍스트는 8000자로 truncate", async () => {
       const longText = "a".repeat(10000);
+      const truncatedText = "a".repeat(7997) + "..."; // 8000 chars total
       const mockEmbedding = Array(1536).fill(0.1);
       mockCreate.mockResolvedValue({
         data: [{ embedding: mockEmbedding }],
@@ -52,7 +53,7 @@ describe("EmbeddingClient", () => {
       expect(result).toEqual(mockEmbedding);
       expect(mockCreate).toHaveBeenCalledWith({
         model: "text-embedding-3-small",
-        input: longText,
+        input: truncatedText,
       });
     });
 
