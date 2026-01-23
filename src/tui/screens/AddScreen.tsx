@@ -189,12 +189,20 @@ export function AddScreen({ navigation, services }: AddScreenProps) {
         processedContent = imageResult.content;
         source = imageResult.source;
       } else if (type === "audio") {
+        // Audio files always processed as meeting (PRD summary)
         const audioResult = await services.audioHandler.handle(content, (progress) => {
           setAudioProgress(progress);
         });
         setAudioProgress(null);
-        processedContent = audioResult.content;
-        source = audioResult.source;
+        const meetingResult = await services.summarizeMeetingUseCase.execute({
+          transcript: audioResult.content,
+          source: audioResult.source,
+          project: project || undefined,
+          sprint: sprint || undefined,
+        });
+        setResult(meetingResult);
+        setStep("result");
+        return;
       } else if (type === "record") {
         // Content already transcribed, just use it
         processedContent = content;

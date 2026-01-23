@@ -10,10 +10,9 @@ export function createAddCommand(): Command {
     .description("Add a new context")
     .option("-t, --text <text>", "Add text content")
     .option("-i, --image <path>", "Add image file (Claude Vision)")
-    .option("-a, --audio <path>", "Add audio file (Whisper)")
+    .option("-a, --audio <path>", "Add audio file (Whisper → Meeting PRD)")
     .option("-f, --file <path>", "Add file content (txt, md, csv, json)")
     .option("-m, --meeting <path>", "Add meeting transcript (txt, md)")
-    .option("--summarize-as-meeting", "Process audio as meeting transcript (PRD summary)")
     .option("--project <name>", "Project name (hierarchy: level 1)")
     .option("--category <name>", "Category name (hierarchy: level 2)")
     .option("--sprint <name>", "Sprint identifier")
@@ -40,8 +39,8 @@ export function createAddCommand(): Command {
           return;
         }
 
-        // Audio + meeting summarization option
-        if (options.audio && options.summarizeAsMeeting) {
+        // Audio always processed as meeting (PRD summary)
+        if (options.audio) {
           spinner.start("Transcribing audio with Whisper...");
           const audioResult = await services.audioHandler.handle(options.audio);
           spinner.succeed("Audio transcribed");
@@ -71,10 +70,6 @@ export function createAddCommand(): Command {
           spinner.start("Analyzing image with Claude Vision...");
           input = await services.imageHandler.handle(options.image);
           spinner.succeed("Image analyzed");
-        } else if (options.audio) {
-          spinner.start("Transcribing audio with Whisper...");
-          input = await services.audioHandler.handle(options.audio);
-          spinner.succeed("Audio transcribed");
         } else if (options.file) {
           input = await services.fileHandler.handle(options.file);
         } else {
