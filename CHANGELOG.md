@@ -1,3 +1,15 @@
+## [1.13.3](https://github.com/mag123c/meeting-context-hub/compare/v1.13.2...v1.13.3) (2026-01-23)
+
+
+### Bug Fixes
+
+* **audio:** remove splitting progress display (only show transcribing) ([01c6f19](https://github.com/mag123c/meeting-context-hub/commit/01c6f196926d7ce1f93b3b9775d28769cd3028e7))
+
+
+### Reverts
+
+* **update:** remove auto-restart, use manual restart ([90bcfe7](https://github.com/mag123c/meeting-context-hub/commit/90bcfe79e9dc65626bb555d93619b280e81612e8))
+
 ## [1.13.2](https://github.com/mag123c/meeting-context-hub/compare/v1.13.1...v1.13.2) (2026-01-23)
 
 
