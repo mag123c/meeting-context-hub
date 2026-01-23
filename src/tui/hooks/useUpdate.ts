@@ -11,11 +11,12 @@ import updateNotifier from "update-notifier";
  * Restart the application by spawning a new process and exiting
  */
 function restartApp(): void {
-  // Spawn new mch process detached from parent
-  const child = spawn("mch", [], {
+  // Use a subshell that waits briefly then starts mch
+  // This ensures the new process starts after the current one exits
+  const child = spawn("/bin/sh", ["-c", "sleep 0.5 && exec mch"], {
     detached: true,
-    stdio: "inherit",
-    shell: true,
+    stdio: "ignore",
+    env: process.env,
   });
   child.unref();
 
