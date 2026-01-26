@@ -47,13 +47,16 @@ pnpm dev
 
 ```bash
 # Required
-ANTHROPIC_API_KEY=sk-ant-xxx   # Claude API
-OPENAI_API_KEY=sk-xxx          # OpenAI (embedding, whisper)
+ANTHROPIC_API_KEY=sk-ant-xxx   # Claude API (context extraction)
 
 # Optional
+OPENAI_API_KEY=sk-xxx          # OpenAI - enables recording (Whisper) & semantic search (Embedding)
 MCH_DB_PATH=~/.mch/data.db     # Database location
-MCH_LANGUAGE=ko                # UI language (ko, en)
+MCH_LANGUAGE=en                # UI language: 'ko' or 'en' (default: 'en')
 ```
+
+> **Note**: Without OpenAI API key, recording and semantic search features are disabled.
+> The app will show a guidance message when accessing these features.
 
 ## Tech Stack
 
