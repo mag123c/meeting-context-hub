@@ -1,3 +1,41 @@
+# [2.0.0](https://github.com/mag123c/meeting-context-hub/compare/v1.14.0...v2.0.0) (2026-01-26)
+
+
+* feat!: complete MCH v2 redesign (v0.1-v0.3) ([8f76a04](https://github.com/mag123c/meeting-context-hub/commit/8f76a0482b575d066a96ed964bbbf47fc6c68e99))
+
+
+### Bug Fixes
+
+* **ci:** add semantic-release plugins ([c695259](https://github.com/mag123c/meeting-context-hub/commit/c6952598c0a49579a829d0dccc522cd4681506fc))
+* **ci:** allow CI to pass with no test files ([71d26b4](https://github.com/mag123c/meeting-context-hub/commit/71d26b4373bf8dce314938fee3aad60cfab60721))
+* **tui:** separate Tab/Enter behavior in AutocompleteInput ([a10018d](https://github.com/mag123c/meeting-context-hub/commit/a10018d34032040d2914cccfa40f5ff60f9ac1f4))
+
+
+### Features
+
+* **core:** implement comprehensive error handling system (v0.4) ([ac5427c](https://github.com/mag123c/meeting-context-hub/commit/ac5427c7de259ccd40fc04b8a2b4d3021ba7fa23))
+
+
+### BREAKING CHANGES
+
+* Complete architecture rewrite
+
+- Remove CLI, keep TUI only
+- Remove macOS dependencies (Keychain, sox for config)
+- Implement Clean Architecture (adapters → services → usecases → TUI)
+- SQLite local storage
+- File-based + env config with priority
+
+- v0.1: Core TUI + Text Input
+- v0.1.1: In-App Configuration (Settings screen)
+- v0.2: Search + Chaining (OpenAI embeddings, cosine similarity)
+- v0.3: Audio Recording (sox + Whisper API)
+
+- src/adapters/ - External integrations (AI, audio, storage, config)
+- src/core/ - Business logic (usecases, services, domain)
+- src/tui/ - React + Ink interface
+- docs/ - PRD, Architecture, Roadmap
+
 ## [1.14.1](https://github.com/mag123c/meeting-context-hub/compare/v1.14.0...v1.14.1) (2026-01-25)
 
 
