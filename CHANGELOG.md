@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/mag123c/meeting-context-hub/compare/v2.5.0...v2.6.0) (2026-01-26)
+
+
+### Features
+
+* add auto-update on startup ([ef520b2](https://github.com/mag123c/meeting-context-hub/commit/ef520b227158994fcb81ab3efef4459966945d67))
+
 # [2.5.0](https://github.com/mag123c/meeting-context-hub/compare/v2.4.0...v2.5.0) (2026-01-26)
 
 
