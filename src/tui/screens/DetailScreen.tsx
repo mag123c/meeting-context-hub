@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { SectionBox } from '../components/SectionBox.js';
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { GroupSelector } from '../components/GroupSelector.js';
 import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
+import type { ManageContextUseCase } from '../../core/usecases/manage-context.usecase.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
 import type { Context, Project, SearchResult } from '../../types/index.js';
 
@@ -14,8 +17,10 @@ interface DetailScreenProps {
   contextId: string;
   getContextUseCase: GetContextUseCase;
   manageProjectUseCase: ManageProjectUseCase;
+  manageContextUseCase: ManageContextUseCase;
   searchContextUseCase?: SearchContextUseCase;
   onNavigateToContext?: (contextId: string) => void;
+  onDeleted?: () => void;
   goBack: () => void;
   language?: 'ko' | 'en';
 }
@@ -24,18 +29,27 @@ export function DetailScreen({
   contextId,
   getContextUseCase,
   manageProjectUseCase,
+  manageContextUseCase,
   searchContextUseCase,
   onNavigateToContext,
+  onDeleted,
   goBack,
   language = 'en',
 }: DetailScreenProps): React.ReactElement {
   const [context, setContext] = useState<Context | null>(null);
   const [project, setProject] = useState<Project | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [relatedContexts, setRelatedContexts] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRelated, setShowRelated] = useState(false);
 
+  // Dialog states
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showGroupSelector, setShowGroupSelector] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  // Load context data
   useEffect(() => {
     async function load() {
       try {
@@ -71,13 +85,91 @@ export function DetailScreen({
     load();
   }, [contextId, getContextUseCase, manageProjectUseCase, searchContextUseCase, language]);
 
+  // Load projects for group selector
+  const loadProjects = useCallback(async () => {
+    try {
+      const projectList = await manageProjectUseCase.listProjects();
+      setProjects(projectList);
+    } catch {
+      // Ignore errors
+    }
+  }, [manageProjectUseCase]);
+
+  // Handle delete
+  const handleDelete = useCallback(async () => {
+    setDeleting(true);
+    try {
+      await manageContextUseCase.deleteContext(contextId);
+      if (onDeleted) {
+        onDeleted();
+      } else {
+        goBack();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete');
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [contextId, manageContextUseCase, onDeleted, goBack]);
+
+  // Handle group change
+  const handleGroupSelect = useCallback(
+    async (projectId: string | null) => {
+      try {
+        await manageContextUseCase.changeGroup(contextId, projectId);
+
+        // Update local state
+        if (projectId === null) {
+          setProject(null);
+        } else {
+          const newProject = await manageProjectUseCase.getProject(projectId);
+          setProject(newProject);
+        }
+
+        // Also update context's projectId
+        setContext((prev) => (prev ? { ...prev, projectId } : null));
+
+        setShowGroupSelector(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to change group');
+      }
+    },
+    [contextId, manageContextUseCase, manageProjectUseCase]
+  );
+
+  // Handle create new group
+  const handleCreateGroup = useCallback(
+    async (name: string) => {
+      const newProject = await manageProjectUseCase.createProject(name);
+      // After creating, select it
+      await handleGroupSelect(newProject.id);
+    },
+    [manageProjectUseCase, handleGroupSelect]
+  );
+
   useInput((input, key) => {
+    // Ignore inputs when dialogs are shown
+    if (showDeleteConfirm || showGroupSelector) return;
+
     if (key.escape) {
       if (showRelated) {
         setShowRelated(false);
       } else {
         goBack();
       }
+      return;
+    }
+
+    // Delete context with 'd'
+    if (input === 'd') {
+      setShowDeleteConfirm(true);
+      return;
+    }
+
+    // Change group with 'g'
+    if (input === 'g') {
+      loadProjects();
+      setShowGroupSelector(true);
       return;
     }
 
@@ -105,6 +197,49 @@ export function DetailScreen({
             {t('hint.esc_back', language)}
           </Text>
         </Box>
+      </Box>
+    );
+  }
+
+  // Show delete confirmation dialog
+  if (showDeleteConfirm) {
+    if (deleting) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Spinner message={t('dialog.deleting', language)} />
+        </Box>
+      );
+    }
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={context.title} />
+        <ConfirmDialog
+          title={t('dialog.delete_context_title', language)}
+          message={t('dialog.delete_context_message', language)}
+          confirmLabel={t('common.delete', language)}
+          cancelLabel={t('common.cancel', language)}
+          destructive
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      </Box>
+    );
+  }
+
+  // Show group selector
+  if (showGroupSelector) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={context.title} />
+        <GroupSelector
+          projects={projects}
+          currentProjectId={context.projectId}
+          onSelect={handleGroupSelect}
+          onCreate={handleCreateGroup}
+          onCancel={() => setShowGroupSelector(false)}
+          language={language}
+        />
       </Box>
     );
   }

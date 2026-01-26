@@ -48,14 +48,16 @@ export const UI_STRINGS = {
 | Scope | Description |
 |-------|-------------|
 | common | Shared strings (back, cancel, save, etc.) |
+| hint | Navigation hints (ESC, Enter, arrows) |
 | menu | Main menu items |
 | settings | Settings screen |
 | add | Add context screen |
 | list | List screen |
 | search | Search screen |
 | detail | Detail screen |
-| project | Project management |
+| project | Group management (UI term: "Group", entity: "Project") |
 | record | Recording screen |
+| dialog | Confirmation dialogs and modals (delete, group change) |
 
 ## Type Safety
 

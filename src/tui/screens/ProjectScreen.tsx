@@ -6,6 +6,7 @@ import { Spinner } from '../components/Spinner.js';
 import { TextInput } from '../components/TextInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
 import { SectionBox } from '../components/SectionBox.js';
+import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
@@ -41,6 +42,10 @@ export function ProjectScreen({
   const [newDescription, setNewDescription] = useState('');
   const [createStep, setCreateStep] = useState<'name' | 'description'>('name');
   const [creating, setCreating] = useState(false);
+
+  // Delete state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadProjects = useCallback(async () => {
     try {
@@ -86,7 +91,27 @@ export function ProjectScreen({
     setCreating(false);
   }, [newName, newDescription, manageProjectUseCase, loadProjects]);
 
+  const handleDeleteProject = useCallback(async () => {
+    if (!selectedProject) return;
+
+    setDeleting(true);
+    setError(null);
+    try {
+      await manageProjectUseCase.deleteProject(selectedProject.id);
+      setShowDeleteConfirm(false);
+      setSelectedProject(null);
+      setMode('list');
+      await loadProjects();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete project'));
+    }
+    setDeleting(false);
+  }, [selectedProject, manageProjectUseCase, loadProjects]);
+
   useInput((input, key) => {
+    // Ignore inputs when delete dialog is shown
+    if (showDeleteConfirm) return;
+
     if (key.escape) {
       if (mode === 'create') {
         setMode('list');
@@ -106,6 +131,11 @@ export function ProjectScreen({
     if (mode === 'list' && input === 'n') {
       setMode('create');
       setError(null);
+    }
+
+    // Delete project in detail mode
+    if (mode === 'detail' && input === 'd') {
+      setShowDeleteConfirm(true);
     }
 
     if (mode === 'create' && key.return) {
@@ -173,6 +203,32 @@ export function ProjectScreen({
   }
 
   if (mode === 'detail' && selectedProject) {
+    // Show delete confirmation dialog
+    if (showDeleteConfirm) {
+      if (deleting) {
+        return (
+          <Box flexDirection="column" padding={1}>
+            <Spinner message={t('dialog.deleting', language)} />
+          </Box>
+        );
+      }
+
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Header title={selectedProject.name} />
+          <ConfirmDialog
+            title={t('dialog.delete_group_title', language)}
+            message={t('dialog.delete_group_message', language)}
+            confirmLabel={t('common.delete', language)}
+            cancelLabel={t('common.cancel', language)}
+            destructive
+            onConfirm={handleDeleteProject}
+            onCancel={() => setShowDeleteConfirm(false)}
+          />
+        </Box>
+      );
+    }
+
     return (
       <Box flexDirection="column" padding={1}>
         <Header title={selectedProject.name} />
@@ -189,9 +245,15 @@ export function ProjectScreen({
         </SectionBox>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            {t('hint.esc_back', language)}
+            d: {t('common.delete', language)} | {t('hint.esc_back', language)}
           </Text>
         </Box>
+
+        {error && (
+          <Box marginTop={1}>
+            <ErrorText error={error} language={language} />
+          </Box>
+        )}
       </Box>
     );
   }

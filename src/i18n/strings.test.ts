@@ -25,8 +25,8 @@ describe('i18n', () => {
 
   describe('ti() function with interpolation', () => {
     it('should interpolate single parameter', () => {
-      expect(ti('project.subtitle', 'ko', { count: 5 })).toBe('5개 프로젝트');
-      expect(ti('project.subtitle', 'en', { count: 5 })).toBe('5 project(s)');
+      expect(ti('project.subtitle', 'ko', { count: 5 })).toBe('5개 그룹');
+      expect(ti('project.subtitle', 'en', { count: 5 })).toBe('5 group(s)');
     });
 
     it('should interpolate multiple parameters', () => {

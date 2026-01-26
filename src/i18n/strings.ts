@@ -35,7 +35,7 @@ export const UI_STRINGS = {
   'menu.record_meeting': { ko: '미팅 녹음', en: 'Record Meeting' },
   'menu.search': { ko: '검색', en: 'Search' },
   'menu.list_contexts': { ko: '컨텍스트 목록', en: 'List Contexts' },
-  'menu.projects': { ko: '프로젝트', en: 'Projects' },
+  'menu.projects': { ko: '그룹', en: 'Groups' },
   'menu.settings': { ko: '설정', en: 'Settings' },
   'menu.exit': { ko: '종료', en: 'Exit' },
   'menu.hint': { ko: '방향키로 이동, Enter로 선택, q로 종료', en: 'Use arrow keys to navigate, Enter to select, q to quit' },
@@ -72,9 +72,9 @@ export const UI_STRINGS = {
 
   // Add Context Screen
   'add.title': { ko: '컨텍스트 추가', en: 'Add Context' },
-  'add.select_project': { ko: '프로젝트 선택 (또는 없음)', en: 'Select a project (or none)' },
-  'add.no_project': { ko: '(프로젝트 없음)', en: '(No Project)' },
-  'add.project_prefix': { ko: '프로젝트:', en: 'Project:' },
+  'add.select_project': { ko: '그룹 선택 (또는 없음)', en: 'Select a group (or none)' },
+  'add.no_project': { ko: '(그룹 없음)', en: '(No Group)' },
+  'add.project_prefix': { ko: '그룹:', en: 'Group:' },
   'add.input_hint': { ko: '미팅 노트나 토론 내용을 입력하세요 (Ctrl+Enter로 제출):', en: 'Enter your meeting notes or discussion (Ctrl+Enter to submit):' },
   'add.placeholder': { ko: '여기에 미팅 노트를 입력하세요...', en: 'Type your meeting notes here...' },
   'add.hint': { ko: 'Ctrl+Enter로 추출 | ESC로 돌아가기', en: 'Ctrl+Enter to extract | ESC to go back' },
@@ -85,14 +85,14 @@ export const UI_STRINGS = {
   'add.related_contexts': { ko: '관련 컨텍스트', en: 'Related Contexts' },
   'add.hint_result': { ko: 'ESC로 메뉴로 돌아가기', en: 'Press ESC to return to menu' },
   'add.hint_related': { ko: 'Enter로 관련 항목 보기 | ', en: 'Enter to view related | ' },
-  'add.loading_projects': { ko: '프로젝트 로딩 중...', en: 'Loading projects...' },
+  'add.loading_projects': { ko: '그룹 로딩 중...', en: 'Loading groups...' },
 
   // List Screen
   'list.title': { ko: '컨텍스트', en: 'Contexts' },
   'list.subtitle': { ko: '총 {total}개 | 페이지 {page}/{totalPages}', en: '{total} total | Page {page} of {totalPages}' },
   'list.empty': { ko: '컨텍스트가 없습니다. 메인 메뉴에서 추가하세요!', en: 'No contexts yet. Add one from the main menu!' },
   'list.loading': { ko: '컨텍스트 로딩 중...', en: 'Loading contexts...' },
-  'list.project': { ko: '프로젝트:', en: 'Project:' },
+  'list.project': { ko: '그룹:', en: 'Group:' },
   'list.uncategorized': { ko: '미분류', en: 'Uncategorized' },
   'list.hint': { ko: '↑/↓ 이동 | Enter: 상세보기 | n: 다음 페이지 | p: 이전 페이지 | ESC: 뒤로', en: '↑/↓ Navigate | Enter: View details | n: Next page | p: Previous page | ESC: Back' },
 
@@ -122,29 +122,29 @@ export const UI_STRINGS = {
   'detail.tags': { ko: '태그:', en: 'Tags:' },
   'detail.related': { ko: '관련 컨텍스트', en: 'Related Contexts' },
   'detail.hint_related': { ko: "'r' 키로 관련 컨텍스트 보기", en: "Press 'r' to view related contexts" },
-  'detail.hint': { ko: 'ESC로 돌아가기', en: 'ESC to go back' },
+  'detail.hint': { ko: 'd: 삭제 | g: 그룹 변경 | r: 관련 | ESC: 뒤로', en: 'd: Delete | g: Change group | r: Related | ESC: Back' },
   'detail.hint_view_related': { ko: 'Enter로 보기 | ', en: 'Enter to view | ' },
   'detail.hint_r_related': { ko: 'r로 관련 항목 | ', en: 'r for related | ' },
 
-  // Project Screen
-  'project.title': { ko: '프로젝트', en: 'Projects' },
-  'project.subtitle': { ko: '{count}개 프로젝트', en: '{count} project(s)' },
-  'project.loading': { ko: '프로젝트 로딩 중...', en: 'Loading projects...' },
-  'project.empty': { ko: '프로젝트가 없습니다. n을 눌러 생성하세요!', en: 'No projects yet. Press n to create one!' },
+  // Project Screen (Group)
+  'project.title': { ko: '그룹', en: 'Groups' },
+  'project.subtitle': { ko: '{count}개 그룹', en: '{count} group(s)' },
+  'project.loading': { ko: '그룹 로딩 중...', en: 'Loading groups...' },
+  'project.empty': { ko: '그룹이 없습니다. n을 눌러 생성하세요!', en: 'No groups yet. Press n to create one!' },
   'project.contexts_count': { ko: '{count}개 컨텍스트', en: '{count} contexts' },
   'project.created': { ko: '생성일:', en: 'Created:' },
-  'project.create_title': { ko: '프로젝트 생성', en: 'Create Project' },
-  'project.name_label': { ko: '프로젝트 이름:', en: 'Project Name:' },
-  'project.name_placeholder': { ko: '프로젝트 이름 입력...', en: 'Enter project name...' },
+  'project.create_title': { ko: '그룹 생성', en: 'Create Group' },
+  'project.name_label': { ko: '그룹 이름:', en: 'Group Name:' },
+  'project.name_placeholder': { ko: '그룹 이름 입력...', en: 'Enter group name...' },
   'project.desc_label': { ko: '설명 (선택):', en: 'Description (optional):' },
   'project.desc_placeholder': { ko: '설명 입력... (Enter로 건너뛰기)', en: 'Enter description... (Enter to skip)' },
-  'project.creating': { ko: '프로젝트 생성 중...', en: 'Creating project...' },
-  'project.hint_list': { ko: 'n: 새 프로젝트 | Enter: 상세보기 | ESC: 뒤로', en: 'n: New project | Enter: View details | ESC: Back' },
+  'project.creating': { ko: '그룹 생성 중...', en: 'Creating group...' },
+  'project.hint_list': { ko: 'n: 새 그룹 | d: 삭제 | Enter: 상세 | ESC: 뒤로', en: 'n: New | d: Delete | Enter: Details | ESC: Back' },
   'project.hint_create': { ko: 'Enter로 계속 | ESC로 취소', en: 'Enter to continue | ESC to cancel' },
 
   // Record Screen
   'record.title': { ko: '미팅 녹음', en: 'Record Meeting' },
-  'record.select_project': { ko: '프로젝트 선택 (또는 없음)', en: 'Select a project (or none)' },
+  'record.select_project': { ko: '그룹 선택 (또는 없음)', en: 'Select a group (or none)' },
   'record.ready': { ko: '녹음 준비 완료', en: 'Ready to Record' },
   'record.start_hint': { ko: 'SPACE를 눌러 녹음 시작', en: 'Press SPACE to start recording' },
   'record.recording': { ko: '녹음 중', en: 'Recording' },
@@ -162,6 +162,20 @@ export const UI_STRINGS = {
   'record.success_title': { ko: '컨텍스트 추가됨!', en: 'Context Added!' },
   'record.success_subtitle': { ko: '성공적으로 추출 및 저장됨', en: 'Successfully extracted and saved' },
   'record.saved': { ko: '컨텍스트가 저장되었습니다!', en: 'Context saved successfully!' },
+
+  // Dialog strings
+  'dialog.delete_context_title': { ko: '컨텍스트 삭제', en: 'Delete Context' },
+  'dialog.delete_context_message': { ko: '이 컨텍스트를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', en: 'Delete this context?\nThis action cannot be undone.' },
+  'dialog.delete_group_title': { ko: '그룹 삭제', en: 'Delete Group' },
+  'dialog.delete_group_message': { ko: '이 그룹을 삭제하시겠습니까?\n그룹 내 컨텍스트는 미분류로 이동합니다.', en: 'Delete this group?\nContexts will become uncategorized.' },
+  'dialog.deleting': { ko: '삭제 중...', en: 'Deleting...' },
+  'dialog.change_group_title': { ko: '그룹 변경', en: 'Change Group' },
+  'dialog.select_group': { ko: '그룹을 선택하세요', en: 'Select a group' },
+  'dialog.create_new_group': { ko: '+ 새 그룹 추가', en: '+ Create new group' },
+  'dialog.new_group_name': { ko: '새 그룹 이름:', en: 'New group name:' },
+  'dialog.group_changed': { ko: '그룹이 변경되었습니다', en: 'Group changed' },
+  'dialog.creating_group': { ko: '그룹 생성 중...', en: 'Creating group...' },
+  'dialog.changing_group': { ko: '그룹 변경 중...', en: 'Changing group...' },
 } as const;
 
 export type StringKey = keyof typeof UI_STRINGS;

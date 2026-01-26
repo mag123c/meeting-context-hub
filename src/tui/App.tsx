@@ -145,8 +145,10 @@ export function App({ onExit }: AppProps): React.ReactElement {
           contextId={params.contextId as string}
           getContextUseCase={services.getContext}
           manageProjectUseCase={services.manageProject}
+          manageContextUseCase={services.manageContext}
           searchContextUseCase={services.searchContext}
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
+          onDeleted={goBack}
           goBack={goBack}
           language={language}
         />

@@ -8,6 +8,7 @@ import {
   AddContextUseCase,
   ListContextsUseCase,
   ManageProjectUseCase,
+  ManageContextUseCase,
   GetContextUseCase,
   SearchContextUseCase,
   RecordContextUseCase,
@@ -17,6 +18,7 @@ interface Services {
   addContext: AddContextUseCase;
   listContexts: ListContextsUseCase;
   manageProject: ManageProjectUseCase;
+  manageContext: ManageContextUseCase;
   getContext: GetContextUseCase;
   searchContext: SearchContextUseCase;
   recordContext: RecordContextUseCase | null;
@@ -90,6 +92,7 @@ async function initializeServices(): Promise<void> {
         addContext: new AddContextUseCase(extractService, embeddingService, chainService, storage),
         listContexts: new ListContextsUseCase(storage),
         manageProject: new ManageProjectUseCase(storage),
+        manageContext: new ManageContextUseCase(storage),
         getContext: new GetContextUseCase(storage),
         searchContext: new SearchContextUseCase(storage, embeddingService, chainService),
         recordContext,

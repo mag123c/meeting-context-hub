@@ -13,7 +13,7 @@
       "components": [
         "App.tsx - Root component, routing, language state",
         "screens/ - Full screen components",
-        "components/ - Reusable UI elements (SectionBox, ErrorDisplay, Spinner, etc.)",
+        "components/ - Reusable UI elements (SectionBox, ErrorDisplay, Spinner, ConfirmDialog, GroupSelector, etc.)",
         "hooks/ - Custom React hooks"
       ]
     },
@@ -26,6 +26,7 @@
         "search-context.usecase.ts",
         "list-contexts.usecase.ts",
         "manage-project.usecase.ts",
+        "manage-context.usecase.ts",
         "get-context.usecase.ts",
         "record-context.usecase.ts"
       ]

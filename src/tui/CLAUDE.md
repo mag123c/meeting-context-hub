@@ -74,6 +74,8 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 | ErrorDisplay | Error message with recovery guidance |
 | ErrorText | Inline error text |
 | Spinner | Loading indicator |
+| ConfirmDialog | Confirmation dialog with keyboard navigation (←/→, Enter, ESC) |
+| GroupSelector | Modal for selecting/creating groups with list/create modes |
 
 ## SectionBox Component
 
