@@ -4,6 +4,9 @@
   "description": "TUI tool for managing meeting contexts with AI extraction and chaining",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "mch": "dist/index.js"
+  },
   "files": [
     "dist"
   ],
