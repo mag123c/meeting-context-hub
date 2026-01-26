@@ -85,10 +85,30 @@
     }
   },
 
+  "developmentStyle": {
+    "method": "TDD (Test-Driven Development)",
+    "cycle": ["RED (write failing test)", "GREEN (minimal code to pass)", "REFACTOR (clean up)"],
+    "rules": [
+      "No implementation without test first",
+      "Tests describe expected behavior",
+      "Mock external dependencies (AI API, DB)",
+      "Small increments - repeat TDD cycle"
+    ]
+  },
+
   "testing": {
-    "location": "__tests__/ or *.test.ts alongside",
-    "naming": "describe/it pattern",
-    "mocking": "vi.mock for external dependencies"
+    "framework": "vitest",
+    "location": "*.test.ts alongside source files",
+    "naming": {
+      "pattern": "{name}.test.ts or {name}.test.tsx",
+      "examples": ["extract.service.test.ts", "ErrorDisplay.test.tsx"]
+    },
+    "structure": "describe/it pattern",
+    "mocking": "vi.mock for external dependencies",
+    "coverage": {
+      "required": ["services", "usecases"],
+      "recommended": ["adapters", "components"]
+    }
   },
 
   "commits": {

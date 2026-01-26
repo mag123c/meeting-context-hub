@@ -71,6 +71,31 @@ src/
 └── types/              # Shared types + Error system (errors.ts)
 ```
 
+## Development Style: TDD
+
+모든 기능 구현은 **Test-Driven Development** 방식을 따릅니다:
+
+```
+1. RED    - 실패하는 테스트 먼저 작성
+2. GREEN  - 테스트를 통과하는 최소한의 코드 작성
+3. REFACTOR - 코드 정리 (테스트는 계속 통과해야 함)
+```
+
+### 테스트 파일 위치
+
+| Layer | Test Location | Example |
+|-------|---------------|---------|
+| Services | `src/core/services/*.test.ts` | `extract.service.test.ts` |
+| UseCases | `src/core/usecases/*.test.ts` | `add-context.usecase.test.ts` |
+| Adapters | `src/adapters/**/*.test.ts` | `claude.adapter.test.ts` |
+| Components | `src/tui/components/*.test.tsx` | `ErrorDisplay.test.tsx` |
+
+### TDD 원칙
+
+- **테스트 없이 구현 금지**: 새 기능/버그 수정 시 테스트 먼저
+- **테스트 커버리지 유지**: 핵심 로직(services, usecases)은 반드시 테스트
+- **Mock 활용**: 외부 의존성(AI API, DB)은 mock으로 격리
+
 ## Error Handling (v0.4)
 
 MCH uses a centralized error system with:
@@ -114,7 +139,7 @@ MCH_LANGUAGE=ko                # UI language
 
 ## Current Status
 
-**v0.4 In Progress** - Error Handling 구현 완료
+**v0.4 Complete** - Error Handling 구현 완료
 
 - [x] 문서 작성 (PRD, Architecture, Roadmap)
 - [x] v0.1 구현 (Core TUI + Text Input)
@@ -122,8 +147,7 @@ MCH_LANGUAGE=ko                # UI language
 - [x] v0.2 구현 (Search + Chaining)
 - [x] v0.3 구현 (Audio Recording)
 - [x] v0.4 Error Handling 구현 (Error System + Retry + UX)
-- [ ] v0.4 Settings 개선 (언어 선택)
-- [ ] v0.4 i18n 완성
+- [ ] v0.5 Test Coverage 추가 (TDD 적용)
 
 ## Requirements
 
