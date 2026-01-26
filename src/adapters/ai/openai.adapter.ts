@@ -1,4 +1,10 @@
 import OpenAI from 'openai';
+import {
+  EmbeddingError,
+  ErrorCode,
+  detectErrorCode,
+} from '../../types/errors.js';
+import { withRetry } from '../../core/services/retry.service.js';
 
 /**
  * Embedding provider interface
@@ -39,28 +45,45 @@ export class OpenAIAdapter implements EmbeddingProvider {
     // OpenAI embedding API has a limit of 8191 tokens per input
     // Truncate texts to ~8000 characters to be safe
     const MAX_CHARS = 8000;
-    const truncatedTexts = texts.map(text =>
+    const truncatedTexts = texts.map((text) =>
       text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text
     );
 
-    const response = await this.client.embeddings.create({
-      model: this.model,
-      input: truncatedTexts,
-    });
+    try {
+      const response = await withRetry(
+        () =>
+          this.client.embeddings.create({
+            model: this.model,
+            input: truncatedTexts,
+          }),
+        {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          onRetry: (error, attempt) => {
+            console.error(
+              `[Embedding] Retry ${attempt}: ${error.message}`
+            );
+          },
+        }
+      );
 
-    return response.data.map(item => new Float32Array(item.embedding));
-  }
-}
+      return response.data.map((item) => new Float32Array(item.embedding));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      const errorCode = detectErrorCode(error);
 
-/**
- * Embedding error
- */
-export class EmbeddingError extends Error {
-  constructor(
-    message: string,
-    public readonly originalError?: Error
-  ) {
-    super(message);
-    this.name = 'EmbeddingError';
+      // Map to specific embedding error codes
+      const code =
+        errorCode === ErrorCode.AI_RATE_LIMITED
+          ? ErrorCode.EMBEDDING_RATE_LIMITED
+          : ErrorCode.EMBEDDING_FAILED;
+
+      throw new EmbeddingError(
+        `Failed to generate embeddings: ${originalError?.message ?? 'Unknown error'}`,
+        code,
+        true,
+        originalError
+      );
+    }
   }
 }

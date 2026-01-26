@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
 import type { AIProvider } from './ai.interface.js';
-import { AIExtractionError } from './ai.interface.js';
 import type { ExtractedContext, ActionItem } from '../../types/index.js';
+import { AIError, ErrorCode, detectErrorCode } from '../../types/errors.js';
+import { withRetry } from '../../core/services/retry.service.js';
 
 // Zod schema for validation
 const ActionItemSchema = z.object({
@@ -35,27 +36,45 @@ export class ClaudeAdapter implements AIProvider {
     const prompt = this.buildExtractionPrompt(input);
 
     try {
-      const response = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
+      const response = await withRetry(
+        () =>
+          this.client.messages.create({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 2048,
+            messages: [
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+          }),
+        {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          onRetry: (error, attempt) => {
+            console.error(`[AI Extraction] Retry ${attempt}: ${error.message}`);
           },
-        ],
-      });
+        }
+      );
 
       // Extract text from response
-      const textBlock = response.content.find(block => block.type === 'text');
+      const textBlock = response.content.find((block) => block.type === 'text');
       if (!textBlock || textBlock.type !== 'text') {
-        throw new AIExtractionError('No text response from Claude');
+        throw new AIError(
+          'No text response from Claude',
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true
+        );
       }
 
       // Parse JSON from response
       const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new AIExtractionError('No JSON found in Claude response');
+        throw new AIError(
+          'No JSON found in Claude response',
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true
+        );
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -71,18 +90,28 @@ export class ClaudeAdapter implements AIProvider {
         tags: validated.tags,
       };
     } catch (error) {
-      if (error instanceof AIExtractionError) {
+      // Don't wrap AIError
+      if (error instanceof AIError) {
         throw error;
       }
+
       if (error instanceof z.ZodError) {
-        throw new AIExtractionError(
+        throw new AIError(
           `Invalid extraction result: ${error.message}`,
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true,
           error
         );
       }
-      throw new AIExtractionError(
-        `Failed to extract context: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error : undefined
+
+      const originalError = error instanceof Error ? error : undefined;
+      const errorCode = detectErrorCode(error);
+
+      throw new AIError(
+        `Failed to extract context: ${originalError?.message ?? 'Unknown error'}`,
+        errorCode,
+        true,
+        originalError
       );
     }
   }

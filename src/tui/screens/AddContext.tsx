@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
+import { ErrorDisplay } from '../components/ErrorDisplay.js';
 import type { AddContextUseCase } from '../../core/usecases/add-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { Project, Context, SearchResult } from '../../types/index.js';
@@ -14,6 +15,7 @@ interface AddContextProps {
   manageProjectUseCase: ManageProjectUseCase;
   onNavigateToContext?: (contextId: string) => void;
   goBack: () => void;
+  language?: 'ko' | 'en';
 }
 
 type Step = 'select-project' | 'input' | 'extracting' | 'result' | 'error';
@@ -23,6 +25,7 @@ export function AddContext({
   manageProjectUseCase,
   onNavigateToContext,
   goBack,
+  language = 'ko',
 }: AddContextProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -30,7 +33,7 @@ export function AddContext({
   const [input, setInput] = useState('');
   const [result, setResult] = useState<Context | null>(null);
   const [relatedContexts, setRelatedContexts] = useState<SearchResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load projects on mount
@@ -41,7 +44,7 @@ export function AddContext({
         setProjects(projectList);
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load projects');
+        setError(err instanceof Error ? err : new Error('Failed to load projects'));
         setStep('error');
         setLoading(false);
       }
@@ -58,6 +61,7 @@ export function AddContext({
     if (!input.trim()) return;
 
     setStep('extracting');
+    setError(null);
 
     try {
       const { context, relatedContexts: related } = await addContextUseCase.execute({
@@ -68,10 +72,15 @@ export function AddContext({
       setRelatedContexts(related);
       setStep('result');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to extract context');
+      setError(err instanceof Error ? err : new Error('Failed to extract context'));
       setStep('error');
     }
   }, [input, selectedProjectId, addContextUseCase]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setStep('input');
+  }, []);
 
   useInput((_, key) => {
     if (key.escape) {
@@ -200,16 +209,15 @@ export function AddContext({
     );
   }
 
-  if (step === 'error') {
+  if (step === 'error' && error) {
     return (
       <Box flexDirection="column" padding={1}>
         <Header title="Error" />
-        <Text color="red">{error}</Text>
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>
-            Press ESC to go back
-          </Text>
-        </Box>
+        <ErrorDisplay
+          error={error}
+          language={language}
+          onRetry={handleRetry}
+        />
       </Box>
     );
   }

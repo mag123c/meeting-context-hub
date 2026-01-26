@@ -50,9 +50,39 @@
   },
 
   "errorHandling": {
-    "customError": "MCHError extends Error",
-    "errorCodes": "enum ErrorCode",
-    "recovery": "recoverable flag for retry logic"
+    "baseClass": {
+      "name": "MCHError",
+      "extends": "Error",
+      "properties": ["code: ErrorCode", "recoverable: boolean", "originalError?: Error"]
+    },
+    "errorClasses": {
+      "pattern": "extends MCHError",
+      "hierarchy": [
+        "MCHError (base)",
+        "AIError",
+        "EmbeddingError",
+        "StorageError",
+        "TranscriptionError",
+        "RecordingError",
+        "ConfigError (with missingKeys[])",
+        "InputError"
+      ]
+    },
+    "errorCodes": {
+      "pattern": "SCREAMING_SNAKE_CASE",
+      "location": "src/types/errors.ts",
+      "example": "ErrorCode.AI_RATE_LIMITED"
+    },
+    "recoveryMessages": {
+      "format": "Record<ErrorCode, { ko: string; en: string }>",
+      "location": "ERROR_RECOVERY in errors.ts",
+      "usage": "error.getRecoveryMessage(language)"
+    },
+    "utilities": {
+      "isMCHError(error)": "Type guard",
+      "isRetryableError(error)": "Check if error should be retried",
+      "detectErrorCode(error)": "Detect error code from raw error"
+    }
   },
 
   "testing": {

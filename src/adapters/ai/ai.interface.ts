@@ -10,15 +10,5 @@ export interface AIProvider {
   extract(input: string): Promise<ExtractedContext>;
 }
 
-/**
- * AI extraction error
- */
-export class AIExtractionError extends Error {
-  constructor(
-    message: string,
-    public readonly originalError?: Error
-  ) {
-    super(message);
-    this.name = 'AIExtractionError';
-  }
-}
+// Re-export AIError as AIExtractionError for backward compatibility
+export { AIError as AIExtractionError } from '../../types/errors.js';

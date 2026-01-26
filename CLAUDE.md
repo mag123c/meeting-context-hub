@@ -68,8 +68,18 @@ src/
 ├── tui/                # TUI layer (screens, components, hooks)
 ├── core/               # Business logic (usecases, services, domain)
 ├── adapters/           # External dependencies (ai, storage, config)
-└── types/              # Shared types
+└── types/              # Shared types + Error system (errors.ts)
 ```
+
+## Error Handling (v0.4)
+
+MCH uses a centralized error system with:
+- **MCHError** base class with `code`, `recoverable`, `originalError`
+- **8 error types**: AIError, EmbeddingError, StorageError, TranscriptionError, RecordingError, ConfigError, InputError
+- **18+ error codes** in ErrorCode enum
+- **Bilingual recovery messages** (ko/en)
+- **Retry service** with exponential backoff (3 attempts, 1s base delay)
+- **ErrorDisplay component** for user-friendly error UI
 
 ## AI Context
 
@@ -104,14 +114,16 @@ MCH_LANGUAGE=ko                # UI language
 
 ## Current Status
 
-**v0.3 Complete** - Audio Recording 구현 완료
+**v0.4 In Progress** - Error Handling 구현 완료
 
 - [x] 문서 작성 (PRD, Architecture, Roadmap)
 - [x] v0.1 구현 (Core TUI + Text Input)
 - [x] v0.1.1 구현 (In-App Configuration)
 - [x] v0.2 구현 (Search + Chaining)
 - [x] v0.3 구현 (Audio Recording)
-- [ ] v0.4 구현 (Polish + GUI 준비)
+- [x] v0.4 Error Handling 구현 (Error System + Retry + UX)
+- [ ] v0.4 Settings 개선 (언어 선택)
+- [ ] v0.4 i18n 완성
 
 ## Requirements
 

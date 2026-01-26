@@ -1,3 +1,5 @@
+import { ConfigError, ErrorCode } from '../../types/errors.js';
+
 /**
  * Configuration interface
  */
@@ -42,14 +44,28 @@ export interface ConfigStatus {
 }
 
 /**
- * Configuration validation errors
+ * Validate required API keys
  */
-export class ConfigError extends Error {
-  constructor(
-    message: string,
-    public readonly missingKeys: string[] = []
-  ) {
-    super(message);
-    this.name = 'ConfigError';
+export function validateConfig(config: Config): void {
+  const missingKeys: string[] = [];
+
+  if (!config.anthropicApiKey) {
+    missingKeys.push('ANTHROPIC_API_KEY');
+  }
+
+  if (!config.openaiApiKey) {
+    missingKeys.push('OPENAI_API_KEY');
+  }
+
+  if (missingKeys.length > 0) {
+    throw new ConfigError(
+      `Missing required API keys: ${missingKeys.join(', ')}`,
+      ErrorCode.MISSING_API_KEY,
+      missingKeys,
+      true
+    );
   }
 }
+
+// Re-export ConfigError for backward compatibility
+export { ConfigError };

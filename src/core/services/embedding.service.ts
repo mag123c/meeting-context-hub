@@ -1,5 +1,6 @@
 import type { EmbeddingProvider } from '../../adapters/ai/openai.adapter.js';
 import type { Context, ExtractedContext } from '../../types/index.js';
+import { isMCHError } from '../../types/errors.js';
 
 /**
  * Service for generating and managing embeddings
@@ -18,13 +19,25 @@ export class EmbeddingService {
    * Generate embedding for context
    * Creates a combined text from title, summary, decisions, policies, and tags
    */
-  async generateForContext(context: Context | ExtractedContext & { rawInput?: string }): Promise<Float32Array | null> {
+  async generateForContext(
+    context: Context | (ExtractedContext & { rawInput?: string })
+  ): Promise<Float32Array | null> {
     if (!this.embeddingProvider) {
       return null;
     }
 
     const text = this.buildEmbeddingText(context);
-    return this.embeddingProvider.embed(text);
+
+    try {
+      return await this.embeddingProvider.embed(text);
+    } catch (error) {
+      // Log error but return null for graceful degradation
+      console.error(
+        '[EmbeddingService] Failed to generate embedding:',
+        isMCHError(error) ? `[${error.code}] ${error.message}` : error
+      );
+      return null;
+    }
   }
 
   /**
@@ -35,13 +48,24 @@ export class EmbeddingService {
       return null;
     }
 
-    return this.embeddingProvider.embed(query);
+    try {
+      return await this.embeddingProvider.embed(query);
+    } catch (error) {
+      // Log error but return null for graceful degradation
+      console.error(
+        '[EmbeddingService] Failed to generate query embedding:',
+        isMCHError(error) ? `[${error.code}] ${error.message}` : error
+      );
+      return null;
+    }
   }
 
   /**
    * Build combined text for embedding
    */
-  private buildEmbeddingText(context: Context | ExtractedContext & { rawInput?: string }): string {
+  private buildEmbeddingText(
+    context: Context | (ExtractedContext & { rawInput?: string })
+  ): string {
     const parts: string[] = [];
 
     // Title and summary are most important

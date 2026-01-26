@@ -1,5 +1,9 @@
 import type { AIProvider } from '../../adapters/ai/ai.interface.js';
 import type { ExtractedContext } from '../../types/index.js';
+import { InputError, ErrorCode } from '../../types/errors.js';
+
+/** Minimum input length for meaningful extraction */
+const MIN_INPUT_LENGTH = 10;
 
 /**
  * Service for extracting structured context from raw input
@@ -11,10 +15,26 @@ export class ExtractService {
    * Extract structured context from raw input text
    */
   async extract(input: string): Promise<ExtractedContext> {
+    // Validate input is not empty
     if (!input || input.trim().length === 0) {
-      throw new Error('Input cannot be empty');
+      throw new InputError(
+        'Input cannot be empty',
+        ErrorCode.INVALID_INPUT,
+        false
+      );
     }
 
-    return this.aiProvider.extract(input.trim());
+    const trimmedInput = input.trim();
+
+    // Validate input is long enough for meaningful extraction
+    if (trimmedInput.length < MIN_INPUT_LENGTH) {
+      throw new InputError(
+        `Input is too short (minimum ${MIN_INPUT_LENGTH} characters). Please provide more details.`,
+        ErrorCode.INPUT_TOO_SHORT,
+        false
+      );
+    }
+
+    return this.aiProvider.extract(trimmedInput);
   }
 }

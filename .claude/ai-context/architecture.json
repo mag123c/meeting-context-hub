@@ -35,10 +35,11 @@
       "path": "src/core/services/",
       "responsibility": "Domain logic implementation",
       "components": [
-        "extract.service.ts - AI extraction logic",
-        "embedding.service.ts - Text to vector",
-        "chain.service.ts - Similarity calculation",
-        "config.service.ts - Configuration management"
+        "extract.service.ts - AI extraction with input validation",
+        "embedding.service.ts - Text to vector with graceful degradation",
+        "chain.service.ts - Similarity calculation with dimension validation",
+        "config.service.ts - Configuration management",
+        "retry.service.ts - Exponential backoff retry logic"
       ]
     },
     {
@@ -119,5 +120,44 @@
     "di": "Constructor injection",
     "errorHandling": "Custom MCHError with error codes",
     "testing": "Unit tests for services, integration for adapters"
+  },
+
+  "errorHandling": {
+    "baseClass": "MCHError extends Error",
+    "properties": ["code: ErrorCode", "recoverable: boolean", "originalError?: Error"],
+    "errorTypes": [
+      "AIError - AI extraction failures",
+      "EmbeddingError - Vector generation failures",
+      "StorageError - Database operations",
+      "TranscriptionError - Whisper API",
+      "RecordingError - Sox recording",
+      "ConfigError - Configuration issues",
+      "InputError - Input validation"
+    ],
+    "errorCodes": {
+      "config": ["MISSING_API_KEY", "INVALID_CONFIG"],
+      "ai": ["AI_EXTRACTION_FAILED", "AI_RATE_LIMITED", "AI_NETWORK_ERROR"],
+      "embedding": ["EMBEDDING_FAILED", "EMBEDDING_RATE_LIMITED"],
+      "transcription": ["TRANSCRIPTION_FAILED", "TRANSCRIPTION_FILE_NOT_FOUND"],
+      "recording": ["RECORDING_FAILED", "RECORDING_SOX_NOT_FOUND", "RECORDING_ALREADY_ACTIVE"],
+      "storage": ["DB_CONNECTION_FAILED", "DB_QUERY_FAILED", "DB_NOT_INITIALIZED", "CONTEXT_NOT_FOUND", "PROJECT_NOT_FOUND", "PROJECT_NAME_DUPLICATE"],
+      "input": ["INVALID_INPUT", "INPUT_TOO_SHORT"],
+      "network": ["NETWORK_ERROR", "TIMEOUT_ERROR"]
+    },
+    "recovery": {
+      "format": "{ ko: string; en: string }",
+      "example": "ERROR_RECOVERY[ErrorCode.AI_RATE_LIMITED].ko"
+    },
+    "retry": {
+      "service": "src/core/services/retry.service.ts",
+      "defaultOptions": {
+        "maxAttempts": 3,
+        "baseDelayMs": 1000,
+        "maxDelayMs": 10000,
+        "backoffMultiplier": 2
+      },
+      "retryableErrors": ["AI_RATE_LIMITED", "AI_NETWORK_ERROR", "EMBEDDING_RATE_LIMITED", "NETWORK_ERROR", "TIMEOUT_ERROR"]
+    },
+    "tuiComponent": "ErrorDisplay.tsx - Shows error message, code, recovery guidance, retry option"
   }
 }

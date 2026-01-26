@@ -4,6 +4,7 @@ import { homedir } from 'os';
 import { existsSync } from 'fs';
 import type { Config, ConfigStatus, ConfigSource } from './config.interface.js';
 import { ConfigError } from './config.interface.js';
+import { ErrorCode } from '../../types/errors.js';
 import { loadFileConfig } from './file-config.adapter.js';
 
 /**
@@ -64,7 +65,9 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
     if (missingKeys.length > 0) {
       throw new ConfigError(
         `Missing required configuration: ${missingKeys.join(', ')}. Use Settings to configure.`,
-        missingKeys
+        ErrorCode.MISSING_API_KEY,
+        missingKeys,
+        true
       );
     }
   }

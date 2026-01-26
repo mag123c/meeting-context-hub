@@ -4,6 +4,7 @@ import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { TextInput } from '../components/TextInput.js';
+import { ErrorText } from '../components/ErrorDisplay.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
 import type { Project } from '../../types/index.js';
@@ -12,6 +13,7 @@ interface ProjectScreenProps {
   manageProjectUseCase: ManageProjectUseCase;
   listContextsUseCase: ListContextsUseCase;
   goBack: () => void;
+  language?: 'ko' | 'en';
 }
 
 type Mode = 'list' | 'create' | 'detail';
@@ -24,11 +26,12 @@ export function ProjectScreen({
   manageProjectUseCase,
   listContextsUseCase,
   goBack,
+  language = 'ko',
 }: ProjectScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('list');
   const [projects, setProjects] = useState<ProjectWithCount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [selectedProject, setSelectedProject] = useState<ProjectWithCount | null>(null);
 
   // Create project state
@@ -40,6 +43,7 @@ export function ProjectScreen({
   const loadProjects = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const projectList = await manageProjectUseCase.listProjects();
 
       // Get context counts for each project
@@ -53,7 +57,7 @@ export function ProjectScreen({
       setProjects(projectsWithCounts);
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load projects');
+      setError(err instanceof Error ? err : new Error('Failed to load projects'));
       setLoading(false);
     }
   }, [manageProjectUseCase, listContextsUseCase]);
@@ -66,6 +70,7 @@ export function ProjectScreen({
     if (!newName.trim()) return;
 
     setCreating(true);
+    setError(null);
     try {
       await manageProjectUseCase.createProject(newName.trim(), newDescription.trim() || undefined);
       setNewName('');
@@ -74,7 +79,7 @@ export function ProjectScreen({
       setMode('list');
       await loadProjects();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create project');
+      setError(err instanceof Error ? err : new Error('Failed to create project'));
     }
     setCreating(false);
   }, [newName, newDescription, manageProjectUseCase, loadProjects]);
@@ -86,6 +91,7 @@ export function ProjectScreen({
         setNewName('');
         setNewDescription('');
         setCreateStep('name');
+        setError(null);
       } else if (mode === 'detail') {
         setMode('list');
         setSelectedProject(null);
@@ -97,6 +103,7 @@ export function ProjectScreen({
 
     if (mode === 'list' && input === 'n') {
       setMode('create');
+      setError(null);
     }
 
     if (mode === 'create' && key.return) {
@@ -156,7 +163,7 @@ export function ProjectScreen({
 
         {error && (
           <Box marginTop={1}>
-            <Text color="red">{error}</Text>
+            <ErrorText error={error} language={language} />
           </Box>
         )}
       </Box>
@@ -214,7 +221,7 @@ export function ProjectScreen({
 
       {error && (
         <Box marginTop={1}>
-          <Text color="red">{error}</Text>
+          <ErrorText error={error} language={language} />
         </Box>
       )}
 

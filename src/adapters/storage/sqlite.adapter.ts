@@ -2,7 +2,13 @@ import Database from 'better-sqlite3';
 import { mkdirSync, existsSync } from 'fs';
 import { dirname } from 'path';
 import type { StorageProvider } from './storage.interface.js';
-import type { Context, Project, ListOptions, ActionItem } from '../../types/index.js';
+import type {
+  Context,
+  Project,
+  ListOptions,
+  ActionItem,
+} from '../../types/index.js';
+import { StorageError, ErrorCode } from '../../types/errors.js';
 
 /**
  * SQLite storage adapter
@@ -13,18 +19,28 @@ export class SQLiteAdapter implements StorageProvider {
   constructor(private readonly dbPath: string) {}
 
   async initialize(): Promise<void> {
-    // Ensure directory exists
-    const dir = dirname(this.dbPath);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+    try {
+      // Ensure directory exists
+      const dir = dirname(this.dbPath);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+
+      // Open database
+      this.db = new Database(this.dbPath);
+      this.db.pragma('journal_mode = WAL');
+
+      // Create tables
+      this.createTables();
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      throw new StorageError(
+        `Failed to initialize database: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_CONNECTION_FAILED,
+        false,
+        originalError
+      );
     }
-
-    // Open database
-    this.db = new Database(this.dbPath);
-    this.db.pragma('journal_mode = WAL');
-
-    // Create tables
-    this.createTables();
   }
 
   close(): void {
@@ -36,7 +52,11 @@ export class SQLiteAdapter implements StorageProvider {
 
   private getDb(): Database.Database {
     if (!this.db) {
-      throw new Error('Database not initialized. Call initialize() first.');
+      throw new StorageError(
+        'Database not initialized. Call initialize() first.',
+        ErrorCode.DB_NOT_INITIALIZED,
+        false
+      );
     }
     return this.db;
   }
@@ -83,299 +103,528 @@ export class SQLiteAdapter implements StorageProvider {
   // Context operations
 
   async saveContext(context: Context): Promise<void> {
-    const db = this.getDb();
-    const stmt = db.prepare(`
-      INSERT INTO contexts (
-        id, project_id, raw_input, title, summary,
-        decisions, action_items, policies, open_questions, tags,
-        embedding, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        INSERT INTO contexts (
+          id, project_id, raw_input, title, summary,
+          decisions, action_items, policies, open_questions, tags,
+          embedding, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
 
-    stmt.run(
-      context.id,
-      context.projectId,
-      context.rawInput,
-      context.title,
-      context.summary,
-      JSON.stringify(context.decisions),
-      JSON.stringify(context.actionItems),
-      JSON.stringify(context.policies),
-      JSON.stringify(context.openQuestions),
-      JSON.stringify(context.tags),
-      context.embedding ? Buffer.from(context.embedding.buffer) : null,
-      context.createdAt.toISOString(),
-      context.updatedAt.toISOString()
-    );
+      stmt.run(
+        context.id,
+        context.projectId,
+        context.rawInput,
+        context.title,
+        context.summary,
+        JSON.stringify(context.decisions),
+        JSON.stringify(context.actionItems),
+        JSON.stringify(context.policies),
+        JSON.stringify(context.openQuestions),
+        JSON.stringify(context.tags),
+        context.embedding ? Buffer.from(context.embedding.buffer) : null,
+        context.createdAt.toISOString(),
+        context.updatedAt.toISOString()
+      );
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to save context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async getContext(id: string): Promise<Context | null> {
-    const db = this.getDb();
-    const stmt = db.prepare('SELECT * FROM contexts WHERE id = ?');
-    const row = stmt.get(id) as ContextRow | undefined;
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM contexts WHERE id = ?');
+      const row = stmt.get(id) as ContextRow | undefined;
 
-    if (!row) return null;
-    return this.rowToContext(row);
+      if (!row) return null;
+      return this.rowToContext(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async listContexts(options?: ListOptions): Promise<Context[]> {
-    const db = this.getDb();
-    let sql = 'SELECT * FROM contexts';
-    const params: unknown[] = [];
-    const conditions: string[] = [];
+    try {
+      const db = this.getDb();
+      let sql = 'SELECT * FROM contexts';
+      const params: unknown[] = [];
+      const conditions: string[] = [];
 
-    if (options?.projectId) {
-      conditions.push('project_id = ?');
-      params.push(options.projectId);
+      if (options?.projectId) {
+        conditions.push('project_id = ?');
+        params.push(options.projectId);
+      }
+
+      if (options?.tags && options.tags.length > 0) {
+        // Filter by tags (any match)
+        const tagConditions = options.tags.map(() => 'tags LIKE ?');
+        conditions.push(`(${tagConditions.join(' OR ')})`);
+        params.push(...options.tags.map((tag) => `%"${tag}"%`));
+      }
+
+      if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ');
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      if (options?.limit) {
+        sql += ' LIMIT ?';
+        params.push(options.limit);
+      }
+
+      if (options?.offset) {
+        sql += ' OFFSET ?';
+        params.push(options.offset);
+      }
+
+      const stmt = db.prepare(sql);
+      const rows = stmt.all(...params) as ContextRow[];
+
+      return rows.map((row) => this.rowToContext(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list contexts: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
     }
-
-    if (options?.tags && options.tags.length > 0) {
-      // Filter by tags (any match)
-      const tagConditions = options.tags.map(() => 'tags LIKE ?');
-      conditions.push(`(${tagConditions.join(' OR ')})`);
-      params.push(...options.tags.map(tag => `%"${tag}"%`));
-    }
-
-    if (conditions.length > 0) {
-      sql += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    sql += ' ORDER BY created_at DESC';
-
-    if (options?.limit) {
-      sql += ' LIMIT ?';
-      params.push(options.limit);
-    }
-
-    if (options?.offset) {
-      sql += ' OFFSET ?';
-      params.push(options.offset);
-    }
-
-    const stmt = db.prepare(sql);
-    const rows = stmt.all(...params) as ContextRow[];
-
-    return rows.map(row => this.rowToContext(row));
   }
 
   async updateContext(id: string, updates: Partial<Context>): Promise<void> {
-    const db = this.getDb();
-    const setClauses: string[] = [];
-    const params: unknown[] = [];
+    try {
+      const db = this.getDb();
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
 
-    if (updates.projectId !== undefined) {
-      setClauses.push('project_id = ?');
-      params.push(updates.projectId);
-    }
-    if (updates.title !== undefined) {
-      setClauses.push('title = ?');
-      params.push(updates.title);
-    }
-    if (updates.summary !== undefined) {
-      setClauses.push('summary = ?');
-      params.push(updates.summary);
-    }
-    if (updates.decisions !== undefined) {
-      setClauses.push('decisions = ?');
-      params.push(JSON.stringify(updates.decisions));
-    }
-    if (updates.actionItems !== undefined) {
-      setClauses.push('action_items = ?');
-      params.push(JSON.stringify(updates.actionItems));
-    }
-    if (updates.policies !== undefined) {
-      setClauses.push('policies = ?');
-      params.push(JSON.stringify(updates.policies));
-    }
-    if (updates.openQuestions !== undefined) {
-      setClauses.push('open_questions = ?');
-      params.push(JSON.stringify(updates.openQuestions));
-    }
-    if (updates.tags !== undefined) {
-      setClauses.push('tags = ?');
-      params.push(JSON.stringify(updates.tags));
-    }
-    if (updates.embedding !== undefined) {
-      setClauses.push('embedding = ?');
-      params.push(updates.embedding ? Buffer.from(updates.embedding.buffer) : null);
-    }
+      if (updates.projectId !== undefined) {
+        setClauses.push('project_id = ?');
+        params.push(updates.projectId);
+      }
+      if (updates.title !== undefined) {
+        setClauses.push('title = ?');
+        params.push(updates.title);
+      }
+      if (updates.summary !== undefined) {
+        setClauses.push('summary = ?');
+        params.push(updates.summary);
+      }
+      if (updates.decisions !== undefined) {
+        setClauses.push('decisions = ?');
+        params.push(JSON.stringify(updates.decisions));
+      }
+      if (updates.actionItems !== undefined) {
+        setClauses.push('action_items = ?');
+        params.push(JSON.stringify(updates.actionItems));
+      }
+      if (updates.policies !== undefined) {
+        setClauses.push('policies = ?');
+        params.push(JSON.stringify(updates.policies));
+      }
+      if (updates.openQuestions !== undefined) {
+        setClauses.push('open_questions = ?');
+        params.push(JSON.stringify(updates.openQuestions));
+      }
+      if (updates.tags !== undefined) {
+        setClauses.push('tags = ?');
+        params.push(JSON.stringify(updates.tags));
+      }
+      if (updates.embedding !== undefined) {
+        setClauses.push('embedding = ?');
+        params.push(
+          updates.embedding ? Buffer.from(updates.embedding.buffer) : null
+        );
+      }
 
-    setClauses.push('updated_at = ?');
-    params.push(new Date().toISOString());
-    params.push(id);
+      setClauses.push('updated_at = ?');
+      params.push(new Date().toISOString());
+      params.push(id);
 
-    const sql = `UPDATE contexts SET ${setClauses.join(', ')} WHERE id = ?`;
-    db.prepare(sql).run(...params);
+      const sql = `UPDATE contexts SET ${setClauses.join(', ')} WHERE id = ?`;
+      db.prepare(sql).run(...params);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to update context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async deleteContext(id: string): Promise<void> {
-    const db = this.getDb();
-    db.prepare('DELETE FROM contexts WHERE id = ?').run(id);
+    try {
+      const db = this.getDb();
+      db.prepare('DELETE FROM contexts WHERE id = ?').run(id);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   // Search operations
 
   async listContextsWithEmbeddings(projectId?: string): Promise<Context[]> {
-    const db = this.getDb();
-    let sql = 'SELECT * FROM contexts WHERE embedding IS NOT NULL';
-    const params: unknown[] = [];
+    try {
+      const db = this.getDb();
+      let sql = 'SELECT * FROM contexts WHERE embedding IS NOT NULL';
+      const params: unknown[] = [];
 
-    if (projectId) {
-      sql += ' AND project_id = ?';
-      params.push(projectId);
+      if (projectId) {
+        sql += ' AND project_id = ?';
+        params.push(projectId);
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      const stmt = db.prepare(sql);
+      const rows = stmt.all(...params) as ContextRow[];
+
+      return rows.map((row) => this.rowToContext(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list contexts with embeddings: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
     }
-
-    sql += ' ORDER BY created_at DESC';
-
-    const stmt = db.prepare(sql);
-    const rows = stmt.all(...params) as ContextRow[];
-
-    return rows.map(row => this.rowToContext(row));
   }
 
   async searchByKeyword(
     keyword: string,
     options?: { projectId?: string; limit?: number }
   ): Promise<Context[]> {
-    const db = this.getDb();
-    const searchTerm = `%${keyword}%`;
-    let sql = `
-      SELECT * FROM contexts
-      WHERE (
-        title LIKE ? OR
-        summary LIKE ? OR
-        raw_input LIKE ? OR
-        decisions LIKE ? OR
-        policies LIKE ? OR
-        tags LIKE ?
-      )
-    `;
-    const params: unknown[] = [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm];
+    try {
+      const db = this.getDb();
+      const searchTerm = `%${keyword}%`;
+      let sql = `
+        SELECT * FROM contexts
+        WHERE (
+          title LIKE ? OR
+          summary LIKE ? OR
+          raw_input LIKE ? OR
+          decisions LIKE ? OR
+          policies LIKE ? OR
+          tags LIKE ?
+        )
+      `;
+      const params: unknown[] = [
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+        searchTerm,
+      ];
 
-    if (options?.projectId) {
-      sql += ' AND project_id = ?';
-      params.push(options.projectId);
+      if (options?.projectId) {
+        sql += ' AND project_id = ?';
+        params.push(options.projectId);
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      if (options?.limit) {
+        sql += ' LIMIT ?';
+        params.push(options.limit);
+      }
+
+      const stmt = db.prepare(sql);
+      const rows = stmt.all(...params) as ContextRow[];
+
+      return rows.map((row) => this.rowToContext(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to search contexts: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
     }
-
-    sql += ' ORDER BY created_at DESC';
-
-    if (options?.limit) {
-      sql += ' LIMIT ?';
-      params.push(options.limit);
-    }
-
-    const stmt = db.prepare(sql);
-    const rows = stmt.all(...params) as ContextRow[];
-
-    return rows.map(row => this.rowToContext(row));
   }
 
   // Project operations
 
   async saveProject(project: Project): Promise<void> {
-    const db = this.getDb();
-    const stmt = db.prepare(`
-      INSERT INTO projects (id, name, description, created_at)
-      VALUES (?, ?, ?, ?)
-    `);
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        INSERT INTO projects (id, name, description, created_at)
+        VALUES (?, ?, ?, ?)
+      `);
 
-    stmt.run(
-      project.id,
-      project.name,
-      project.description,
-      project.createdAt.toISOString()
-    );
+      stmt.run(
+        project.id,
+        project.name,
+        project.description,
+        project.createdAt.toISOString()
+      );
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+
+      // Check for unique constraint violation
+      const message = originalError?.message?.toLowerCase() ?? '';
+      if (message.includes('unique constraint')) {
+        throw new StorageError(
+          `Project with name "${project.name}" already exists`,
+          ErrorCode.PROJECT_NAME_DUPLICATE,
+          true,
+          originalError
+        );
+      }
+
+      throw new StorageError(
+        `Failed to save project: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async getProject(id: string): Promise<Project | null> {
-    const db = this.getDb();
-    const stmt = db.prepare('SELECT * FROM projects WHERE id = ?');
-    const row = stmt.get(id) as ProjectRow | undefined;
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM projects WHERE id = ?');
+      const row = stmt.get(id) as ProjectRow | undefined;
 
-    if (!row) return null;
-    return this.rowToProject(row);
+      if (!row) return null;
+      return this.rowToProject(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get project: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async getProjectByName(name: string): Promise<Project | null> {
-    const db = this.getDb();
-    const stmt = db.prepare('SELECT * FROM projects WHERE name = ?');
-    const row = stmt.get(name) as ProjectRow | undefined;
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM projects WHERE name = ?');
+      const row = stmt.get(name) as ProjectRow | undefined;
 
-    if (!row) return null;
-    return this.rowToProject(row);
+      if (!row) return null;
+      return this.rowToProject(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get project by name: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async listProjects(): Promise<Project[]> {
-    const db = this.getDb();
-    const stmt = db.prepare('SELECT * FROM projects ORDER BY created_at DESC');
-    const rows = stmt.all() as ProjectRow[];
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM projects ORDER BY created_at DESC');
+      const rows = stmt.all() as ProjectRow[];
 
-    return rows.map(row => this.rowToProject(row));
+      return rows.map((row) => this.rowToProject(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list projects: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   async updateProject(id: string, updates: Partial<Project>): Promise<void> {
-    const db = this.getDb();
-    const setClauses: string[] = [];
-    const params: unknown[] = [];
+    try {
+      const db = this.getDb();
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
 
-    if (updates.name !== undefined) {
-      setClauses.push('name = ?');
-      params.push(updates.name);
+      if (updates.name !== undefined) {
+        setClauses.push('name = ?');
+        params.push(updates.name);
+      }
+      if (updates.description !== undefined) {
+        setClauses.push('description = ?');
+        params.push(updates.description);
+      }
+
+      if (setClauses.length === 0) return;
+
+      params.push(id);
+      const sql = `UPDATE projects SET ${setClauses.join(', ')} WHERE id = ?`;
+      db.prepare(sql).run(...params);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+
+      // Check for unique constraint violation
+      const message = originalError?.message?.toLowerCase() ?? '';
+      if (message.includes('unique constraint')) {
+        throw new StorageError(
+          `Project with name "${updates.name}" already exists`,
+          ErrorCode.PROJECT_NAME_DUPLICATE,
+          true,
+          originalError
+        );
+      }
+
+      throw new StorageError(
+        `Failed to update project: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
     }
-    if (updates.description !== undefined) {
-      setClauses.push('description = ?');
-      params.push(updates.description);
-    }
-
-    if (setClauses.length === 0) return;
-
-    params.push(id);
-    const sql = `UPDATE projects SET ${setClauses.join(', ')} WHERE id = ?`;
-    db.prepare(sql).run(...params);
   }
 
   async deleteProject(id: string): Promise<void> {
-    const db = this.getDb();
-    // Set contexts to uncategorized first
-    db.prepare('UPDATE contexts SET project_id = NULL WHERE project_id = ?').run(id);
-    // Delete project
-    db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+    try {
+      const db = this.getDb();
+      // Set contexts to uncategorized first
+      db.prepare('UPDATE contexts SET project_id = NULL WHERE project_id = ?').run(
+        id
+      );
+      // Delete project
+      db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete project: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   // Utility
 
   async getContextCount(projectId?: string): Promise<number> {
-    const db = this.getDb();
-    let sql = 'SELECT COUNT(*) as count FROM contexts';
-    const params: unknown[] = [];
+    try {
+      const db = this.getDb();
+      let sql = 'SELECT COUNT(*) as count FROM contexts';
+      const params: unknown[] = [];
 
-    if (projectId) {
-      sql += ' WHERE project_id = ?';
-      params.push(projectId);
+      if (projectId) {
+        sql += ' WHERE project_id = ?';
+        params.push(projectId);
+      }
+
+      const row = db.prepare(sql).get(...params) as { count: number };
+      return row.count;
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get context count: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
     }
-
-    const row = db.prepare(sql).get(...params) as { count: number };
-    return row.count;
   }
 
   // Helper methods
 
   private rowToContext(row: ContextRow): Context {
-    return {
-      id: row.id,
-      projectId: row.project_id,
-      rawInput: row.raw_input,
-      title: row.title,
-      summary: row.summary || '',
-      decisions: JSON.parse(row.decisions || '[]'),
-      actionItems: JSON.parse(row.action_items || '[]') as ActionItem[],
-      policies: JSON.parse(row.policies || '[]'),
-      openQuestions: JSON.parse(row.open_questions || '[]'),
-      tags: JSON.parse(row.tags || '[]'),
-      embedding: row.embedding ? new Float32Array(row.embedding.buffer) : null,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
+    try {
+      return {
+        id: row.id,
+        projectId: row.project_id,
+        rawInput: row.raw_input,
+        title: row.title,
+        summary: row.summary || '',
+        decisions: JSON.parse(row.decisions || '[]'),
+        actionItems: JSON.parse(row.action_items || '[]') as ActionItem[],
+        policies: JSON.parse(row.policies || '[]'),
+        openQuestions: JSON.parse(row.open_questions || '[]'),
+        tags: JSON.parse(row.tags || '[]'),
+        embedding: row.embedding
+          ? new Float32Array(row.embedding.buffer)
+          : null,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+      };
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      throw new StorageError(
+        `Failed to parse context data: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
   }
 
   private rowToProject(row: ProjectRow): Project {

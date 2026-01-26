@@ -139,6 +139,19 @@
         "Deleting project sets contexts to uncategorized",
         "Uncategorized is a virtual project (projectId = null)"
       ]
+    },
+    "errorHandling": {
+      "description": "Error handling and recovery strategy",
+      "rules": [
+        "Rate limit errors (429) are retryable with exponential backoff",
+        "Network errors are retryable up to 3-5 attempts",
+        "Configuration errors require user action (show Settings link)",
+        "All errors provide bilingual recovery guidance (ko/en)",
+        "ErrorDisplay component shows code + recovery message",
+        "Embedding failures degrade gracefully (return null, log error)"
+      ],
+      "retryableOperations": ["AI extraction", "Embedding generation", "Transcription"],
+      "nonRetryableOperations": ["Missing API key", "Invalid input", "File not found"]
     }
   },
 

@@ -8,7 +8,7 @@
 | **v0.1.1** | In-App Configuration | TUI/GUI 공용 설정 모듈, Settings 화면 |
 | **v0.2** | Search + Chaining | 의미론적 검색 + 관련 컨텍스트 연결 |
 | **v0.3** | Audio File Support | 오디오 파일 → Whisper → 추출 |
-| **v0.4** | Polish + GUI 준비 | UX 개선, 다국어, GUI 분리 |
+| **v0.4** | Error Handling + Polish | 에러 처리, 재시도 로직, 사용자 메시지 개선 |
 
 ---
 
@@ -254,40 +254,61 @@ TUI/GUI 공용 설정 모듈 구현. 환경변수 export 없이 앱 내에서 AP
 
 ---
 
-## v0.4 - Polish + GUI 준비
+## v0.4 - Error Handling + Polish
 
 ### Goal
-UX 개선 및 GUI 전환 준비
+에러 처리 시스템 구축 및 UX 개선
 
 ### Features
 
 ```
-[ ] Error Handling
-    [ ] 에러 타입 정의
-    [ ] 사용자 친화적 에러 메시지
-    [ ] 복구 가능 에러 처리
+[x] Error Handling
+    [x] 에러 타입 정의 (MCHError + 7 specialized classes)
+    [x] ErrorCode enum (18개 에러 코드)
+    [x] 사용자 친화적 에러 메시지 (bilingual recovery messages)
+    [x] 복구 가능 에러 처리 (recoverable flag)
+    [x] Retry Service (exponential backoff with jitter)
+    [x] ErrorDisplay 컴포넌트 (error + code + recovery + retry)
 
-[ ] Settings Screen
-    [ ] API 키 상태 확인
-    [ ] DB 경로 표시
-    [ ] 언어 선택
+[x] Adapter Layer Hardening
+    [x] OpenAI adapter - try-catch + retry
+    [x] Whisper adapter - try-catch + retry + file check
+    [x] Claude adapter - retry logic
+    [x] SQLite adapter - comprehensive error handling
+    [x] Recording adapter - sox detection
+    [x] Config adapter - proper error types
 
-[ ] i18n
+[x] Services Layer
+    [x] Input validation (min length, empty check)
+    [x] Graceful degradation (embedding failures)
+    [x] Dimension validation (cosine similarity)
+
+[x] TUI Screens
+    [x] ErrorDisplay component
+    [x] ErrorText component (inline)
+    [x] All screens updated with error handling
+
+[ ] Settings Screen Enhancement
+    [ ] 언어 선택 기능
+    [ ] DB 경로 변경
+
+[ ] i18n (pending)
     [ ] 메시지 추출
-    [ ] 한국어/영어 번역
-    [ ] 언어 전환
+    [ ] 완전한 한국어/영어 번역
 
 [ ] Core 분리
     [ ] TUI 의존성 없는 core 패키지 확인
     [ ] GUI용 entry point 준비
-    [ ] 문서화
 ```
 
 ### Acceptance Criteria
 
-- [ ] 에러 발생 시 명확한 안내 표시
-- [ ] 설정 화면에서 현재 설정 확인 가능
-- [ ] 한국어/영어 전환 가능
+- [x] 에러 발생 시 명확한 안내 표시 (에러 코드 + 복구 방법)
+- [x] Rate limit 에러 시 자동 재시도 (exponential backoff)
+- [x] 네트워크 오류 시 재시도 옵션 제공
+- [x] sox 미설치 시 설치 안내 표시
+- [x] 한국어/영어 에러 메시지 지원
+- [ ] 설정 화면에서 언어 전환 가능
 - [ ] core 로직을 GUI에서 import 가능
 
 ---

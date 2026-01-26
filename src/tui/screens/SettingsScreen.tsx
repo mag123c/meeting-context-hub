@@ -4,12 +4,14 @@ import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
+import { ErrorText } from '../components/ErrorDisplay.js';
 import { ConfigService } from '../../core/services/config.service.js';
 import type { ConfigStatus } from '../../adapters/config/index.js';
 
 interface SettingsScreenProps {
   goBack: () => void;
   onConfigChange?: () => void;
+  language?: 'ko' | 'en';
 }
 
 type Mode = 'view' | 'edit-anthropic' | 'edit-openai';
@@ -19,12 +21,13 @@ const configService = new ConfigService();
 export function SettingsScreen({
   goBack,
   onConfigChange,
+  language = 'ko',
 }: SettingsScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('view');
   const [status, setStatus] = useState<ConfigStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [apiKeyInput, setApiKeyInput] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +37,7 @@ export function SettingsScreen({
       setStatus(s);
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load config');
+      setError(err instanceof Error ? err : new Error('Failed to load config'));
       setLoading(false);
     }
   }, []);
@@ -45,7 +48,7 @@ export function SettingsScreen({
 
   const handleSaveKey = useCallback(async (key: 'anthropic' | 'openai') => {
     if (!apiKeyInput.trim()) {
-      setError('API key cannot be empty');
+      setError(new Error(language === 'ko' ? 'API 키를 입력해주세요' : 'API key cannot be empty'));
       return;
     }
 
@@ -57,7 +60,11 @@ export function SettingsScreen({
     setSaving(false);
 
     if (result.success) {
-      setSuccess(`${key === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key saved successfully!`);
+      setSuccess(
+        language === 'ko'
+          ? `${key === 'anthropic' ? 'Anthropic' : 'OpenAI'} API 키가 저장되었습니다!`
+          : `${key === 'anthropic' ? 'Anthropic' : 'OpenAI'} API key saved successfully!`
+      );
       setApiKeyInput('');
       setMode('view');
       loadStatus();
@@ -66,9 +73,9 @@ export function SettingsScreen({
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } else {
-      setError(result.error || 'Failed to save API key');
+      setError(new Error(result.error || 'Failed to save API key'));
     }
-  }, [apiKeyInput, loadStatus, onConfigChange]);
+  }, [apiKeyInput, loadStatus, onConfigChange, language]);
 
   useInput((_, key) => {
     if (key.escape) {
@@ -121,7 +128,7 @@ export function SettingsScreen({
 
             {error && (
               <Box marginY={1}>
-                <Text color="red">{error}</Text>
+                <ErrorText error={error} language={language} />
               </Box>
             )}
 
@@ -190,7 +197,7 @@ export function SettingsScreen({
 
       {error && (
         <Box marginY={1}>
-          <Text color="red">{error}</Text>
+          <ErrorText error={error} language={language} />
         </Box>
       )}
 

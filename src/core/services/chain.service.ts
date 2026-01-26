@@ -1,4 +1,5 @@
 import type { Context, SearchResult } from '../../types/index.js';
+import { InputError, ErrorCode } from '../../types/errors.js';
 
 /**
  * Service for finding related contexts using embedding similarity
@@ -12,7 +13,19 @@ export class ChainService {
    */
   cosineSimilarity(a: Float32Array, b: Float32Array): number {
     if (a.length !== b.length) {
-      throw new Error('Embeddings must have the same dimension');
+      throw new InputError(
+        `Embedding dimension mismatch: ${a.length} vs ${b.length}`,
+        ErrorCode.INVALID_INPUT,
+        false
+      );
+    }
+
+    if (a.length === 0) {
+      throw new InputError(
+        'Embeddings cannot be empty',
+        ErrorCode.INVALID_INPUT,
+        false
+      );
     }
 
     let dotProduct = 0;
@@ -57,18 +70,23 @@ export class ChainService {
         continue;
       }
 
-      const score = this.cosineSimilarity(targetEmbedding, context.embedding);
+      try {
+        const score = this.cosineSimilarity(targetEmbedding, context.embedding);
 
-      // Only include if above threshold
-      if (score >= threshold) {
-        results.push({ context, score });
+        // Only include if above threshold
+        if (score >= threshold) {
+          results.push({ context, score });
+        }
+      } catch (error) {
+        // Log and skip contexts with mismatched embeddings
+        console.error(
+          `[ChainService] Skipping context ${context.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
     // Sort by score descending and limit
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return results.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 
   /**
@@ -92,15 +110,20 @@ export class ChainService {
         continue;
       }
 
-      const score = this.cosineSimilarity(queryEmbedding, context.embedding);
+      try {
+        const score = this.cosineSimilarity(queryEmbedding, context.embedding);
 
-      if (score >= threshold) {
-        results.push({ context, score });
+        if (score >= threshold) {
+          results.push({ context, score });
+        }
+      } catch (error) {
+        // Log and skip contexts with mismatched embeddings
+        console.error(
+          `[ChainService] Skipping context ${context.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       }
     }
 
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
+    return results.sort((a, b) => b.score - a.score).slice(0, limit);
   }
 }

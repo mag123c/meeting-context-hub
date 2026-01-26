@@ -2,6 +2,7 @@ import record from 'node-record-lpcm16';
 import { createWriteStream, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
 import { homedir } from 'os';
+import { RecordingError, ErrorCode } from '../../types/errors.js';
 
 /**
  * Recording state
@@ -45,7 +46,11 @@ export class SoxRecordingAdapter implements RecordingProvider {
    */
   start(events?: RecordingEvents): void {
     if (this.state === 'recording') {
-      throw new Error('Already recording');
+      throw new RecordingError(
+        'Already recording',
+        ErrorCode.RECORDING_ALREADY_ACTIVE,
+        false
+      );
     }
 
     this.events = events || {};
@@ -70,13 +75,39 @@ export class SoxRecordingAdapter implements RecordingProvider {
 
       const writeStream = createWriteStream(this.filePath);
 
-      this.recording.stream()
+      this.recording
+        .stream()
         .on('data', (chunk: Buffer) => {
           this.events.onData?.(chunk);
         })
         .on('error', (err: Error) => {
           this.state = 'idle';
-          this.events.onError?.(err);
+
+          // Check if sox is not found
+          const message = err.message.toLowerCase();
+          if (
+            message.includes('sox') &&
+            (message.includes('not found') ||
+              message.includes('enoent') ||
+              message.includes('spawn'))
+          ) {
+            const soxError = new RecordingError(
+              'sox is not installed or not found in PATH',
+              ErrorCode.RECORDING_SOX_NOT_FOUND,
+              false,
+              err
+            );
+            this.events.onError?.(soxError);
+            return;
+          }
+
+          const recordingError = new RecordingError(
+            `Recording error: ${err.message}`,
+            ErrorCode.RECORDING_FAILED,
+            true,
+            err
+          );
+          this.events.onError?.(recordingError);
         })
         .pipe(writeStream);
 
@@ -85,8 +116,29 @@ export class SoxRecordingAdapter implements RecordingProvider {
       this.events.onStart?.();
     } catch (error) {
       this.state = 'idle';
-      throw new Error(
-        `Failed to start recording: ${error instanceof Error ? error.message : 'Unknown error'}`
+      const originalError = error instanceof Error ? error : undefined;
+
+      // Check if sox is not found
+      const message = originalError?.message?.toLowerCase() ?? '';
+      if (
+        message.includes('sox') &&
+        (message.includes('not found') ||
+          message.includes('enoent') ||
+          message.includes('spawn'))
+      ) {
+        throw new RecordingError(
+          'sox is not installed or not found in PATH',
+          ErrorCode.RECORDING_SOX_NOT_FOUND,
+          false,
+          originalError
+        );
+      }
+
+      throw new RecordingError(
+        `Failed to start recording: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.RECORDING_FAILED,
+        true,
+        originalError
       );
     }
   }
@@ -127,18 +179,5 @@ export class SoxRecordingAdapter implements RecordingProvider {
       return 0;
     }
     return Math.floor((Date.now() - this.startTime) / 1000);
-  }
-}
-
-/**
- * Recording error
- */
-export class RecordingError extends Error {
-  constructor(
-    message: string,
-    public readonly originalError?: Error
-  ) {
-    super(message);
-    this.name = 'RecordingError';
   }
 }

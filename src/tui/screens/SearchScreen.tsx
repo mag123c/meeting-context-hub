@@ -4,6 +4,7 @@ import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
+import { ErrorText } from '../components/ErrorDisplay.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
 import type { SearchResult } from '../../types/index.js';
 
@@ -11,6 +12,7 @@ interface SearchScreenProps {
   searchContextUseCase: SearchContextUseCase;
   onSelectContext: (contextId: string) => void;
   goBack: () => void;
+  language?: 'ko' | 'en';
 }
 
 type Mode = 'input' | 'results';
@@ -19,17 +21,18 @@ export function SearchScreen({
   searchContextUseCase,
   onSelectContext,
   goBack,
+  language = 'ko',
 }: SearchScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('input');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searchMethod, setSearchMethod] = useState<'semantic' | 'keyword' | 'hybrid'>('keyword');
   const [searching, setSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
-      setError('Please enter a search query');
+      setError(new Error(language === 'ko' ? '검색어를 입력해주세요' : 'Please enter a search query'));
       return;
     }
 
@@ -46,11 +49,11 @@ export function SearchScreen({
       setSearchMethod(result.method);
       setMode('results');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(err instanceof Error ? err : new Error('Search failed'));
     } finally {
       setSearching(false);
     }
-  }, [query, searchContextUseCase]);
+  }, [query, searchContextUseCase, language]);
 
   useInput((_, key) => {
     if (key.escape) {
@@ -153,7 +156,7 @@ export function SearchScreen({
 
       {error && (
         <Box marginY={1}>
-          <Text color="red">{error}</Text>
+          <ErrorText error={error} language={language} />
         </Box>
       )}
 

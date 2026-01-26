@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
+import { ErrorDisplay } from '../components/ErrorDisplay.js';
 import type { RecordContextUseCase } from '../../core/usecases/record-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { Project, Context, SearchResult } from '../../types/index.js';
@@ -14,6 +15,7 @@ interface RecordScreenProps {
   manageProjectUseCase: ManageProjectUseCase;
   onNavigateToContext?: (contextId: string) => void;
   goBack: () => void;
+  language?: 'ko' | 'en';
 }
 
 type Step =
@@ -31,6 +33,7 @@ export function RecordScreen({
   manageProjectUseCase,
   onNavigateToContext,
   goBack,
+  language = 'ko',
 }: RecordScreenProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -39,7 +42,7 @@ export function RecordScreen({
   const [editedTranscription, setEditedTranscription] = useState('');
   const [result, setResult] = useState<Context | null>(null);
   const [relatedContexts, setRelatedContexts] = useState<SearchResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Load projects on mount
@@ -50,7 +53,7 @@ export function RecordScreen({
         setProjects(projectList);
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load projects');
+        setError(err instanceof Error ? err : new Error('Failed to load projects'));
         setStep('error');
         setLoading(false);
       }
@@ -82,18 +85,19 @@ export function RecordScreen({
           setDuration(0);
         },
         onError: (err) => {
-          setError(err.message);
+          setError(err);
           setStep('error');
         },
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start recording');
+      setError(err instanceof Error ? err : new Error('Failed to start recording'));
       setStep('error');
     }
   }, [recordContextUseCase]);
 
   const stopAndTranscribe = useCallback(async () => {
     setStep('transcribing');
+    setError(null);
 
     try {
       const filePath = recordContextUseCase.stopRecording();
@@ -105,13 +109,14 @@ export function RecordScreen({
       setEditedTranscription(text);
       setStep('review');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to transcribe');
+      setError(err instanceof Error ? err : new Error('Failed to transcribe'));
       setStep('error');
     }
   }, [recordContextUseCase]);
 
   const processTranscription = useCallback(async () => {
     setStep('extracting');
+    setError(null);
 
     try {
       const { context, relatedContexts: related } = await recordContextUseCase.processTranscription(
@@ -122,10 +127,15 @@ export function RecordScreen({
       setRelatedContexts(related);
       setStep('result');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to extract context');
+      setError(err instanceof Error ? err : new Error('Failed to extract context'));
       setStep('error');
     }
   }, [editedTranscription, selectedProjectId, recordContextUseCase]);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setStep('ready');
+  }, []);
 
   useInput((input, key) => {
     if (key.escape) {
@@ -206,7 +216,7 @@ export function RecordScreen({
 
         <Box marginY={2} flexDirection="column" alignItems="center">
           <Text color="cyan" bold>
-            🎙️ Ready to Record
+            Ready to Record
           </Text>
           <Box marginTop={1}>
             <Text>Press SPACE to start recording</Text>
@@ -229,7 +239,7 @@ export function RecordScreen({
 
         <Box marginY={2} flexDirection="column" alignItems="center">
           <Text color="red" bold>
-            🔴 Recording
+            Recording
           </Text>
           <Box marginTop={1}>
             <Text bold color="yellow">
@@ -340,16 +350,15 @@ export function RecordScreen({
     );
   }
 
-  if (step === 'error') {
+  if (step === 'error' && error) {
     return (
       <Box flexDirection="column" padding={1}>
         <Header title="Error" />
-        <Text color="red">{error}</Text>
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>
-            Press ESC to go back
-          </Text>
-        </Box>
+        <ErrorDisplay
+          error={error}
+          language={language}
+          onRetry={handleRetry}
+        />
       </Box>
     );
   }
