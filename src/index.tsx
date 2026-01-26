@@ -8,6 +8,10 @@
 import { render } from 'ink';
 import { App, cleanup } from './tui/index.js';
 
+// Clear terminal and add spacing
+console.clear();
+console.log('\n');
+
 // Handle process exit
 function handleExit(): void {
   cleanup();

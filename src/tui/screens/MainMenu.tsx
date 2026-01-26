@@ -1,10 +1,24 @@
 import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
-import { Header } from '../components/Header.js';
 import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const pkg = require('../../package.json');
+
+// ASCII Art Logo - Extra wide block style
+const LOGO = `
+ ███╗   ███╗     ██████╗     ██╗  ██╗
+ ████╗ ████║    ██╔════╝     ██║  ██║
+ ██╔████╔██║    ██║          ███████║
+ ██║╚██╔╝██║    ██║          ██╔══██║
+ ██║ ╚═╝ ██║    ╚██████╗     ██║  ██║
+ ╚═╝     ╚═╝     ╚═════╝     ╚═╝  ╚═╝
+  M E E T I N G   C O N T E X T   H U B
+`.trim();
 
 interface MainMenuProps {
   navigate: (screen: Screen) => void;
@@ -44,10 +58,15 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Header
-        title={t('menu.title', language)}
-        subtitle={t('menu.subtitle', language)}
-      />
+      {/* ASCII Art Logo */}
+      <Box flexDirection="column" marginBottom={1}>
+        <Text color="cyan">{LOGO}</Text>
+        <Box marginTop={0}>
+          <Text color="gray">Meeting Context Hub </Text>
+          <Text color="cyan" bold>v{pkg.version}</Text>
+        </Box>
+        <Text color="gray" dimColor>{t('menu.subtitle', language)}</Text>
+      </Box>
 
       <SectionBox color="cyan" marginY={1}>
         <SelectInput items={menuItems} onSelect={handleSelect} />
