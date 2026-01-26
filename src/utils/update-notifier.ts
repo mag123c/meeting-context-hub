@@ -1,5 +1,4 @@
 import updateNotifier from 'update-notifier';
-import { execSync } from 'child_process';
 import { VERSION, PACKAGE_NAME } from '../version.js';
 
 // Construct pkg object for update-notifier
@@ -16,12 +15,13 @@ interface UpdateInfo {
 
 /**
  * Check for updates and return update info if available
+ * Shows banner in App.tsx if update is available
  */
 export function checkForUpdates(): UpdateInfo | null {
   try {
     const notifier = updateNotifier({
       pkg,
-      updateCheckInterval: 0, // Always check
+      updateCheckInterval: 1000 * 60 * 60, // Check once per hour
     });
 
     if (notifier.update && notifier.update.latest !== VERSION) {
@@ -43,32 +43,4 @@ export function checkForUpdates(): UpdateInfo | null {
  */
 export function getUpdateCommand(): string {
   return 'npm install -g meeting-context-hub@latest';
-}
-
-/**
- * Auto-update to latest version
- * Returns true if update was successful and app should restart
- */
-export function autoUpdate(): boolean {
-  try {
-    const notifier = updateNotifier({
-      pkg,
-      updateCheckInterval: 0, // Always check
-    });
-
-    if (notifier.update && notifier.update.latest !== VERSION) {
-      console.log(`\n🔄 Updating MCH: ${VERSION} → ${notifier.update.latest}...\n`);
-
-      execSync('npm install -g meeting-context-hub@latest', {
-        stdio: 'inherit',
-      });
-
-      console.log('\n✅ Update complete! Restarting...\n');
-      return true;
-    }
-  } catch (error) {
-    console.error('❌ Auto-update failed:', error instanceof Error ? error.message : error);
-  }
-
-  return false;
 }
