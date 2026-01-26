@@ -264,7 +264,7 @@ TUI/GUI 공용 설정 모듈 구현. 환경변수 export 없이 앱 내에서 AP
 ```
 [x] Error Handling
     [x] 에러 타입 정의 (MCHError + 7 specialized classes)
-    [x] ErrorCode enum (18개 에러 코드)
+    [x] ErrorCode enum (28개 에러 코드)
     [x] 사용자 친화적 에러 메시지 (bilingual recovery messages)
     [x] 복구 가능 에러 처리 (recoverable flag)
     [x] Retry Service (exponential backoff with jitter)

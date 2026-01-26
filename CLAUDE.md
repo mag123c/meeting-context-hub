@@ -76,7 +76,7 @@ src/
 MCH uses a centralized error system with:
 - **MCHError** base class with `code`, `recoverable`, `originalError`
 - **8 error types**: AIError, EmbeddingError, StorageError, TranscriptionError, RecordingError, ConfigError, InputError
-- **18+ error codes** in ErrorCode enum
+- **28 error codes** in ErrorCode enum
 - **Bilingual recovery messages** (ko/en)
 - **Retry service** with exponential backoff (3 attempts, 1s base delay)
 - **ErrorDisplay component** for user-friendly error UI
