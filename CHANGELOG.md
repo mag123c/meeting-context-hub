@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/mag123c/meeting-context-hub/compare/v2.1.0...v2.1.1) (2026-01-26)
+
+
+### Bug Fixes
+
+* restore bin field for mch CLI command ([28562ba](https://github.com/mag123c/meeting-context-hub/commit/28562ba10950bb1f927d98f5df0764256b20ce36))
+
 # [2.1.0](https://github.com/mag123c/meeting-context-hub/compare/v2.0.0...v2.1.0) (2026-01-26)
 
 
