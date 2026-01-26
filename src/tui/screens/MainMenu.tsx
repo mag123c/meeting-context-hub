@@ -6,11 +6,14 @@ import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
 import { VERSION } from '../../version.js';
 
-// Compact ASCII Logo - 3 lines
+// ASCII Logo - Medium size, wide
 const LOGO = `
- ╔╦╗╔═╗╦ ╦  Meeting Context Hub
- ║║║║  ╠═╣  Capture · Extract · Chain
- ╩ ╩╚═╝╩ ╩
+ ███╗   ███╗  ██████╗ ██╗  ██╗
+ ████╗ ████║ ██╔════╝ ██║  ██║
+ ██╔████╔██║ ██║      ███████║
+ ██║╚██╔╝██║ ██║      ██╔══██║
+ ██║ ╚═╝ ██║ ╚██████╗ ██║  ██║
+ ╚═╝     ╚═╝  ╚═════╝ ╚═╝  ╚═╝
 `.trim();
 
 interface MainMenuProps {
@@ -51,10 +54,13 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
 
   return (
     <Box flexDirection="column" padding={1}>
-      {/* Compact Logo */}
+      {/* Logo */}
       <Box flexDirection="column">
         <Text color="cyan">{LOGO}</Text>
-        <Text color="gray" dimColor>v{VERSION}</Text>
+        <Box>
+          <Text color="white" bold>Meeting Context Hub</Text>
+          <Text color="gray"> v{VERSION}</Text>
+        </Box>
       </Box>
 
       <SectionBox color="cyan" marginY={1}>
