@@ -70,6 +70,7 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 | Component | Purpose |
 |-----------|---------|
 | SectionBox | Consistent bordered section container |
+| MultilineInput | Multiline text input with line numbers |
 | ErrorDisplay | Error message with recovery guidance |
 | ErrorText | Inline error text |
 | Spinner | Loading indicator |
@@ -102,3 +103,37 @@ import { SectionBox } from '../components/SectionBox.js';
 - `blue` - Policies
 - `magenta` - Questions
 - `gray` - Hints, secondary info
+
+## MultilineInput Component
+
+Multiline text input with line numbers, cursor navigation, and paste support:
+
+```typescript
+import { MultilineInput } from '../components/MultilineInput.js';
+
+<MultilineInput
+  value={text}
+  onChange={setText}
+  onSubmit={handleSubmit}
+  placeholder="Enter text..."
+  focus={true}
+  maxDisplayLines={10}
+/>
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| value | string | - | Current text value |
+| onChange | (value: string) => void | - | Text change handler |
+| onSubmit | () => void | - | Submit handler (Ctrl+D) |
+| placeholder | string | '' | Placeholder text |
+| focus | boolean | true | Whether input is focused |
+| maxDisplayLines | number | 10 | Max visible lines before scroll |
+
+**Key bindings:**
+- `Enter` - New line
+- `Ctrl+D` - Submit
+- `ESC` - Cancel (handled by parent)
+- `Arrow keys` - Cursor navigation
+- `Backspace` - Delete character/merge lines

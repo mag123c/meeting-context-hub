@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
-import { TextInput } from '../components/TextInput.js';
+import { MultilineInput } from '../components/MultilineInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { ErrorDisplay } from '../components/ErrorDisplay.js';
@@ -94,12 +94,7 @@ export function AddContext({
         goBack();
       }
     }
-
-    // Submit on Ctrl+Enter for multiline input
-    if (key.ctrl && key.return && step === 'input') {
-      handleSubmit();
-    }
-  });
+  }, { isActive: step !== 'input' });
 
   if (loading) {
     return (
@@ -138,18 +133,13 @@ export function AddContext({
           title={t('add.title', language)}
           subtitle={selectedProjectId ? `${t('add.project_prefix', language)} ${projects.find(p => p.id === selectedProjectId)?.name}` : t('add.no_project', language)}
         />
-        <SectionBox color="cyan" title={t('add.input_hint', language)}>
-          <TextInput
-            value={input}
-            onChange={setInput}
-            placeholder={t('add.placeholder', language)}
-          />
-        </SectionBox>
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>
-            {t('add.hint', language)}
-          </Text>
-        </Box>
+        <MultilineInput
+          value={input}
+          onChange={setInput}
+          onSubmit={handleSubmit}
+          placeholder={t('add.placeholder', language)}
+          focus={true}
+        />
       </Box>
     );
   }
