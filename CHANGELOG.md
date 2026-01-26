@@ -1,3 +1,10 @@
+## [2.7.2](https://github.com/mag123c/meeting-context-hub/compare/v2.7.1...v2.7.2) (2026-01-26)
+
+
+### Bug Fixes
+
+* **tui:** simplify paste logic in MultilineInput ([9847872](https://github.com/mag123c/meeting-context-hub/commit/98478724c98d844542585271d143385c531b0e10))
+
 ## [2.7.1](https://github.com/mag123c/meeting-context-hub/compare/v2.7.0...v2.7.1) (2026-01-26)
 
 
