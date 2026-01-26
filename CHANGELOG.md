@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/mag123c/meeting-context-hub/compare/v2.7.2...v2.8.0) (2026-01-26)
+
+
+### Features
+
+* **tui:** add context delete and group management features ([734a0b2](https://github.com/mag123c/meeting-context-hub/commit/734a0b23b8ec430e664b9db55c9c7cdf31cce1cb))
+
 ## [2.7.2](https://github.com/mag123c/meeting-context-hub/compare/v2.7.1...v2.7.2) (2026-01-26)
 
 
