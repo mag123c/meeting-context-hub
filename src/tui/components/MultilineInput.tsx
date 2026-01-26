@@ -178,6 +178,15 @@ export function MultilineInput({
           <Text color="gray" dimColor>
             {placeholder}
           </Text>
+        ) : isEmpty && focus ? (
+          <Box>
+            <Text color="gray" dimColor>
+              {'  1 '}
+            </Text>
+            <Text backgroundColor="white" color="black">
+              {' '}
+            </Text>
+          </Box>
         ) : (
           visibleLines.map((line, idx) => {
             const actualLineNum = startLine + idx;
@@ -203,16 +212,6 @@ export function MultilineInput({
               </Box>
             );
           })
-        )}
-        {isEmpty && focus && (
-          <Box>
-            <Text color="gray" dimColor>
-              {'  1 '}
-            </Text>
-            <Text backgroundColor="white" color="black">
-              {' '}
-            </Text>
-          </Box>
         )}
       </Box>
 
