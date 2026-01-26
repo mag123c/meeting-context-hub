@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/mag123c/meeting-context-hub/compare/v2.3.0...v2.4.0) (2026-01-26)
+
+
+### Features
+
+* **tui:** add MultilineInput component for Add Context screen ([fb71a79](https://github.com/mag123c/meeting-context-hub/commit/fb71a790b65b68bf34840519823af6f705bdbdb0))
+
 # [2.3.0](https://github.com/mag123c/meeting-context-hub/compare/v2.2.0...v2.3.0) (2026-01-26)
 
 
