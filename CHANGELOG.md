@@ -1,3 +1,10 @@
+## [2.6.2](https://github.com/mag123c/meeting-context-hub/compare/v2.6.1...v2.6.2) (2026-01-26)
+
+
+### Bug Fixes
+
+* **tui:** fix double line rendering in empty MultilineInput ([9d6b12e](https://github.com/mag123c/meeting-context-hub/commit/9d6b12ef035d8eb48b8301aa501791ea6ac83825))
+
 ## [2.6.1](https://github.com/mag123c/meeting-context-hub/compare/v2.6.0...v2.6.1) (2026-01-26)
 
 
