@@ -1,66 +1,57 @@
-import { Box, Text } from "ink";
-import type { Context, ContextWithSimilarity } from "../../types/context.types.js";
-import { useTranslation } from "../../i18n/index.js";
+import React from 'react';
+import { Box, Text } from 'ink';
+import type { Context } from '../../types/index.js';
 
 interface ContextCardProps {
-  context: Context | ContextWithSimilarity;
+  context: Context;
   selected?: boolean;
-  showSimilarity?: boolean;
 }
 
-function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 3) + "...";
-}
-
-export function ContextCard({ context, selected, showSimilarity }: ContextCardProps) {
-  const { t, formatDate } = useTranslation();
-  const similarity = "similarity" in context ? context.similarity : undefined;
+export function ContextCard({ context, selected = false }: ContextCardProps): React.ReactElement {
+  const borderColor = selected ? 'cyan' : 'gray';
 
   return (
-    <Box flexDirection="column" paddingLeft={selected ? 0 : 2}>
-      <Box>
-        {selected && <Text color="cyan">{"> "}</Text>}
-        <Text bold color={selected ? "cyan" : undefined}>
-          {truncate(context.summary, 50)}
-        </Text>
-        {showSimilarity && similarity !== undefined && (
-          <Text dimColor> ({Math.round(similarity * 100)}%)</Text>
+    <Box
+      flexDirection="column"
+      borderStyle="round"
+      borderColor={borderColor}
+      paddingX={1}
+      marginBottom={1}
+    >
+      <Text bold color={selected ? 'cyan' : 'white'}>
+        {context.title}
+      </Text>
+      <Text color="gray" wrap="truncate-end">
+        {context.summary}
+      </Text>
+      <Box marginTop={1}>
+        {context.decisions.length > 0 && (
+          <Text color="green" dimColor>
+            {context.decisions.length} decisions{' '}
+          </Text>
+        )}
+        {context.actionItems.length > 0 && (
+          <Text color="yellow" dimColor>
+            {context.actionItems.length} actions{' '}
+          </Text>
+        )}
+        {context.policies.length > 0 && (
+          <Text color="blue" dimColor>
+            {context.policies.length} policies
+          </Text>
         )}
       </Box>
-      <Box paddingLeft={selected ? 2 : 0}>
-        <Text dimColor>
-          [{context.type}] {formatDate(context.createdAt)}
-          {context.project && ` | ${context.project}`}
-          {context.sprint && ` | ${context.sprint}`}
+      <Box>
+        <Text color="gray" dimColor>
+          {new Date(context.createdAt).toLocaleDateString()}
         </Text>
+        {context.tags.length > 0 && (
+          <Text color="magenta" dimColor>
+            {' '}
+            #{context.tags.slice(0, 3).join(' #')}
+          </Text>
+        )}
       </Box>
-      <Box paddingLeft={selected ? 2 : 0}>
-        <Text dimColor>
-          {t.contextCard.tags} {context.tags.length > 0 ? context.tags.join(", ") : t.contextCard.noTags}
-        </Text>
-      </Box>
-    </Box>
-  );
-}
-
-interface ContextListProps {
-  contexts: (Context | ContextWithSimilarity)[];
-  selectedIndex: number;
-  showSimilarity?: boolean;
-}
-
-export function ContextList({ contexts, selectedIndex, showSimilarity }: ContextListProps) {
-  return (
-    <Box flexDirection="column" gap={1}>
-      {contexts.map((context, index) => (
-        <ContextCard
-          key={context.id}
-          context={context}
-          selected={index === selectedIndex}
-          showSimilarity={showSimilarity}
-        />
-      ))}
     </Box>
   );
 }

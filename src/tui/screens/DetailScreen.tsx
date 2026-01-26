@@ -1,202 +1,213 @@
-import { useState, useCallback } from "react";
-import { Box, Text, useInput } from "ink";
-import { Header, Spinner, ErrorBanner, KeyHintBar, ContextList } from "../components/index.js";
-import type { NavigationContext } from "../App.js";
-import type { AppServices } from "../../core/factories.js";
-import type { Context } from "../../types/context.types.js";
-import { useTranslation } from "../../i18n/index.js";
+import React, { useState, useEffect } from 'react';
+import { Box, Text, useInput } from 'ink';
+import SelectInput from 'ink-select-input';
+import { Header } from '../components/Header.js';
+import { Spinner } from '../components/Spinner.js';
+import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
+import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
+import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
+import type { Context, Project, SearchResult } from '../../types/index.js';
 
 interface DetailScreenProps {
-  navigation: NavigationContext;
-  services: AppServices;
-  context: Context | null;
+  contextId: string;
+  getContextUseCase: GetContextUseCase;
+  manageProjectUseCase: ManageProjectUseCase;
+  searchContextUseCase?: SearchContextUseCase;
+  onNavigateToContext?: (contextId: string) => void;
+  goBack: () => void;
 }
 
-type View = "detail" | "similar-loading" | "similar";
-
-export function DetailScreen({ navigation, services, context }: DetailScreenProps) {
-  const { t, formatDateTime } = useTranslation();
-  const [view, setView] = useState<View>("detail");
-  const [similarContexts, setSimilarContexts] = useState<Context[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+export function DetailScreen({
+  contextId,
+  getContextUseCase,
+  manageProjectUseCase,
+  searchContextUseCase,
+  onNavigateToContext,
+  goBack,
+}: DetailScreenProps): React.ReactElement {
+  const [context, setContext] = useState<Context | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
+  const [relatedContexts, setRelatedContexts] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRelated, setShowRelated] = useState(false);
 
-  const loadSimilar = useCallback(async () => {
-    if (!context) return;
+  useEffect(() => {
+    async function load() {
+      try {
+        const ctx = await getContextUseCase.execute(contextId);
+        if (!ctx) {
+          setError('Context not found');
+          setLoading(false);
+          return;
+        }
+        setContext(ctx);
 
-    setView("similar-loading");
-    setError(null);
+        if (ctx.projectId) {
+          const proj = await manageProjectUseCase.getProject(ctx.projectId);
+          setProject(proj);
+        }
 
-    try {
-      const searchResult = await services.searchContextUseCase.searchSimilar(context.id);
-      setSimilarContexts(searchResult.contexts);
-      setSelectedIndex(0);
-      setView("similar");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to find similar contexts");
-      setView("detail");
+        // Load related contexts if search service available
+        if (searchContextUseCase && ctx.embedding) {
+          try {
+            const related = await searchContextUseCase.findRelated(contextId, { limit: 5 });
+            setRelatedContexts(related);
+          } catch {
+            // Ignore errors loading related contexts
+          }
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load context');
+        setLoading(false);
+      }
     }
-  }, [context, services.searchContextUseCase]);
+    load();
+  }, [contextId, getContextUseCase, manageProjectUseCase, searchContextUseCase]);
 
   useInput((input, key) => {
     if (key.escape) {
-      if (view === "similar") {
-        setView("detail");
-        setSimilarContexts([]);
+      if (showRelated) {
+        setShowRelated(false);
       } else {
-        navigation.goBack();
+        goBack();
       }
       return;
     }
 
-    if (view === "detail") {
-      if (input === "s") {
-        loadSimilar();
-      }
-    }
-
-    if (view === "similar" && similarContexts.length > 0) {
-      if (key.upArrow) {
-        setSelectedIndex((prev) => Math.max(0, prev - 1));
-      } else if (key.downArrow) {
-        setSelectedIndex((prev) => Math.min(similarContexts.length - 1, prev + 1));
-      }
+    // Toggle related contexts view with 'r'
+    if (input === 'r' && relatedContexts.length > 0) {
+      setShowRelated(!showRelated);
     }
   });
 
-  if (!context) {
+  if (loading) {
     return (
-      <Box flexDirection="column">
-        <Header title={t.detail.title} breadcrumb={t.detail.breadcrumb} />
-        <Text color="red">{t.detail.noContextSelected}</Text>
-        <KeyHintBar bindings={[{ key: "Esc", description: t.detail.keyHints.back }]} />
+      <Box flexDirection="column" padding={1}>
+        <Spinner message="Loading context..." />
       </Box>
     );
   }
 
-  const renderDetail = () => (
-    <Box flexDirection="column" gap={1}>
-      <Box>
-        <Text bold color="cyan">{t.detail.labels.id} </Text>
-        <Text>{context.id}</Text>
-      </Box>
-
-      <Box>
-        <Text bold color="cyan">{t.detail.labels.type} </Text>
-        <Text>{context.type}</Text>
-      </Box>
-
-      <Box flexDirection="column">
-        <Text bold color="cyan">{t.detail.labels.summary}</Text>
-        <Box paddingLeft={2}>
-          <Text>{context.summary}</Text>
-        </Box>
-      </Box>
-
-      <Box>
-        <Text bold color="cyan">{t.detail.labels.tags} </Text>
-        <Text>{context.tags.length > 0 ? context.tags.join(", ") : t.detail.noTags}</Text>
-      </Box>
-
-      {context.project && (
-        <Box>
-          <Text bold color="cyan">{t.detail.labels.project} </Text>
-          <Text>{context.project}</Text>
-        </Box>
-      )}
-
-      {context.sprint && (
-        <Box>
-          <Text bold color="cyan">{t.detail.labels.sprint} </Text>
-          <Text>{context.sprint}</Text>
-        </Box>
-      )}
-
-      {context.source && (
-        <Box>
-          <Text bold color="cyan">{t.detail.labels.source} </Text>
-          <Text>{context.source}</Text>
-        </Box>
-      )}
-
-      <Box>
-        <Text bold color="cyan">{t.detail.labels.created} </Text>
-        <Text>{formatDateTime(context.createdAt)}</Text>
-      </Box>
-
-      <Box>
-        <Text bold color="cyan">{t.detail.labels.updated} </Text>
-        <Text>{formatDateTime(context.updatedAt)}</Text>
-      </Box>
-
-      <Box flexDirection="column" marginTop={1}>
-        <Text bold color="cyan">{t.detail.labels.content}</Text>
-        <Box paddingLeft={2} flexDirection="column">
-          <Text>
-            {context.content.length > 500
-              ? context.content.slice(0, 500) + "..."
-              : context.content}
-          </Text>
-        </Box>
-      </Box>
-
-      {error && <ErrorBanner message={error} />}
-    </Box>
-  );
-
-  const renderSimilar = () => {
-    if (view === "similar-loading") {
-      return <Spinner message={t.detail.findingSimilar} />;
-    }
-
-    if (similarContexts.length === 0) {
-      return (
-        <Box flexDirection="column">
-          <Text>{t.detail.noSimilarFound}</Text>
-        </Box>
-      );
-    }
-
+  if (error || !context) {
     return (
-      <Box flexDirection="column">
-        <Box marginBottom={1}>
-          <Text bold>
-            {t.detail.similarContexts.replace("{count}", String(similarContexts.length))}
+      <Box flexDirection="column" padding={1}>
+        <Header title="Error" />
+        <Text color="red">{error || 'Context not found'}</Text>
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            Press ESC to go back
           </Text>
         </Box>
-        <ContextList
-          contexts={similarContexts}
-          selectedIndex={selectedIndex}
-          showSimilarity
-        />
       </Box>
     );
-  };
-
-  const getKeyBindings = () => {
-    if (view === "similar-loading") {
-      return [];
-    }
-    if (view === "similar") {
-      return [
-        { key: "↑↓", description: t.detail.keyHints.navigate },
-        { key: "Esc", description: t.detail.keyHints.backToDetail },
-      ];
-    }
-    return [
-      { key: "s", description: t.detail.keyHints.similar },
-      { key: "Esc", description: t.detail.keyHints.back },
-    ];
-  };
+  }
 
   return (
-    <Box flexDirection="column">
+    <Box flexDirection="column" padding={1}>
       <Header
-        title={t.detail.title}
-        breadcrumb={view === "similar" ? t.detail.breadcrumbSimilar : t.detail.breadcrumb}
+        title={context.title}
+        subtitle={`Project: ${project?.name || 'Uncategorized'} | ${new Date(context.createdAt).toLocaleString()}`}
       />
-      {view === "detail" ? renderDetail() : renderSimilar()}
-      {view !== "similar-loading" && <KeyHintBar bindings={getKeyBindings()} />}
+
+      {/* Summary */}
+      <Box marginY={1} flexDirection="column">
+        <Text bold color="cyan">Summary</Text>
+        <Text>{context.summary}</Text>
+      </Box>
+
+      {/* Decisions */}
+      {context.decisions.length > 0 && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="green">Decisions ({context.decisions.length})</Text>
+          {context.decisions.map((decision, i) => (
+            <Text key={i}>  • {decision}</Text>
+          ))}
+        </Box>
+      )}
+
+      {/* Action Items */}
+      {context.actionItems.length > 0 && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="yellow">Action Items ({context.actionItems.length})</Text>
+          {context.actionItems.map((item, i) => (
+            <Box key={i} flexDirection="column">
+              <Text>  • {item.task}</Text>
+              {item.assignee && <Text color="gray">    Assignee: {item.assignee}</Text>}
+              {item.dueDate && <Text color="gray">    Due: {item.dueDate}</Text>}
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Policies */}
+      {context.policies.length > 0 && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="blue">Policies ({context.policies.length})</Text>
+          {context.policies.map((policy, i) => (
+            <Text key={i}>  • {policy}</Text>
+          ))}
+        </Box>
+      )}
+
+      {/* Open Questions */}
+      {context.openQuestions.length > 0 && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="magenta">Open Questions ({context.openQuestions.length})</Text>
+          {context.openQuestions.map((question, i) => (
+            <Text key={i}>  • {question}</Text>
+          ))}
+        </Box>
+      )}
+
+      {/* Tags */}
+      {context.tags.length > 0 && (
+        <Box marginY={1}>
+          <Text bold>Tags: </Text>
+          <Text color="magenta">#{context.tags.join(' #')}</Text>
+        </Box>
+      )}
+
+      {/* Related Contexts */}
+      {relatedContexts.length > 0 && !showRelated && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="cyan">
+            Related Contexts ({relatedContexts.length})
+          </Text>
+          <Text color="gray" dimColor>
+            Press 'r' to view related contexts
+          </Text>
+        </Box>
+      )}
+
+      {showRelated && relatedContexts.length > 0 && (
+        <Box marginY={1} flexDirection="column">
+          <Text bold color="cyan">Related Contexts</Text>
+          <Box marginTop={1}>
+            <SelectInput
+              items={relatedContexts.map((result, i) => ({
+                label: `${i + 1}. ${result.context.title} (${(result.score * 100).toFixed(0)}%)`,
+                value: result.context.id,
+              }))}
+              onSelect={(item) => {
+                if (onNavigateToContext) {
+                  onNavigateToContext(item.value);
+                }
+              }}
+            />
+          </Box>
+        </Box>
+      )}
+
+      <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+        <Text color="gray" dimColor>
+          {showRelated ? 'Enter to view | ' : ''}
+          {relatedContexts.length > 0 && !showRelated ? "r for related | " : ''}
+          ESC to go back
+        </Text>
+      </Box>
     </Box>
   );
 }

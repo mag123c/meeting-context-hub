@@ -1,54 +1,53 @@
-import { useState, useCallback } from "react";
-import type { Screen } from "../App.js";
+import { useState, useCallback } from 'react';
 
-export interface NavigationState {
+export type Screen =
+  | 'main'
+  | 'add'
+  | 'list'
+  | 'detail'
+  | 'projects'
+  | 'new-project'
+  | 'settings'
+  | 'search'
+  | 'record';
+
+interface NavigationState {
   screen: Screen;
-  params?: Record<string, string>;
-  history: Screen[];
+  params: Record<string, unknown>;
 }
 
-export interface UseNavigationResult {
+interface UseNavigationResult {
   screen: Screen;
-  params?: Record<string, string>;
-  navigate: (screen: Screen, params?: Record<string, string>) => void;
+  params: Record<string, unknown>;
+  navigate: (screen: Screen, params?: Record<string, unknown>) => void;
   goBack: () => void;
-  canGoBack: boolean;
 }
 
-export function useNavigation(initialScreen: Screen = "main"): UseNavigationResult {
-  const [state, setState] = useState<NavigationState>({
-    screen: initialScreen,
-    history: [],
-  });
+/**
+ * Hook for screen navigation
+ */
+export function useNavigation(): UseNavigationResult {
+  const [history, setHistory] = useState<NavigationState[]>([
+    { screen: 'main', params: {} },
+  ]);
 
-  const navigate = useCallback(
-    (screen: Screen, params?: Record<string, string>) => {
-      setState((prev) => ({
-        screen,
-        params,
-        history: [...prev.history, prev.screen],
-      }));
-    },
-    []
-  );
+  const currentState = history[history.length - 1];
+
+  const navigate = useCallback((screen: Screen, params: Record<string, unknown> = {}) => {
+    setHistory(prev => [...prev, { screen, params }]);
+  }, []);
 
   const goBack = useCallback(() => {
-    setState((prev) => {
-      const history = [...prev.history];
-      const previousScreen = history.pop() || "main";
-      return {
-        screen: previousScreen,
-        history,
-        params: undefined,
-      };
+    setHistory(prev => {
+      if (prev.length <= 1) return prev;
+      return prev.slice(0, -1);
     });
   }, []);
 
   return {
-    screen: state.screen,
-    params: state.params,
+    screen: currentState.screen,
+    params: currentState.params,
     navigate,
     goBack,
-    canGoBack: state.history.length > 0,
   };
 }

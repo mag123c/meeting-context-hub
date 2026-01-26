@@ -1,209 +1,167 @@
-import { useState, useCallback } from "react";
-import { Box, Text, useInput } from "ink";
-import TextInput from "ink-text-input";
-import { Header, Menu, Spinner, ErrorBanner, KeyHintBar, ContextList, type MenuItem } from "../components/index.js";
-import type { NavigationContext } from "../App.js";
-import type { AppServices } from "../../core/factories.js";
-import type { Context } from "../../types/context.types.js";
-import type { SearchResult } from "../../core/search-context.usecase.js";
-import { useTranslation } from "../../i18n/index.js";
+import React, { useState, useCallback } from 'react';
+import { Box, Text, useInput } from 'ink';
+import SelectInput from 'ink-select-input';
+import { Header } from '../components/Header.js';
+import { TextInput } from '../components/TextInput.js';
+import { Spinner } from '../components/Spinner.js';
+import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
+import type { SearchResult } from '../../types/index.js';
 
 interface SearchScreenProps {
-  navigation: NavigationContext;
-  services: AppServices;
-  onSelectContext: (context: Context) => void;
+  searchContextUseCase: SearchContextUseCase;
+  onSelectContext: (contextId: string) => void;
+  goBack: () => void;
 }
 
-type Step = "mode" | "query" | "searching" | "results";
-type SearchMode = "semantic" | "exact" | "tag";
+type Mode = 'input' | 'results';
 
-export function SearchScreen({ navigation, services, onSelectContext }: SearchScreenProps) {
-  const { t } = useTranslation();
-
-  const modeItems: MenuItem[] = [
-    { label: t.search.modes.semantic, value: "semantic" },
-    { label: t.search.modes.exact, value: "exact" },
-    { label: t.search.modes.tag, value: "tag" },
-  ];
-  const [step, setStep] = useState<Step>("mode");
-  const [mode, setMode] = useState<SearchMode>("semantic");
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Context[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+export function SearchScreen({
+  searchContextUseCase,
+  onSelectContext,
+  goBack,
+}: SearchScreenProps): React.ReactElement {
+  const [mode, setMode] = useState<Mode>('input');
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchMethod, setSearchMethod] = useState<'semantic' | 'keyword' | 'hybrid'>('keyword');
+  const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useInput((input, key) => {
+  const handleSearch = useCallback(async () => {
+    if (!query.trim()) {
+      setError('Please enter a search query');
+      return;
+    }
+
+    setSearching(true);
+    setError(null);
+
+    try {
+      const result = await searchContextUseCase.execute({
+        query: query.trim(),
+        limit: 20,
+      });
+
+      setResults(result.results);
+      setSearchMethod(result.method);
+      setMode('results');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Search failed');
+    } finally {
+      setSearching(false);
+    }
+  }, [query, searchContextUseCase]);
+
+  useInput((_, key) => {
     if (key.escape) {
-      if (step === "mode") {
-        navigation.goBack();
-      } else if (step === "results" || step === "query") {
-        setStep("mode");
+      if (mode === 'results') {
+        setMode('input');
         setResults([]);
-        setSelectedIndex(0);
-        setError(null);
+      } else {
+        goBack();
       }
       return;
     }
 
-    if (step === "results" && results.length > 0) {
-      if (key.upArrow) {
-        setSelectedIndex((prev) => Math.max(0, prev - 1));
-      } else if (key.downArrow) {
-        setSelectedIndex((prev) => Math.min(results.length - 1, prev + 1));
-      } else if (key.return) {
-        onSelectContext(results[selectedIndex]);
-      } else if (input === "n") {
-        // New search
-        setStep("query");
-        setQuery("");
-        setResults([]);
-        setSelectedIndex(0);
-      }
+    if (key.return && mode === 'input' && query.trim() && !searching) {
+      handleSearch();
     }
   });
 
-  const handleModeSelect = useCallback((item: MenuItem) => {
-    setMode(item.value as SearchMode);
-    setStep("query");
-  }, []);
+  if (searching) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title="Search" subtitle="Searching contexts..." />
+        <Spinner message="Searching..." />
+      </Box>
+    );
+  }
 
-  const handleQuerySubmit = useCallback(async (value: string) => {
-    if (!value.trim()) return;
+  if (mode === 'results') {
+    if (results.length === 0) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Header
+            title="Search Results"
+            subtitle={`Query: "${query}" (${searchMethod})`}
+          />
 
-    setQuery(value);
-    setStep("searching");
-    setError(null);
-
-    try {
-      let searchResult: SearchResult;
-
-      if (mode === "semantic") {
-        searchResult = await services.searchContextUseCase.searchByText(value);
-      } else if (mode === "exact") {
-        searchResult = await services.searchContextUseCase.searchByKeyword(value);
-      } else {
-        // Tag search
-        searchResult = await services.searchContextUseCase.searchByTags([value]);
-      }
-
-      setResults(searchResult.contexts);
-      setSelectedIndex(0);
-      setStep("results");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed");
-      setStep("results");
-    }
-  }, [mode, services.searchContextUseCase]);
-
-  const renderStep = () => {
-    switch (step) {
-      case "mode":
-        return (
-          <Box flexDirection="column">
-            <Text bold>{t.search.selectMode}</Text>
-            <Box marginTop={1}>
-              <Menu items={modeItems} onSelect={handleModeSelect} />
-            </Box>
+          <Box marginY={1}>
+            <Text color="yellow">No results found</Text>
           </Box>
-        );
 
-      case "query":
-        return (
-          <Box flexDirection="column">
-            <Text bold>
-              {mode === "semantic"
-                ? t.search.enterQuery
-                : mode === "exact"
-                ? t.search.enterExactText
-                : t.search.enterTag}
+          <Box marginTop={1}>
+            <Text color="gray" dimColor>
+              Press ESC to search again
             </Text>
-            <Box marginTop={1}>
-              <Text color="cyan">{"> "}</Text>
-              <TextInput
-                value={query}
-                onChange={setQuery}
-                onSubmit={handleQuerySubmit}
-              />
-            </Box>
           </Box>
-        );
-
-      case "searching":
-        return <Spinner message={t.search.searching} />;
-
-      case "results":
-        if (error) {
-          return (
-            <Box flexDirection="column">
-              <ErrorBanner message={error} />
-              <Text dimColor>{t.common.pressEscToGoBack}</Text>
-            </Box>
-          );
-        }
-
-        if (results.length === 0) {
-          return (
-            <Box flexDirection="column">
-              <Text>{t.search.noResults.replace("{query}", query)}</Text>
-              <Box marginTop={1}>
-                <Text dimColor>{t.search.newSearchHint}</Text>
-              </Box>
-            </Box>
-          );
-        }
-
-        return (
-          <Box flexDirection="column">
-            <Text bold>
-              {t.search.foundResults
-                .replace("{count}", String(results.length))
-                .replace("{plural}", results.length > 1 ? "s" : "")
-                .replace("{query}", query)}
-            </Text>
-            <Box marginTop={1}>
-              <ContextList
-                contexts={results}
-                selectedIndex={selectedIndex}
-                showSimilarity={mode === "semantic"}
-              />
-            </Box>
-          </Box>
-        );
-
-      default:
-        return null;
+        </Box>
+      );
     }
-  };
 
-  const getKeyBindings = () => {
-    if (step === "mode") {
-      return [
-        { key: "Enter", description: t.search.keyHints.select },
-        { key: "Esc", description: t.search.keyHints.back },
-      ];
-    }
-    if (step === "searching") {
-      return [];
-    }
-    if (step === "results") {
-      return [
-        { key: "↑↓", description: t.search.keyHints.navigate },
-        { key: "Enter", description: t.search.keyHints.view },
-        { key: "n", description: t.search.keyHints.newSearch },
-        { key: "Esc", description: t.search.keyHints.back },
-      ];
-    }
-    return [
-      { key: "Enter", description: t.search.keyHints.search },
-      { key: "Esc", description: t.search.keyHints.back },
-    ];
-  };
+    const items = results.map((result, index) => {
+      const scoreText = searchMethod === 'semantic'
+        ? ` (${(result.score * 100).toFixed(0)}%)`
+        : '';
+      return {
+        label: `${index + 1}. ${result.context.title}${scoreText}`,
+        value: result.context.id,
+      };
+    });
 
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title="Search Results"
+          subtitle={`Query: "${query}" | ${results.length} results (${searchMethod})`}
+        />
+
+        <Box marginY={1} flexDirection="column">
+          <SelectInput
+            items={items}
+            onSelect={(item) => onSelectContext(item.value)}
+          />
+        </Box>
+
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            Enter to view | ESC to search again
+          </Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Input mode
   return (
-    <Box flexDirection="column">
-      <Header title={t.search.title} breadcrumb={t.search.breadcrumb} />
-      {renderStep()}
-      {step !== "searching" && <KeyHintBar bindings={getKeyBindings()} />}
+    <Box flexDirection="column" padding={1}>
+      <Header
+        title="Search Contexts"
+        subtitle="Enter keywords or a question to find related contexts"
+      />
+
+      <Box marginY={1} flexDirection="column">
+        <Text bold>Search Query:</Text>
+        <Box marginTop={1}>
+          <TextInput
+            value={query}
+            onChange={setQuery}
+            placeholder="e.g., payment API, authentication flow..."
+          />
+        </Box>
+      </Box>
+
+      {error && (
+        <Box marginY={1}>
+          <Text color="red">{error}</Text>
+        </Box>
+      )}
+
+      <Box marginTop={1}>
+        <Text color="gray" dimColor>
+          Enter to search | ESC to go back
+        </Text>
+      </Box>
     </Box>
   );
 }

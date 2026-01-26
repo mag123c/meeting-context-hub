@@ -1,114 +1,80 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
+  "name": "MCH Conventions",
+  "version": "2.0",
+
   "naming": {
-    "repository_interface": {
-      "pattern": "{entity}.repository.ts",
-      "example": "context.repository.ts"
+    "files": {
+      "pattern": "kebab-case",
+      "examples": ["add-context.usecase.ts", "extract.service.ts"]
     },
-    "repository_impl": {
-      "pattern": "{entity}.{provider}.ts",
-      "example": "context.obsidian.ts"
+    "classes": {
+      "pattern": "PascalCase",
+      "suffixes": {
+        "usecase": "UseCase",
+        "service": "Service",
+        "adapter": "Adapter"
+      },
+      "examples": ["AddContextUseCase", "ExtractService", "ClaudeAdapter"]
     },
-    "usecase": {
-      "pattern": "{action}-{entity}.usecase.ts",
-      "examples": ["add-context.usecase.ts", "summarize-meeting.usecase.ts"]
+    "interfaces": {
+      "pattern": "PascalCase",
+      "prefixes": ["I (optional)", "none"],
+      "examples": ["AIProvider", "StorageProvider", "Context"]
     },
-    "ai_interface": {
-      "pattern": "I{Type}Client",
-      "examples": ["ILLMClient", "IEmbeddingClient", "ITranscriptionClient"]
+    "functions": {
+      "pattern": "camelCase",
+      "examples": ["extractContext", "generateEmbedding"]
     },
-    "ai_client": {
-      "pattern": "{provider}.client.ts",
-      "examples": ["claude.client.ts", "whisper.client.ts"]
-    },
-    "prompt": {
-      "pattern": "{purpose}.prompt.ts",
-      "examples": ["tagging.prompt.ts", "meeting-summary.prompt.ts"]
-    },
-    "types": {
-      "pattern": "{entity}.types.ts",
-      "examples": ["context.types.ts", "meeting.types.ts"]
-    },
-    "schema": {
-      "pattern": "{entity}.schema.ts",
-      "examples": ["context.schema.ts", "meeting.schema.ts"]
-    },
-    "cli_command": {
-      "pattern": "{name}.command.ts",
-      "examples": ["add.command.ts", "search.command.ts"]
-    },
-    "cli_utils": {
-      "pattern": "{purpose}.ts",
-      "examples": ["cli-runner.ts", "formatters.ts"]
-    },
-    "input_handler": {
-      "pattern": "{type}.handler.ts",
-      "examples": ["image.handler.ts", "meeting.handler.ts"]
-    },
-    "error_class": {
-      "pattern": "{Type}Error",
-      "examples": ["NotFoundError", "ValidationError", "AIClientError"]
+    "constants": {
+      "pattern": "SCREAMING_SNAKE_CASE",
+      "examples": ["DEFAULT_SIMILARITY_THRESHOLD", "MAX_RESULTS"]
     }
   },
-  "commit": {
-    "format": "{type}: {description}",
-    "types": {
-      "feat": "New feature",
-      "fix": "Bug fix",
-      "refactor": "Code improvement (no feature change)",
-      "docs": "Documentation",
-      "test": "Test addition/modification",
-      "chore": "Build, config, tooling",
-      "style": "Code formatting"
-    },
-    "examples": [
-      "feat: add image analysis feature",
-      "fix: embedding similarity calculation bug",
-      "refactor: extract common spinner utility"
-    ],
-    "rules": [
-      "Use English commit messages",
-      "No Co-Authored-By or AI markers",
-      "No direct commits to main branch"
-    ]
-  },
-  "branch": {
-    "patterns": {
-      "feat/": "New features",
-      "fix/": "Bug fixes",
-      "refactor/": "Code improvements",
-      "docs/": "Documentation",
-      "test/": "Test additions"
-    },
-    "format": "{type}/{kebab-case-description}",
-    "examples": ["feat/meeting-summary", "fix/tag-duplicate"]
-  },
-  "code_style": {
+
+  "codeStyle": {
     "typescript": {
       "strict": true,
-      "esm": true,
-      "file_extensions": ".ts for source, .js in imports"
+      "noImplicitAny": true,
+      "preferInterfaces": true,
+      "preferConst": true
     },
-    "prompts": {
-      "version_field": "All prompts must include version field",
-      "example": "{ version: '1.0', system: '...', template: (input) => `...` }"
+    "imports": {
+      "order": ["node builtins", "external packages", "internal modules", "relative imports"],
+      "style": "named imports preferred"
     },
-    "errors": {
-      "base_class": "MCHError",
-      "code_field": "All errors must have code field for programmatic handling"
-    },
-    "documentation": {
-      "new_directory": "Create CLAUDE.md when adding new directory",
-      "comments": "English comments, minimize when code is self-explanatory"
+    "exports": {
+      "style": "named exports preferred",
+      "indexFiles": "re-export public API"
     }
   },
-  "architecture_rules": [
-    "Clean Architecture: Repository interface → Storage implementation separation",
-    "Declarative prompts: Include version field in ai/prompts",
-    "Zod schemas: Define in types/ directory",
-    "AI client abstraction: Dependency injection via ai/interfaces",
-    "Unified error handling: MCHError-based custom error classes in errors/",
-    "CLI common functions: Centralize spinner, formatting, error handling in cli/utils"
-  ]
+
+  "errorHandling": {
+    "customError": "MCHError extends Error",
+    "errorCodes": "enum ErrorCode",
+    "recovery": "recoverable flag for retry logic"
+  },
+
+  "testing": {
+    "location": "__tests__/ or *.test.ts alongside",
+    "naming": "describe/it pattern",
+    "mocking": "vi.mock for external dependencies"
+  },
+
+  "commits": {
+    "format": "type(scope): description",
+    "types": ["feat", "fix", "refactor", "docs", "test", "chore"],
+    "scopes": ["tui", "core", "adapters", "config"],
+    "examples": [
+      "feat(core): add context extraction service",
+      "fix(tui): handle empty input state",
+      "refactor(adapters): simplify storage interface"
+    ]
+  },
+
+  "documentation": {
+    "required": ["public interfaces", "complex logic"],
+    "style": "JSDoc for public APIs, inline comments for complex logic",
+    "language": "English for code, Korean for user-facing"
+  }
 }

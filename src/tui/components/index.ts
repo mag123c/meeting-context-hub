@@ -1,12 +1,4 @@
-export { Header } from "./Header.js";
-export { Banner } from "./Banner.js";
-export { Spinner } from "./Spinner.js";
-export { Menu, type MenuItem } from "./Menu.js";
-export { KeyHint, KeyHintBar, type KeyBinding } from "./KeyHint.js";
-export { ErrorBanner } from "./ErrorBanner.js";
-export { ErrorBoundary } from "./ErrorBoundary.js";
-export { ContextCard, ContextList } from "./ContextCard.js";
-export { RecordingIndicator } from "./RecordingIndicator.js";
-export { ApiKeyPrompt } from "./ApiKeyPrompt.js";
-export { UpdatePrompt, UpdateBanner } from "./UpdatePrompt.js";
-export { AutocompleteInput, type AutocompleteInputProps } from "./AutocompleteInput.js";
+export { Header } from './Header.js';
+export { Spinner } from './Spinner.js';
+export { ContextCard } from './ContextCard.js';
+export { TextInput } from './TextInput.js';

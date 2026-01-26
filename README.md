@@ -1,193 +1,66 @@
 # Meeting Context Hub
 
-A CLI tool that processes multimodal inputs (text/image/audio/file/meeting transcripts) with AI and stores them in Obsidian.
-Find related contexts with tag + embedding-based semantic search.
+> TUI tool for managing meeting contexts with AI extraction and semantic chaining
+
+## Why This Exists
+
+When working on multiple parallel workstreams (squads, teams, personal projects), it becomes nearly impossible to retain all the granular discussions—policies, direction decisions, conventions, edge cases—that happen across meetings and conversations.
+
+**MCH captures what matters for development work and chains them together by relevance**, so you can quickly rebuild context when switching between projects.
 
 ## Features
 
-- **Text** - Save notes and ideas
-- **Image** - Analyze with Claude Vision and extract tags
-- **Audio** - Transcribe with Whisper
-- **File** - Support txt, md, csv, json
-- **Meeting** - Auto-summarize with PRD format + Action Items
-- **Semantic Search** - Find similar documents with embeddings
-- **Auto Tagging** - AI generates relevant tags automatically
-- **Obsidian Integration** - Graph View, Dataview query support
-- **TUI Mode** - Interactive terminal UI with ink
+- **AI Extraction**: Automatically extract decisions, action items, and policies from meeting notes
+- **Semantic Search**: Find related contexts using embedding-based similarity
+- **Context Chaining**: Automatically link related discussions
+- **Project Organization**: Group contexts by squad, team, or project
 
-## Installation
+## Status
+
+**v2.0.0-alpha** - Complete redesign in progress
+
+See [ROADMAP](./docs/ROADMAP.md) for implementation plan.
+
+## Quick Start
 
 ```bash
-npm install -g meeting-context-hub
+# Set API keys
+export ANTHROPIC_API_KEY=sk-ant-xxx
+export OPENAI_API_KEY=sk-xxx
+
+# Install dependencies
+pnpm install
+
+# Run (TUI)
+pnpm dev
 ```
 
-### Requirements
+## Documentation
 
-- Node.js >= 20.0.0
-- [Obsidian](https://obsidian.md/) (optional, used as storage)
+| Document | Description |
+|----------|-------------|
+| [PRD](./docs/PRD.md) | Product requirements |
+| [Architecture](./docs/ARCHITECTURE.md) | Technical design |
+| [Roadmap](./docs/ROADMAP.md) | Implementation plan |
 
 ## Configuration
 
-### API Keys
-
-**Option 1: macOS Keychain (Recommended)**
-
 ```bash
-mch config set ANTHROPIC_API_KEY sk-ant-xxx
-mch config set OPENAI_API_KEY sk-xxx
+# Required
+ANTHROPIC_API_KEY=sk-ant-xxx   # Claude API
+OPENAI_API_KEY=sk-xxx          # OpenAI (embedding, whisper)
+
+# Optional
+MCH_DB_PATH=~/.mch/data.db     # Database location
+MCH_LANGUAGE=ko                # UI language (ko, en)
 ```
 
-**Option 2: Environment Variables**
+## Tech Stack
 
-```bash
-cp .env.local.example .env.local
-# Edit .env.local file
-```
-
-### Obsidian Vault
-
-```bash
-# Default: ~/Library/Mobile Documents/iCloud~md~obsidian/Documents
-mch config set OBSIDIAN_VAULT_PATH /path/to/your/vault
-
-# Storage folder (default: mch)
-mch config set MCH_FOLDER mch
-```
-
-### Check Configuration
-
-```bash
-mch config show   # Show current settings
-mch config check  # Check API key status
-```
-
-## Usage
-
-### TUI Mode (Interactive)
-
-```bash
-mch
-```
-
-Launches an interactive terminal UI with:
-- Add Context (text/image/audio/file/meeting)
-- Search (semantic/exact/tag)
-- List with filtering and pagination
-- Config management
-
-### CLI Mode
-
-#### Add Context
-
-```bash
-# Text
-mch add -t "Today's meeting decisions..."
-
-# Image (Claude Vision analysis)
-mch add -i ./screenshot.png
-
-# Audio (Whisper transcription)
-mch add -a ./recording.m4a
-
-# File
-mch add -f ./notes.md
-
-# Interactive mode
-mch add
-```
-
-#### Meeting Summary
-
-```bash
-mch add -m ./meeting-transcript.txt
-```
-
-**Output format:**
-- Meeting Summary
-- Key Decisions
-- Action Items (assignee, deadline)
-- Discussion Points
-- Open Issues
-- Next Steps
-
-#### Search
-
-```bash
-# Semantic search (default)
-mch search "project schedule"
-
-# Exact text match
-mch search "API" --exact
-
-# Find similar documents
-mch search --similar <context-id>
-
-# Filter by tag
-mch search --tag "meeting"
-```
-
-#### List
-
-```bash
-# All contexts
-mch list
-
-# Filter by tag
-mch list --tag "meeting"
-
-# Filter by type
-mch list --type image
-
-# Pagination
-mch list -l 10 -o 20
-```
-
-## Obsidian Integration
-
-### File Structure
-
-Contexts are saved in `{vault}/{mch-folder}/`:
-
-```
-~/Obsidian/Vault/mch/
-├── meeting-summary-campaign_a1b2c3d4.md
-├── cli-test-image-analysis_e5f6g7h8.md
-└── ...
-```
-
-### Frontmatter
-
-```yaml
----
-id: a1b2c3d4-...
-type: text
-summary: Summary content
-tags:
-  - meeting
-  - project
-embedding: [0.1, 0.2, ...]
-createdAt: 2024-01-01T00:00:00.000Z
----
-```
-
-### Dataview Query Example
-
-```dataview
-TABLE type AS "Type", summary AS "Summary"
-FROM ""
-WHERE id
-SORT createdAt DESC
-```
-
-## Supported Formats
-
-| Type | Extensions | Processing |
-|------|------------|------------|
-| Text | - | Direct input |
-| Image | jpg, png, gif, webp | Claude Vision |
-| Audio | mp3, m4a, wav, webm | Whisper API |
-| File | txt, md, csv, json | Text extraction |
-| Meeting | txt, md | PRD summary |
+- **UI**: React + Ink (TUI)
+- **AI**: Claude (extraction), OpenAI (embedding)
+- **Storage**: SQLite
+- **Language**: TypeScript
 
 ## Development
 
@@ -211,14 +84,6 @@ pnpm lint
 # Test
 pnpm test
 ```
-
-## Tech Stack
-
-- **CLI**: Commander.js, Inquirer, Chalk, Ora
-- **TUI**: Ink (React for CLI)
-- **AI**: Claude API (Anthropic), Whisper & Embedding (OpenAI)
-- **Storage**: Obsidian (gray-matter for frontmatter)
-- **Validation**: Zod
 
 ## License
 

@@ -1,6 +1,6 @@
-export { MainMenu } from "./MainMenu.js";
-export { AddScreen } from "./AddScreen.js";
-export { SearchScreen } from "./SearchScreen.js";
-export { ListScreen } from "./ListScreen.js";
-export { DetailScreen } from "./DetailScreen.js";
-export { ConfigScreen } from "./ConfigScreen.js";
+export { MainMenu } from './MainMenu.js';
+export { AddContext } from './AddContext.js';
+export { ListScreen } from './ListScreen.js';
+export { DetailScreen } from './DetailScreen.js';
+export { ProjectScreen } from './ProjectScreen.js';
+export { SettingsScreen } from './SettingsScreen.js';

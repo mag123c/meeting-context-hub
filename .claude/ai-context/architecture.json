@@ -1,175 +1,123 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "version": "1.0.0",
-  "project": {
-    "name": "Meeting Context Hub",
-    "type": "TypeScript CLI",
-    "runtime": "Node.js 20+",
-    "description": "CLI tool for processing multimodal inputs (text/image/audio/file/meeting) with AI and storing to Obsidian"
-  },
-  "layers": {
-    "cli": {
-      "path": "src/cli/",
-      "description": "User input handling and output formatting",
-      "ctx": "src/cli/CLAUDE.md",
-      "subdirs": {
-        "commands": "CLI command implementations (add, search, list, config, migrate)",
-        "utils": "Common CLI utilities (spinner, formatters, error handling)"
-      }
-    },
-    "tui": {
+  "name": "MCH Architecture",
+  "version": "2.0",
+  "description": "Meeting Context Hub v2 architecture overview",
+
+  "layers": [
+    {
+      "name": "TUI",
       "path": "src/tui/",
-      "description": "Interactive TUI using ink (React for CLI)",
-      "ctx": "src/tui/CLAUDE.md",
-      "subdirs": {
-        "components": "Reusable UI components",
-        "screens": "Screen-level components",
-        "hooks": "Custom React hooks"
-      }
+      "technology": "React + Ink",
+      "responsibility": "User interface, input handling, display",
+      "components": [
+        "App.tsx - Root component, routing",
+        "screens/ - Full screen components",
+        "components/ - Reusable UI elements",
+        "hooks/ - Custom React hooks"
+      ]
     },
-    "core": {
-      "path": "src/core/",
-      "description": "Application layer - UseCases, Services, and factories",
-      "ctx": "src/core/CLAUDE.md",
-      "files": {
-        "add-context.usecase.ts": "Add context workflow with hierarchy",
-        "summarize-meeting.usecase.ts": "Meeting summarization",
-        "search-context.usecase.ts": "Context search",
-        "hierarchy.service.ts": "AI-powered hierarchy classification",
-        "migrate-hierarchy.usecase.ts": "Legacy file migration",
-        "factories.ts": "DI factory"
-      }
+    {
+      "name": "Use Cases",
+      "path": "src/core/usecases/",
+      "responsibility": "Application business logic orchestration",
+      "components": [
+        "add-context.usecase.ts",
+        "search-context.usecase.ts",
+        "list-contexts.usecase.ts",
+        "manage-project.usecase.ts",
+        "get-context.usecase.ts",
+        "record-context.usecase.ts"
+      ]
     },
-    "repositories": {
-      "path": "src/repositories/",
-      "description": "Domain layer - Repository interfaces",
-      "files": {
-        "context.repository.ts": "Context repository interface"
-      }
+    {
+      "name": "Services",
+      "path": "src/core/services/",
+      "responsibility": "Domain logic implementation",
+      "components": [
+        "extract.service.ts - AI extraction logic",
+        "embedding.service.ts - Text to vector",
+        "chain.service.ts - Similarity calculation",
+        "config.service.ts - Configuration management"
+      ]
     },
-    "types": {
-      "path": "src/types/",
-      "description": "Domain layer - Types and Zod schemas",
-      "ctx": "src/types/CLAUDE.md",
-      "files": {
-        "context.types.ts": "Context entity types (with project/category)",
-        "context.schema.ts": "Context Zod schemas",
-        "hierarchy.types.ts": "Hierarchy classification types",
-        "meeting.types.ts": "Meeting types",
-        "meeting.schema.ts": "Meeting Zod schemas",
-        "prompt.types.ts": "Prompt types",
-        "tag.types.ts": "Tag types",
-        "config.types.ts": "Config types"
-      }
+    {
+      "name": "Domain",
+      "path": "src/core/domain/",
+      "responsibility": "Domain entities and value objects",
+      "components": [
+        "context.ts - Context entity",
+        "project.ts - Project entity"
+      ]
     },
-    "errors": {
-      "path": "src/errors/",
-      "description": "Custom error classes",
-      "ctx": "src/errors/CLAUDE.md"
-    },
-    "ai": {
-      "path": "src/ai/",
-      "description": "AI client abstraction and prompts",
-      "ctx": "src/ai/CLAUDE.md",
-      "subdirs": {
-        "interfaces": "AI client interfaces (ILLMClient, IEmbeddingClient, ITranscriptionClient)",
-        "clients": "Client implementations (Claude, Whisper, Embedding)",
-        "prompts": "Prompt templates with versioning"
-      }
-    },
-    "storage": {
-      "path": "src/storage/",
-      "description": "Storage implementations",
-      "subdirs": {
-        "obsidian": "Obsidian vault storage"
-      }
-    },
-    "input": {
-      "path": "src/input/",
-      "description": "Input handlers with pre-flight validation",
-      "ctx": "src/input/CLAUDE.md",
-      "files": {
-        "interfaces.ts": "Generic InputHandler interface",
-        "text.handler.ts": "Text input",
-        "image.handler.ts": "Image input (Claude Vision, 15MB limit)",
-        "audio.handler.ts": "Audio input (Whisper, 25MB limit, parallel 3-chunk batches)",
-        "recording.handler.ts": "Live recording (binary check, mic permission, parallel transcription)",
-        "file.handler.ts": "File input (txt, md, csv, json, 10MB limit)",
-        "meeting.handler.ts": "Meeting transcript (improved path detection)"
-      }
-    },
-    "utils": {
-      "path": "src/utils/",
-      "description": "Common utility functions and pre-flight validation",
-      "ctx": "src/utils/CLAUDE.md",
-      "subdirs": {
-        "preflight": "Pre-flight validation (file size, permissions, format, recording deps)"
-      },
-      "files": {
-        "path-sanitizer.ts": "Path sanitization and directory traversal prevention",
-        "atomic-file.ts": "Atomic file writes with locking",
-        "audio-merge.ts": "WAV file merging with header correction",
-        "audio-split.ts": "WAV splitting with progress callback"
-      }
-    },
-    "config": {
-      "path": "src/config/",
-      "description": "Configuration and environment",
-      "ctx": "src/config/CLAUDE.md",
-      "files": {
-        "config.ts": "Main config",
-        "keychain.ts": "macOS keychain integration (spawnSync)",
-        "env.ts": "Environment variables",
-        "constants.ts": "Application constants (AI, similarity, storage)",
-        "api-key-check.ts": "Non-throwing API key availability check for pre-flight validation"
-      }
-    },
-    "i18n": {
-      "path": "src/i18n/",
-      "description": "Internationalization system for multi-language support",
-      "ctx": "src/i18n/CLAUDE.md",
-      "subdirs": {
-        "locales": "Translation files (en.ts, ko.ts) and locale registry"
-      },
-      "files": {
-        "types.ts": "Type definitions (SupportedLanguage, Translations, LanguageOption)",
-        "context.tsx": "React Context (I18nProvider, useTranslation hook)",
-        "storage.ts": "Language preference persistence (~/.config/mch/preferences.json)",
-        "index.ts": "Public exports"
-      }
+    {
+      "name": "Adapters",
+      "path": "src/adapters/",
+      "responsibility": "External system integration",
+      "components": [
+        "ai/ - Claude and OpenAI adapters",
+        "audio/ - Whisper and Sox recording adapters",
+        "storage/ - SQLite adapter",
+        "config/ - Environment and file-based config"
+      ]
     }
-  },
+  ],
+
   "dependencies": {
-    "flow": [
-      "cli → core",
-      "tui → core",
-      "tui → i18n",
-      "tui → config/api-key-check (for API key guard)",
-      "core → repositories",
-      "core → ai/interfaces",
-      "core → storage",
-      "storage → repositories (implements)"
-    ],
-    "principle": "Clean Architecture: outer layers depend on inner layers only"
-  },
-  "external": {
-    "anthropic": {
-      "purpose": "LLM completions, image analysis",
-      "client": "src/ai/clients/claude.client.ts",
-      "envKey": "ANTHROPIC_API_KEY"
+    "runtime": {
+      "@anthropic-ai/sdk": "Claude API client",
+      "openai": "OpenAI API client (embedding, whisper)",
+      "better-sqlite3": "SQLite database",
+      "ink": "React for CLI",
+      "react": "UI framework",
+      "zod": "Schema validation",
+      "dotenv": "Environment variables",
+      "uuid": "ID generation"
     },
-    "openai": {
-      "purpose": "Embeddings, transcription",
-      "clients": [
-        "src/ai/clients/embedding.client.ts",
-        "src/ai/clients/whisper.client.ts"
-      ],
-      "envKey": "OPENAI_API_KEY"
-    },
-    "obsidian": {
-      "purpose": "Local markdown storage",
-      "implementation": "src/storage/obsidian/",
-      "envKey": "OBSIDIAN_VAULT_PATH"
+    "development": {
+      "typescript": "Type system",
+      "tsx": "TypeScript execution",
+      "vitest": "Testing framework",
+      "eslint": "Linting"
     }
+  },
+
+  "dataFlow": {
+    "addContext": [
+      "User input text",
+      "TUI -> AddContextUseCase",
+      "UseCase -> ExtractService (Claude)",
+      "UseCase -> EmbeddingService (OpenAI)",
+      "UseCase -> StorageAdapter (SQLite)",
+      "UseCase -> ChainService (find related)",
+      "Return result to TUI"
+    ],
+    "searchContext": [
+      "User search query",
+      "TUI -> SearchContextUseCase",
+      "UseCase -> EmbeddingService (query embedding)",
+      "UseCase -> StorageAdapter (all embeddings)",
+      "UseCase -> ChainService (cosine similarity)",
+      "Return ranked results to TUI"
+    ],
+    "recordContext": [
+      "User starts recording (SPACE)",
+      "RecordingAdapter captures audio",
+      "User stops recording (SPACE)",
+      "WhisperAdapter transcribes audio",
+      "User reviews/edits transcription",
+      "ExtractService extracts context",
+      "EmbeddingService generates embedding",
+      "StorageAdapter saves",
+      "ChainService finds related",
+      "Return result to TUI"
+    ]
+  },
+
+  "patterns": {
+    "architecture": "Clean Architecture",
+    "di": "Constructor injection",
+    "errorHandling": "Custom MCHError with error codes",
+    "testing": "Unit tests for services, integration for adapters"
   }
 }
