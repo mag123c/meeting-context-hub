@@ -6,15 +6,11 @@ import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
 import { VERSION } from '../../version.js';
 
-// ASCII Art Logo - Extra wide block style
+// Compact ASCII Logo - 3 lines
 const LOGO = `
- ███╗   ███╗     ██████╗     ██╗  ██╗
- ████╗ ████║    ██╔════╝     ██║  ██║
- ██╔████╔██║    ██║          ███████║
- ██║╚██╔╝██║    ██║          ██╔══██║
- ██║ ╚═╝ ██║    ╚██████╗     ██║  ██║
- ╚═╝     ╚═╝     ╚═════╝     ╚═╝  ╚═╝
-  M E E T I N G   C O N T E X T   H U B
+ ╔╦╗╔═╗╦ ╦  Meeting Context Hub
+ ║║║║  ╠═╣  Capture · Extract · Chain
+ ╩ ╩╚═╝╩ ╩
 `.trim();
 
 interface MainMenuProps {
@@ -55,25 +51,17 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
 
   return (
     <Box flexDirection="column" padding={1}>
-      {/* ASCII Art Logo */}
-      <Box flexDirection="column" marginBottom={1}>
+      {/* Compact Logo */}
+      <Box flexDirection="column">
         <Text color="cyan">{LOGO}</Text>
-        <Box marginTop={0}>
-          <Text color="gray">Meeting Context Hub </Text>
-          <Text color="cyan" bold>v{VERSION}</Text>
-        </Box>
-        <Text color="gray" dimColor>{t('menu.subtitle', language)}</Text>
+        <Text color="gray" dimColor>v{VERSION}</Text>
       </Box>
 
       <SectionBox color="cyan" marginY={1}>
         <SelectInput items={menuItems} onSelect={handleSelect} />
       </SectionBox>
 
-      <Box marginTop={1}>
-        <Text color="gray" dimColor>
-          {t('menu.hint', language)}
-        </Text>
-      </Box>
+      <Text color="gray" dimColor>{t('menu.hint', language)}</Text>
     </Box>
   );
 }
