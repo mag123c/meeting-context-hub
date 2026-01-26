@@ -69,6 +69,36 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 
 | Component | Purpose |
 |-----------|---------|
+| SectionBox | Consistent bordered section container |
 | ErrorDisplay | Error message with recovery guidance |
 | ErrorText | Inline error text |
 | Spinner | Loading indicator |
+
+## SectionBox Component
+
+Reusable box component for consistent UI styling across screens:
+
+```typescript
+import { SectionBox } from '../components/SectionBox.js';
+
+<SectionBox title="Decisions" color="green">
+  {decisions.map(d => <Text key={d}>• {d}</Text>)}
+</SectionBox>
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| title | string? | - | Optional section header |
+| color | string | 'gray' | Border and title color |
+| borderStyle | string | 'round' | Box border style |
+| marginY | number | 1 | Vertical margin |
+| paddingX | number | 1 | Horizontal padding |
+
+**Color conventions:**
+- `cyan` - Default sections, navigation
+- `green` - Decisions, success
+- `yellow` - Action items, warnings
+- `blue` - Policies
+- `magenta` - Questions
+- `gray` - Hints, secondary info

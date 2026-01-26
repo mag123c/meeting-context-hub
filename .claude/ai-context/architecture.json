@@ -11,9 +11,9 @@
       "technology": "React + Ink",
       "responsibility": "User interface, input handling, display",
       "components": [
-        "App.tsx - Root component, routing",
+        "App.tsx - Root component, routing, language state",
         "screens/ - Full screen components",
-        "components/ - Reusable UI elements",
+        "components/ - Reusable UI elements (SectionBox, ErrorDisplay, Spinner, etc.)",
         "hooks/ - Custom React hooks"
       ]
     },

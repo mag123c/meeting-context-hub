@@ -53,7 +53,7 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
 
   const language = fileConfig?.language
     || (process.env.MCH_LANGUAGE as 'ko' | 'en')
-    || 'ko';
+    || 'en';
 
   // Validate required keys (only if requireKeys is true)
   if (requireKeys) {
@@ -117,7 +117,7 @@ export function getConfigStatus(): ConfigStatus {
 
   const language = fileConfig?.language
     || (process.env.MCH_LANGUAGE as 'ko' | 'en')
-    || 'ko';
+    || 'en';
 
   return {
     anthropicKey: {

@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -26,7 +27,7 @@ export function DetailScreen({
   searchContextUseCase,
   onNavigateToContext,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: DetailScreenProps): React.ReactElement {
   const [context, setContext] = useState<Context | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -116,53 +117,48 @@ export function DetailScreen({
       />
 
       {/* Summary */}
-      <Box marginY={1} flexDirection="column">
-        <Text bold color="cyan">{t('detail.summary', language)}</Text>
+      <SectionBox title={t('detail.summary', language)} color="cyan">
         <Text>{context.summary}</Text>
-      </Box>
+      </SectionBox>
 
       {/* Decisions */}
       {context.decisions.length > 0 && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="green">{t('detail.decisions', language)} ({context.decisions.length})</Text>
+        <SectionBox title={`${t('detail.decisions', language)} (${context.decisions.length})`} color="green">
           {context.decisions.map((decision, i) => (
-            <Text key={i}>  • {decision}</Text>
+            <Text key={i}>• {decision}</Text>
           ))}
-        </Box>
+        </SectionBox>
       )}
 
       {/* Action Items */}
       {context.actionItems.length > 0 && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="yellow">{t('detail.action_items', language)} ({context.actionItems.length})</Text>
+        <SectionBox title={`${t('detail.action_items', language)} (${context.actionItems.length})`} color="yellow">
           {context.actionItems.map((item, i) => (
             <Box key={i} flexDirection="column">
-              <Text>  • {item.task}</Text>
-              {item.assignee && <Text color="gray">    {t('detail.assignee', language)} {item.assignee}</Text>}
-              {item.dueDate && <Text color="gray">    {t('detail.due_date', language)} {item.dueDate}</Text>}
+              <Text>• {item.task}</Text>
+              {item.assignee && <Text color="gray">  {t('detail.assignee', language)} {item.assignee}</Text>}
+              {item.dueDate && <Text color="gray">  {t('detail.due_date', language)} {item.dueDate}</Text>}
             </Box>
           ))}
-        </Box>
+        </SectionBox>
       )}
 
       {/* Policies */}
       {context.policies.length > 0 && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="blue">{t('detail.policies', language)} ({context.policies.length})</Text>
+        <SectionBox title={`${t('detail.policies', language)} (${context.policies.length})`} color="blue">
           {context.policies.map((policy, i) => (
-            <Text key={i}>  • {policy}</Text>
+            <Text key={i}>• {policy}</Text>
           ))}
-        </Box>
+        </SectionBox>
       )}
 
       {/* Open Questions */}
       {context.openQuestions.length > 0 && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="magenta">{t('detail.open_questions', language)} ({context.openQuestions.length})</Text>
+        <SectionBox title={`${t('detail.open_questions', language)} (${context.openQuestions.length})`} color="magenta">
           {context.openQuestions.map((question, i) => (
-            <Text key={i}>  • {question}</Text>
+            <Text key={i}>• {question}</Text>
           ))}
-        </Box>
+        </SectionBox>
       )}
 
       {/* Tags */}
@@ -175,42 +171,36 @@ export function DetailScreen({
 
       {/* Related Contexts */}
       {relatedContexts.length > 0 && !showRelated && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="cyan">
-            {t('detail.related', language)} ({relatedContexts.length})
-          </Text>
+        <SectionBox title={`${t('detail.related', language)} (${relatedContexts.length})`} color="cyan">
           <Text color="gray" dimColor>
             {t('detail.hint_related', language)}
           </Text>
-        </Box>
+        </SectionBox>
       )}
 
       {showRelated && relatedContexts.length > 0 && (
-        <Box marginY={1} flexDirection="column">
-          <Text bold color="cyan">{t('detail.related', language)}</Text>
-          <Box marginTop={1}>
-            <SelectInput
-              items={relatedContexts.map((result, i) => ({
-                label: `${i + 1}. ${result.context.title} (${(result.score * 100).toFixed(0)}%)`,
-                value: result.context.id,
-              }))}
-              onSelect={(item) => {
-                if (onNavigateToContext) {
-                  onNavigateToContext(item.value);
-                }
-              }}
-            />
-          </Box>
-        </Box>
+        <SectionBox title={t('detail.related', language)} color="cyan">
+          <SelectInput
+            items={relatedContexts.map((result, i) => ({
+              label: `${i + 1}. ${result.context.title} (${(result.score * 100).toFixed(0)}%)`,
+              value: result.context.id,
+            }))}
+            onSelect={(item) => {
+              if (onNavigateToContext) {
+                onNavigateToContext(item.value);
+              }
+            }}
+          />
+        </SectionBox>
       )}
 
-      <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
+      <SectionBox borderStyle="single" color="gray" marginY={1}>
         <Text color="gray" dimColor>
           {showRelated ? t('detail.hint_view_related', language) : ''}
           {relatedContexts.length > 0 && !showRelated ? t('detail.hint_r_related', language) : ''}
           {t('detail.hint', language)}
         </Text>
-      </Box>
+      </SectionBox>
     </Box>
   );
 }

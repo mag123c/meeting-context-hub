@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { TextInput } from '../components/TextInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
@@ -27,7 +28,7 @@ export function ProjectScreen({
   manageProjectUseCase,
   listContextsUseCase,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: ProjectScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('list');
   const [projects, setProjects] = useState<ProjectWithCount[]>([]);
@@ -175,15 +176,17 @@ export function ProjectScreen({
     return (
       <Box flexDirection="column" padding={1}>
         <Header title={selectedProject.name} />
-        {selectedProject.description && (
-          <Text color="gray">{selectedProject.description}</Text>
-        )}
-        <Box marginY={1}>
-          <Text>{ti('project.contexts_count', language, { count: selectedProject.contextCount })}</Text>
-        </Box>
-        <Text color="gray" dimColor>
-          {t('project.created', language)} {new Date(selectedProject.createdAt).toLocaleString()}
-        </Text>
+        <SectionBox color="cyan">
+          {selectedProject.description && (
+            <Text color="gray">{selectedProject.description}</Text>
+          )}
+          <Box marginY={1}>
+            <Text>{ti('project.contexts_count', language, { count: selectedProject.contextCount })}</Text>
+          </Box>
+          <Text color="gray" dimColor>
+            {t('project.created', language)} {new Date(selectedProject.createdAt).toLocaleString()}
+          </Text>
+        </SectionBox>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {t('hint.esc_back', language)}
@@ -204,20 +207,22 @@ export function ProjectScreen({
       <Header title={t('project.title', language)} subtitle={ti('project.subtitle', language, { count: projects.length })} />
 
       {projects.length === 0 ? (
-        <Box marginY={1}>
+        <SectionBox color="gray">
           <Text color="gray">{t('project.empty', language)}</Text>
-        </Box>
+        </SectionBox>
       ) : (
-        <SelectInput
-          items={projectItems}
-          onSelect={(item) => {
-            const proj = projects.find(p => p.id === item.value);
-            if (proj) {
-              setSelectedProject(proj);
-              setMode('detail');
-            }
-          }}
-        />
+        <SectionBox color="cyan">
+          <SelectInput
+            items={projectItems}
+            onSelect={(item) => {
+              const proj = projects.find(p => p.id === item.value);
+              if (proj) {
+                setSelectedProject(proj);
+                setMode('detail');
+              }
+            }}
+          />
+        </SectionBox>
       )}
 
       {error && (

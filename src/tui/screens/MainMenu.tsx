@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
 
@@ -16,7 +17,7 @@ interface MenuItem {
   value: Screen | 'exit';
 }
 
-export function MainMenu({ navigate, onExit, language = 'ko' }: MainMenuProps): React.ReactElement {
+export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): React.ReactElement {
   const menuItems: MenuItem[] = [
     { label: `${t('menu.add_context', language)}`, value: 'add' },
     { label: `${t('menu.record_meeting', language)}`, value: 'record' },
@@ -48,9 +49,9 @@ export function MainMenu({ navigate, onExit, language = 'ko' }: MainMenuProps): 
         subtitle={t('menu.subtitle', language)}
       />
 
-      <Box marginY={1}>
+      <SectionBox color="cyan" marginY={1}>
         <SelectInput items={menuItems} onSelect={handleSelect} />
-      </Box>
+      </SectionBox>
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>

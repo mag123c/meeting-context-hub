@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t, ti } from '../../i18n/index.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
 import type { SearchResult } from '../../types/index.js';
@@ -22,7 +23,7 @@ export function SearchScreen({
   searchContextUseCase,
   onSelectContext,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: SearchScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('input');
   const [query, setQuery] = useState('');
@@ -90,9 +91,9 @@ export function SearchScreen({
             subtitle={ti('search.results_subtitle', language, { query, count: 0, method: searchMethod })}
           />
 
-          <Box marginY={1}>
+          <SectionBox color="yellow">
             <Text color="yellow">{t('search.no_results', language)}</Text>
-          </Box>
+          </SectionBox>
 
           <Box marginTop={1}>
             <Text color="gray" dimColor>
@@ -120,12 +121,12 @@ export function SearchScreen({
           subtitle={ti('search.results_subtitle', language, { query, count: results.length, method: searchMethod })}
         />
 
-        <Box marginY={1} flexDirection="column">
+        <SectionBox color="cyan">
           <SelectInput
             items={items}
             onSelect={(item) => onSelectContext(item.value)}
           />
-        </Box>
+        </SectionBox>
 
         <Box marginTop={1}>
           <Text color="gray" dimColor>
@@ -144,16 +145,13 @@ export function SearchScreen({
         subtitle={t('search.subtitle', language)}
       />
 
-      <Box marginY={1} flexDirection="column">
-        <Text bold>{t('search.label', language)}</Text>
-        <Box marginTop={1}>
-          <TextInput
-            value={query}
-            onChange={setQuery}
-            placeholder={t('search.placeholder', language)}
-          />
-        </Box>
-      </Box>
+      <SectionBox color="cyan" title={t('search.label', language)}>
+        <TextInput
+          value={query}
+          onChange={setQuery}
+          placeholder={t('search.placeholder', language)}
+        />
+      </SectionBox>
 
       {error && (
         <Box marginY={1}>

@@ -6,6 +6,7 @@ import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { ErrorDisplay } from '../components/ErrorDisplay.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import type { AddContextUseCase } from '../../core/usecases/add-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -26,7 +27,7 @@ export function AddContext({
   manageProjectUseCase,
   onNavigateToContext,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: AddContextProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -118,7 +119,9 @@ export function AddContext({
     return (
       <Box flexDirection="column" padding={1}>
         <Header title={t('add.title', language)} subtitle={t('add.select_project', language)} />
-        <SelectInput items={projectItems} onSelect={handleProjectSelect} />
+        <SectionBox color="cyan">
+          <SelectInput items={projectItems} onSelect={handleProjectSelect} />
+        </SectionBox>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {t('hint.esc_back', language)}
@@ -135,16 +138,13 @@ export function AddContext({
           title={t('add.title', language)}
           subtitle={selectedProjectId ? `${t('add.project_prefix', language)} ${projects.find(p => p.id === selectedProjectId)?.name}` : t('add.no_project', language)}
         />
-        <Box marginBottom={1}>
-          <Text color="gray">
-            {t('add.input_hint', language)}
-          </Text>
-        </Box>
-        <TextInput
-          value={input}
-          onChange={setInput}
-          placeholder={t('add.placeholder', language)}
-        />
+        <SectionBox color="cyan" title={t('add.input_hint', language)}>
+          <TextInput
+            value={input}
+            onChange={setInput}
+            placeholder={t('add.placeholder', language)}
+          />
+        </SectionBox>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {t('add.hint', language)}
@@ -167,27 +167,24 @@ export function AddContext({
     return (
       <Box flexDirection="column" padding={1}>
         <Header title={t('add.success_title', language)} subtitle={t('add.success_subtitle', language)} />
-        <ContextCard context={result} />
-        <Box marginTop={1}>
-          <Text color="green">{t('add.saved', language)}</Text>
-        </Box>
+        <SectionBox color="green">
+          <ContextCard context={result} />
+          <Box marginTop={1}>
+            <Text color="green">{t('add.saved', language)}</Text>
+          </Box>
+        </SectionBox>
 
         {/* Related Contexts */}
         {relatedContexts.length > 0 && (
-          <Box marginTop={1} flexDirection="column">
-            <Text bold color="cyan">
-              {t('add.related_contexts', language)} ({relatedContexts.length})
-            </Text>
+          <SectionBox title={`${t('add.related_contexts', language)} (${relatedContexts.length})`} color="cyan">
             {onNavigateToContext ? (
-              <Box marginTop={1}>
-                <SelectInput
-                  items={relatedContexts.map((r, i) => ({
-                    label: `${i + 1}. ${r.context.title} (${(r.score * 100).toFixed(0)}%)`,
-                    value: r.context.id,
-                  }))}
-                  onSelect={(item) => onNavigateToContext(item.value)}
-                />
-              </Box>
+              <SelectInput
+                items={relatedContexts.map((r, i) => ({
+                  label: `${i + 1}. ${r.context.title} (${(r.score * 100).toFixed(0)}%)`,
+                  value: r.context.id,
+                }))}
+                onSelect={(item) => onNavigateToContext(item.value)}
+              />
             ) : (
               relatedContexts.map((r, i) => (
                 <Text key={r.context.id} color="gray">
@@ -195,7 +192,7 @@ export function AddContext({
                 </Text>
               ))
             )}
-          </Box>
+          </SectionBox>
         )}
 
         <Box marginTop={1}>

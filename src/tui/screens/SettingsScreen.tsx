@@ -22,7 +22,7 @@ const configService = new ConfigService();
 export function SettingsScreen({
   goBack,
   onConfigChange,
-  language = 'ko',
+  language = 'en',
 }: SettingsScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('view');
   const [status, setStatus] = useState<ConfigStatus | null>(null);

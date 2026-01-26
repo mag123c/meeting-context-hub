@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
+import { SectionBox } from '../components/SectionBox.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -24,7 +25,7 @@ export function ListScreen({
   manageProjectUseCase,
   navigate,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: ListScreenProps): React.ReactElement {
   const [contexts, setContexts] = useState<Context[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -119,13 +120,13 @@ export function ListScreen({
       />
 
       {contexts.length === 0 ? (
-        <Box marginY={1}>
+        <SectionBox color="gray">
           <Text color="gray">{t('list.empty', language)}</Text>
-        </Box>
+        </SectionBox>
       ) : (
-        <Box flexDirection="column">
+        <SectionBox color="cyan">
           {contexts.map((context, index) => (
-            <Box key={context.id} flexDirection="column">
+            <Box key={context.id} flexDirection="column" marginBottom={index < contexts.length - 1 ? 1 : 0}>
               {index === selectedIndex && <Text color="cyan">&gt; </Text>}
               <ContextCard context={context} selected={index === selectedIndex} />
               <Text color="gray" dimColor>
@@ -133,7 +134,7 @@ export function ListScreen({
               </Text>
             </Box>
           ))}
-        </Box>
+        </SectionBox>
       )}
 
       <Box marginTop={1} flexDirection="column">

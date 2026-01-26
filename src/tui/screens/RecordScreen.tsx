@@ -34,7 +34,7 @@ export function RecordScreen({
   manageProjectUseCase,
   onNavigateToContext,
   goBack,
-  language = 'ko',
+  language = 'en',
 }: RecordScreenProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);

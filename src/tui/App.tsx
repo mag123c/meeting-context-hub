@@ -18,9 +18,12 @@ interface AppProps {
 }
 
 export function App({ onExit }: AppProps): React.ReactElement {
-  const { services, error, loading, needsConfig } = useServices();
+  const { services, config, error, loading, needsConfig } = useServices();
   const { screen, params, navigate, goBack } = useNavigation();
   const [reinitializing, setReinitializing] = useState(false);
+
+  // Get language from config, default to 'en'
+  const language = config?.language || 'en';
 
   const handleExit = useCallback(() => {
     cleanup();
@@ -56,6 +59,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
         <SettingsScreen
           goBack={handleExit}
           onConfigChange={handleConfigChange}
+          language={language}
         />
       </Box>
     );
@@ -84,7 +88,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
   // Route to appropriate screen
   switch (screen) {
     case 'main':
-      return <MainMenu navigate={navigate} onExit={handleExit} />;
+      return <MainMenu navigate={navigate} onExit={handleExit} language={language} />;
 
     case 'add':
       return (
@@ -93,6 +97,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           manageProjectUseCase={services.manageProject}
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
+          language={language}
         />
       );
 
@@ -103,6 +108,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           manageProjectUseCase={services.manageProject}
           navigate={navigate}
           goBack={goBack}
+          language={language}
         />
       );
 
@@ -115,6 +121,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           searchContextUseCase={services.searchContext}
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
+          language={language}
         />
       );
 
@@ -124,6 +131,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           manageProjectUseCase={services.manageProject}
           listContextsUseCase={services.listContexts}
           goBack={goBack}
+          language={language}
         />
       );
 
@@ -132,6 +140,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
         <SettingsScreen
           goBack={goBack}
           onConfigChange={handleConfigChange}
+          language={language}
         />
       );
 
@@ -141,6 +150,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           searchContextUseCase={services.searchContext}
           onSelectContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
+          language={language}
         />
       );
 
@@ -154,10 +164,11 @@ export function App({ onExit }: AppProps): React.ReactElement {
           manageProjectUseCase={services.manageProject}
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
+          language={language}
         />
       );
 
     default:
-      return <MainMenu navigate={navigate} onExit={handleExit} />;
+      return <MainMenu navigate={navigate} onExit={handleExit} language={language} />;
   }
 }
