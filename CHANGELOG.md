@@ -1,3 +1,10 @@
+## [2.6.3](https://github.com/mag123c/meeting-context-hub/compare/v2.6.2...v2.6.3) (2026-01-26)
+
+
+### Bug Fixes
+
+* remove auto-update, show banner notification only ([b94bee8](https://github.com/mag123c/meeting-context-hub/commit/b94bee8a378b1a26b2e315f2cfcac4ff353c6ae2))
+
 ## [2.6.2](https://github.com/mag123c/meeting-context-hub/compare/v2.6.1...v2.6.2) (2026-01-26)
 
 
