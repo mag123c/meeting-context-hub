@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/mag123c/meeting-context-hub/compare/v2.7.0...v2.7.1) (2026-01-26)
+
+
+### Bug Fixes
+
+* **tui:** restore medium-size MCH logo ([cf28015](https://github.com/mag123c/meeting-context-hub/commit/cf28015648e4a8ede83be4f41d7ec78f67cfbf5b))
+
 # [2.7.0](https://github.com/mag123c/meeting-context-hub/compare/v2.6.3...v2.7.0) (2026-01-26)
 
 
