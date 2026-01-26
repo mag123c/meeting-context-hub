@@ -138,7 +138,7 @@ import { MultilineInput } from '../components/MultilineInput.js';
 - `Arrow keys` - Cursor navigation
 - `Backspace` - Delete character/merge lines
 
-## Version & Auto-Update
+## Version & Update
 
 ### Version Module (`src/version.ts`)
 
@@ -147,36 +147,42 @@ Provides version info with path resolution for both `src/` and `dist/`:
 ```typescript
 import { VERSION, PACKAGE_NAME } from '../version.js';
 
-// VERSION: "2.6.2"
+// VERSION: "2.7.2"
 // PACKAGE_NAME: "meeting-context-hub"
 ```
 
-### Auto-Update (`src/utils/update-notifier.ts`)
+### Update Banner (`src/tui/components/UpdateBanner.tsx`)
 
-App checks for updates on every startup and auto-installs if new version available:
+Shows update notification in main menu. Press `U` to update:
 
 ```typescript
-import { autoUpdate, checkForUpdates } from '../utils/update-notifier.js';
+import { UpdateBanner } from '../components/UpdateBanner.js';
 
-// Auto-update (used in index.tsx)
-const updated = autoUpdate();
-if (updated) {
-  execSync('mch', { stdio: 'inherit' });
-  process.exit(0);
-}
-
-// Manual check (used in App.tsx for banner)
-const updateInfo = checkForUpdates();
-// { current: "2.6.1", latest: "2.6.2", type: "patch" }
+{updateInfo && (
+  <UpdateBanner
+    currentVersion={updateInfo.current}
+    latestVersion={updateInfo.latest}
+    updateCommand={getUpdateCommand()}
+  />
+)}
 ```
+
+**States:**
+- Default: Shows version diff + "Press U to update"
+- Updating: Shows "Updating..."
+- Success: Shows "Updated! Press Ctrl+C and run `mch` to restart"
+- Error: Shows error + manual command
 
 ### MainMenu Logo
 
-ASCII art logo with version display:
+ASCII art logo (6 lines) with version:
 
 ```
- ███╗   ███╗     ██████╗     ██╗  ██╗
- ████╗ ████║    ██╔════╝     ██║  ██║
- ...
-Meeting Context Hub v2.6.2
+ ███╗   ███╗  ██████╗ ██╗  ██╗
+ ████╗ ████║ ██╔════╝ ██║  ██║
+ ██╔████╔██║ ██║      ███████║
+ ██║╚██╔╝██║ ██║      ██╔══██║
+ ██║ ╚═╝ ██║ ╚██████╗ ██║  ██║
+ ╚═╝     ╚═╝  ╚═════╝ ╚═╝  ╚═╝
+Meeting Context Hub v2.7.2
 ```
