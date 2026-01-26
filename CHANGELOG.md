@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/mag123c/meeting-context-hub/compare/v2.2.0...v2.3.0) (2026-01-26)
+
+
+### Features
+
+* add update notification on app startup ([ec7c16c](https://github.com/mag123c/meeting-context-hub/commit/ec7c16cb07ae64829c2aab7b7e3b18c8b4e4195c))
+
 # [2.2.0](https://github.com/mag123c/meeting-context-hub/compare/v2.1.1...v2.2.0) (2026-01-26)
 
 
