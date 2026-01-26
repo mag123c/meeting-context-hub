@@ -114,38 +114,29 @@ export function MultilineInput({
 
       // Regular character input (including pasted text)
       if (input && !key.ctrl && !key.meta) {
-        // Handle pasted multiline text
-        if (input.includes('\n') || input.includes('\r')) {
-          const pastedLines = input.split(/\r?\n/);
-          const currentLine = lines[cursorRow] || '';
-          const before = currentLine.slice(0, cursorCol);
-          const after = currentLine.slice(cursorCol);
+        const currentLine = lines[cursorRow] || '';
+        const before = currentLine.slice(0, cursorCol);
+        const after = currentLine.slice(cursorCol);
 
-          const newLines = [
-            ...lines.slice(0, cursorRow),
-            before + pastedLines[0],
-            ...pastedLines.slice(1, -1),
-            pastedLines[pastedLines.length - 1] + after,
-            ...lines.slice(cursorRow + 1),
-          ];
+        // Insert input at cursor position
+        const newText = before + input + after;
+        const newLines = [
+          ...lines.slice(0, cursorRow),
+          ...newText.split('\n'),
+          ...lines.slice(cursorRow + 1),
+        ];
 
-          // Handle case where paste is single line with trailing newline
-          if (pastedLines.length === 2 && pastedLines[1] === '') {
-            newLines.pop();
-            newLines.push(after);
-          }
-
-          onChange(newLines.join('\n'));
-          setCursorRow(cursorRow + pastedLines.length - 1);
-          setCursorCol(pastedLines[pastedLines.length - 1].length);
-        } else {
-          // Single character
-          const currentLine = lines[cursorRow] || '';
-          const newLine = currentLine.slice(0, cursorCol) + input + currentLine.slice(cursorCol);
-          const newLines = [...lines.slice(0, cursorRow), newLine, ...lines.slice(cursorRow + 1)];
-          onChange(newLines.join('\n'));
-          setCursorCol(cursorCol + input.length);
+        // Remove trailing empty line if original was empty
+        if (lines.length === 1 && lines[0] === '' && newLines[newLines.length - 1] === '') {
+          newLines.pop();
         }
+
+        onChange(newLines.join('\n'));
+
+        // Update cursor position
+        const insertedLines = (before + input).split('\n');
+        setCursorRow(cursorRow + insertedLines.length - 1);
+        setCursorCol(insertedLines[insertedLines.length - 1].length);
       }
     },
     { isActive: focus }
