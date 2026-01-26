@@ -61,6 +61,19 @@
         "storage/ - SQLite adapter",
         "config/ - Environment and file-based config"
       ]
+    },
+    {
+      "name": "i18n",
+      "path": "src/i18n/",
+      "responsibility": "Internationalization - bilingual UI strings (ko/en)",
+      "components": [
+        "index.ts - t() and ti() helper functions",
+        "strings.ts - ~95 UI string catalog"
+      ],
+      "usage": {
+        "t": "t(key, lang) - Simple translation",
+        "ti": "ti(key, lang, params) - Translation with interpolation"
+      }
     }
   ],
 
