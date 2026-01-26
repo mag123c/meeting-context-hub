@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/mag123c/meeting-context-hub/compare/v2.6.0...v2.6.1) (2026-01-26)
+
+
+### Bug Fixes
+
+* resolve package.json path issue for npm distribution ([4386604](https://github.com/mag123c/meeting-context-hub/commit/43866046c8bb7a54fa8045edb663fae9f7d293aa))
+
 # [2.6.0](https://github.com/mag123c/meeting-context-hub/compare/v2.5.0...v2.6.0) (2026-01-26)
 
 
