@@ -288,17 +288,21 @@ TUI/GUI 공용 설정 모듈 구현. 환경변수 export 없이 앱 내에서 AP
     [x] ErrorText component (inline)
     [x] All screens updated with error handling
 
-[ ] Settings Screen Enhancement
-    [ ] 언어 선택 기능
-    [ ] DB 경로 변경
+[x] Settings Screen Enhancement
+    [x] 언어 선택 기능
+    [x] DB 경로 변경
 
-[ ] i18n (pending)
-    [ ] 메시지 추출
-    [ ] 완전한 한국어/영어 번역
+[x] i18n
+    [x] 메시지 추출 (~95개 문자열)
+    [x] 완전한 한국어/영어 번역
+    [x] t() / ti() 헬퍼 함수
+    [x] 모든 TUI 화면 적용
 
-[ ] Core 분리
-    [ ] TUI 의존성 없는 core 패키지 확인
-    [ ] GUI용 entry point 준비
+[x] Core 분리
+    [x] TUI 의존성 없는 core 패키지 확인
+    [x] GUI용 entry point 준비 (core/index.ts)
+    [x] GUI_INTEGRATION.md 문서 작성
+    [x] verify:core 스크립트 추가
 ```
 
 ### Acceptance Criteria
@@ -308,8 +312,8 @@ TUI/GUI 공용 설정 모듈 구현. 환경변수 export 없이 앱 내에서 AP
 - [x] 네트워크 오류 시 재시도 옵션 제공
 - [x] sox 미설치 시 설치 안내 표시
 - [x] 한국어/영어 에러 메시지 지원
-- [ ] 설정 화면에서 언어 전환 가능
-- [ ] core 로직을 GUI에서 import 가능
+- [x] 설정 화면에서 언어 전환 가능
+- [x] core 로직을 GUI에서 import 가능
 
 ---
 

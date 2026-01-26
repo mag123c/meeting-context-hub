@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { TextInput } from '../components/TextInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { t, ti } from '../../i18n/index.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
 import type { Project } from '../../types/index.js';
@@ -118,8 +119,8 @@ export function ProjectScreen({
   if (loading) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Projects" />
-        <Spinner message="Loading projects..." />
+        <Header title={t('project.title', language)} />
+        <Spinner message={t('project.loading', language)} />
       </Box>
     );
   }
@@ -127,35 +128,35 @@ export function ProjectScreen({
   if (mode === 'create') {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Create Project" />
+        <Header title={t('project.create_title', language)} />
 
         {creating ? (
-          <Spinner message="Creating project..." />
+          <Spinner message={t('project.creating', language)} />
         ) : (
           <>
             {createStep === 'name' ? (
               <TextInput
-                label="Project Name:"
+                label={t('project.name_label', language)}
                 value={newName}
                 onChange={setNewName}
-                placeholder="Enter project name..."
+                placeholder={t('project.name_placeholder', language)}
               />
             ) : (
               <>
-                <Text color="gray">Name: {newName}</Text>
+                <Text color="gray">{t('project.name_label', language)} {newName}</Text>
                 <Box marginTop={1}>
                   <TextInput
-                    label="Description (optional):"
+                    label={t('project.desc_label', language)}
                     value={newDescription}
                     onChange={setNewDescription}
-                    placeholder="Enter description... (Enter to skip)"
+                    placeholder={t('project.desc_placeholder', language)}
                   />
                 </Box>
               </>
             )}
             <Box marginTop={1}>
               <Text color="gray" dimColor>
-                Enter to continue | ESC to cancel
+                {t('project.hint_create', language)}
               </Text>
             </Box>
           </>
@@ -178,14 +179,14 @@ export function ProjectScreen({
           <Text color="gray">{selectedProject.description}</Text>
         )}
         <Box marginY={1}>
-          <Text>Contexts: {selectedProject.contextCount}</Text>
+          <Text>{ti('project.contexts_count', language, { count: selectedProject.contextCount })}</Text>
         </Box>
         <Text color="gray" dimColor>
-          Created: {new Date(selectedProject.createdAt).toLocaleString()}
+          {t('project.created', language)} {new Date(selectedProject.createdAt).toLocaleString()}
         </Text>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            Press ESC to go back
+            {t('hint.esc_back', language)}
           </Text>
         </Box>
       </Box>
@@ -194,17 +195,17 @@ export function ProjectScreen({
 
   // List mode
   const projectItems = projects.map(p => ({
-    label: `${p.name} (${p.contextCount} contexts)`,
+    label: `${p.name} (${ti('project.contexts_count', language, { count: p.contextCount })})`,
     value: p.id,
   }));
 
   return (
     <Box flexDirection="column" padding={1}>
-      <Header title="Projects" subtitle={`${projects.length} project(s)`} />
+      <Header title={t('project.title', language)} subtitle={ti('project.subtitle', language, { count: projects.length })} />
 
       {projects.length === 0 ? (
         <Box marginY={1}>
-          <Text color="gray">No projects yet. Press n to create one!</Text>
+          <Text color="gray">{t('project.empty', language)}</Text>
         </Box>
       ) : (
         <SelectInput
@@ -227,7 +228,7 @@ export function ProjectScreen({
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          n: New project | Enter: View details | ESC: Back
+          {t('project.hint_list', language)}
         </Text>
       </Box>
     </Box>

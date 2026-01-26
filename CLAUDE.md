@@ -38,6 +38,7 @@ src/
 ├── tui/                # TUI layer (screens, components, hooks)
 ├── core/               # Business logic (usecases, services, domain)
 ├── adapters/           # External dependencies (ai, storage, config)
+├── i18n/               # Internationalization (t(), ti() helpers, ~95 strings)
 └── types/              # Shared types + Error system (errors.ts)
 ```
 
@@ -78,10 +79,11 @@ Centralized error system:
 ## Commands
 
 ```bash
-pnpm dev      # Run TUI (development)
-pnpm build    # Build for production
-pnpm test     # Run tests
-pnpm lint     # Lint check
+pnpm dev         # Run TUI (development)
+pnpm build       # Build for production
+pnpm test        # Run tests
+pnpm lint        # Lint check
+pnpm verify:core # Verify core module has no UI imports
 ```
 
 ## Configuration
@@ -91,9 +93,9 @@ pnpm lint     # Lint check
 ANTHROPIC_API_KEY=sk-ant-xxx   # Claude API
 OPENAI_API_KEY=sk-xxx          # OpenAI (embedding, whisper)
 
-# Optional
+# Optional (can also be changed in Settings screen)
 MCH_DB_PATH=~/.mch/data.db     # Database location
-MCH_LANGUAGE=ko                # UI language (ko/en)
+MCH_LANGUAGE=ko                # UI language: 'ko' (Korean) or 'en' (English)
 ```
 
 ## Documentation
@@ -103,6 +105,7 @@ MCH_LANGUAGE=ko                # UI language (ko/en)
 | `docs/PRD.md` | Product requirements |
 | `docs/ARCHITECTURE.md` | Architecture & technical design |
 | `docs/ROADMAP.md` | Version-by-version implementation plan |
+| `docs/GUI_INTEGRATION.md` | Guide for GUI integration with core module |
 
 ## AI Context
 

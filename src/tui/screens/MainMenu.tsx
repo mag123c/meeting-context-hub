@@ -2,11 +2,13 @@ import React from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
+import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
 
 interface MainMenuProps {
   navigate: (screen: Screen) => void;
   onExit: () => void;
+  language?: 'ko' | 'en';
 }
 
 interface MenuItem {
@@ -14,17 +16,17 @@ interface MenuItem {
   value: Screen | 'exit';
 }
 
-const menuItems: MenuItem[] = [
-  { label: '📝 Add Context', value: 'add' },
-  { label: '🎙️ Record Meeting', value: 'record' },
-  { label: '🔍 Search', value: 'search' },
-  { label: '📋 List Contexts', value: 'list' },
-  { label: '📁 Projects', value: 'projects' },
-  { label: '⚙️  Settings', value: 'settings' },
-  { label: '🚪 Exit', value: 'exit' },
-];
+export function MainMenu({ navigate, onExit, language = 'ko' }: MainMenuProps): React.ReactElement {
+  const menuItems: MenuItem[] = [
+    { label: `${t('menu.add_context', language)}`, value: 'add' },
+    { label: `${t('menu.record_meeting', language)}`, value: 'record' },
+    { label: `${t('menu.search', language)}`, value: 'search' },
+    { label: `${t('menu.list_contexts', language)}`, value: 'list' },
+    { label: `${t('menu.projects', language)}`, value: 'projects' },
+    { label: `${t('menu.settings', language)}`, value: 'settings' },
+    { label: `${t('menu.exit', language)}`, value: 'exit' },
+  ];
 
-export function MainMenu({ navigate, onExit }: MainMenuProps): React.ReactElement {
   const handleSelect = (item: MenuItem) => {
     if (item.value === 'exit') {
       onExit();
@@ -42,8 +44,8 @@ export function MainMenu({ navigate, onExit }: MainMenuProps): React.ReactElemen
   return (
     <Box flexDirection="column" padding={1}>
       <Header
-        title="Meeting Context Hub"
-        subtitle="Capture discussions, extract insights"
+        title={t('menu.title', language)}
+        subtitle={t('menu.subtitle', language)}
       />
 
       <Box marginY={1}>
@@ -52,7 +54,7 @@ export function MainMenu({ navigate, onExit }: MainMenuProps): React.ReactElemen
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Use arrow keys to navigate, Enter to select, q to quit
+          {t('menu.hint', language)}
         </Text>
       </Box>
     </Box>

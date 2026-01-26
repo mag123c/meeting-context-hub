@@ -6,6 +6,7 @@ import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { ErrorDisplay } from '../components/ErrorDisplay.js';
+import { t } from '../../i18n/index.js';
 import type { RecordContextUseCase } from '../../core/usecases/record-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { Project, Context, SearchResult } from '../../types/index.js';
@@ -181,25 +182,25 @@ export function RecordScreen({
   if (loading) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Record Meeting" />
-        <Spinner message="Loading projects..." />
+        <Header title={t('record.title', language)} />
+        <Spinner message={t('add.loading_projects', language)} />
       </Box>
     );
   }
 
   if (step === 'select-project') {
     const projectItems = [
-      { label: '(No Project)', value: 'none' },
+      { label: t('add.no_project', language), value: 'none' },
       ...projects.map(p => ({ label: p.name, value: p.id })),
     ];
 
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Record Meeting" subtitle="Select a project (or none)" />
+        <Header title={t('record.title', language)} subtitle={t('record.select_project', language)} />
         <SelectInput items={projectItems} onSelect={handleProjectSelect} />
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            ESC to go back
+            {t('hint.esc_back', language)}
           </Text>
         </Box>
       </Box>
@@ -210,22 +211,22 @@ export function RecordScreen({
     return (
       <Box flexDirection="column" padding={1}>
         <Header
-          title="Record Meeting"
-          subtitle={selectedProjectId ? `Project: ${projects.find(p => p.id === selectedProjectId)?.name}` : 'No project'}
+          title={t('record.title', language)}
+          subtitle={selectedProjectId ? `${t('add.project_prefix', language)} ${projects.find(p => p.id === selectedProjectId)?.name}` : t('add.no_project', language)}
         />
 
         <Box marginY={2} flexDirection="column" alignItems="center">
           <Text color="cyan" bold>
-            Ready to Record
+            {t('record.ready', language)}
           </Text>
           <Box marginTop={1}>
-            <Text>Press SPACE to start recording</Text>
+            <Text>{t('record.start_hint', language)}</Text>
           </Box>
         </Box>
 
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            SPACE to start | ESC to go back
+            {t('record.ready_hint', language)}
           </Text>
         </Box>
       </Box>
@@ -235,11 +236,11 @@ export function RecordScreen({
   if (step === 'recording') {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Recording..." subtitle="Speak clearly into your microphone" />
+        <Header title={t('record.recording', language)} subtitle={t('record.recording_subtitle', language)} />
 
         <Box marginY={2} flexDirection="column" alignItems="center">
           <Text color="red" bold>
-            Recording
+            {t('record.recording', language)}
           </Text>
           <Box marginTop={1}>
             <Text bold color="yellow">
@@ -250,7 +251,7 @@ export function RecordScreen({
 
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            SPACE to stop | ESC to cancel
+            {t('record.stop_hint', language)}
           </Text>
         </Box>
       </Box>
@@ -260,8 +261,8 @@ export function RecordScreen({
   if (step === 'transcribing') {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Processing" />
-        <Spinner message="Transcribing audio with Whisper..." />
+        <Header title={t('record.processing', language)} />
+        <Spinner message={t('record.transcribing', language)} />
       </Box>
     );
   }
@@ -270,24 +271,24 @@ export function RecordScreen({
     return (
       <Box flexDirection="column" padding={1}>
         <Header
-          title="Review Transcription"
-          subtitle="Edit if needed, then submit"
+          title={t('record.review_title', language)}
+          subtitle={t('record.review_subtitle', language)}
         />
 
         <Box marginY={1} flexDirection="column">
-          <Text bold>Transcription:</Text>
+          <Text bold>{t('record.transcription_label', language)}</Text>
           <Box marginTop={1} borderStyle="round" borderColor="gray" padding={1}>
             <TextInput
               value={editedTranscription}
               onChange={setEditedTranscription}
-              placeholder="(transcription will appear here)"
+              placeholder={t('record.transcription_placeholder', language)}
             />
           </Box>
         </Box>
 
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            Ctrl+Enter to extract | ESC to re-record
+            {t('record.review_hint', language)}
           </Text>
         </Box>
       </Box>
@@ -297,8 +298,8 @@ export function RecordScreen({
   if (step === 'extracting') {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Processing" />
-        <Spinner message="Extracting insights with AI..." />
+        <Header title={t('record.processing', language)} />
+        <Spinner message={t('record.extracting', language)} />
       </Box>
     );
   }
@@ -306,17 +307,17 @@ export function RecordScreen({
   if (step === 'result' && result) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Context Added!" subtitle="Successfully extracted and saved" />
+        <Header title={t('record.success_title', language)} subtitle={t('record.success_subtitle', language)} />
         <ContextCard context={result} />
         <Box marginTop={1}>
-          <Text color="green">Context saved successfully!</Text>
+          <Text color="green">{t('record.saved', language)}</Text>
         </Box>
 
         {/* Related Contexts */}
         {relatedContexts.length > 0 && (
           <Box marginTop={1} flexDirection="column">
             <Text bold color="cyan">
-              Related Contexts ({relatedContexts.length})
+              {t('add.related_contexts', language)} ({relatedContexts.length})
             </Text>
             {onNavigateToContext ? (
               <Box marginTop={1}>
@@ -341,9 +342,9 @@ export function RecordScreen({
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {relatedContexts.length > 0 && onNavigateToContext
-              ? 'Enter to view related | '
+              ? t('add.hint_related', language)
               : ''}
-            Press ESC to return to menu
+            {t('add.hint_result', language)}
           </Text>
         </Box>
       </Box>
@@ -353,7 +354,7 @@ export function RecordScreen({
   if (step === 'error' && error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Error" />
+        <Header title={t('common.error', language)} />
         <ErrorDisplay
           error={error}
           language={language}
@@ -366,8 +367,8 @@ export function RecordScreen({
   // Fallback
   return (
     <Box flexDirection="column" padding={1}>
-      <Header title="Record Meeting" />
-      <Text color="gray">Loading...</Text>
+      <Header title={t('record.title', language)} />
+      <Text color="gray">{t('common.loading', language)}</Text>
     </Box>
   );
 }

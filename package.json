@@ -34,7 +34,8 @@
     "lint:fix": "eslint src/ --fix",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "verify:core": "! grep -r \"from 'ink'\\|from 'react'\\|from \\\"ink\\\"\\|from \\\"react\\\"\" src/core/ --include='*.ts' --include='*.tsx' || echo 'Core is clean'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",

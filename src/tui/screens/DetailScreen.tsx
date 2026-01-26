@@ -3,6 +3,7 @@ import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
+import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
@@ -15,6 +16,7 @@ interface DetailScreenProps {
   searchContextUseCase?: SearchContextUseCase;
   onNavigateToContext?: (contextId: string) => void;
   goBack: () => void;
+  language?: 'ko' | 'en';
 }
 
 export function DetailScreen({
@@ -24,6 +26,7 @@ export function DetailScreen({
   searchContextUseCase,
   onNavigateToContext,
   goBack,
+  language = 'ko',
 }: DetailScreenProps): React.ReactElement {
   const [context, setContext] = useState<Context | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -37,7 +40,7 @@ export function DetailScreen({
       try {
         const ctx = await getContextUseCase.execute(contextId);
         if (!ctx) {
-          setError('Context not found');
+          setError(t('detail.not_found', language));
           setLoading(false);
           return;
         }
@@ -65,7 +68,7 @@ export function DetailScreen({
       }
     }
     load();
-  }, [contextId, getContextUseCase, manageProjectUseCase, searchContextUseCase]);
+  }, [contextId, getContextUseCase, manageProjectUseCase, searchContextUseCase, language]);
 
   useInput((input, key) => {
     if (key.escape) {
@@ -86,7 +89,7 @@ export function DetailScreen({
   if (loading) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Spinner message="Loading context..." />
+        <Spinner message={t('detail.loading', language)} />
       </Box>
     );
   }
@@ -94,11 +97,11 @@ export function DetailScreen({
   if (error || !context) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Error" />
-        <Text color="red">{error || 'Context not found'}</Text>
+        <Header title={t('common.error', language)} />
+        <Text color="red">{error || t('detail.not_found', language)}</Text>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            Press ESC to go back
+            {t('hint.esc_back', language)}
           </Text>
         </Box>
       </Box>
@@ -109,19 +112,19 @@ export function DetailScreen({
     <Box flexDirection="column" padding={1}>
       <Header
         title={context.title}
-        subtitle={`Project: ${project?.name || 'Uncategorized'} | ${new Date(context.createdAt).toLocaleString()}`}
+        subtitle={`${t('list.project', language)} ${project?.name || t('list.uncategorized', language)} | ${new Date(context.createdAt).toLocaleString()}`}
       />
 
       {/* Summary */}
       <Box marginY={1} flexDirection="column">
-        <Text bold color="cyan">Summary</Text>
+        <Text bold color="cyan">{t('detail.summary', language)}</Text>
         <Text>{context.summary}</Text>
       </Box>
 
       {/* Decisions */}
       {context.decisions.length > 0 && (
         <Box marginY={1} flexDirection="column">
-          <Text bold color="green">Decisions ({context.decisions.length})</Text>
+          <Text bold color="green">{t('detail.decisions', language)} ({context.decisions.length})</Text>
           {context.decisions.map((decision, i) => (
             <Text key={i}>  • {decision}</Text>
           ))}
@@ -131,12 +134,12 @@ export function DetailScreen({
       {/* Action Items */}
       {context.actionItems.length > 0 && (
         <Box marginY={1} flexDirection="column">
-          <Text bold color="yellow">Action Items ({context.actionItems.length})</Text>
+          <Text bold color="yellow">{t('detail.action_items', language)} ({context.actionItems.length})</Text>
           {context.actionItems.map((item, i) => (
             <Box key={i} flexDirection="column">
               <Text>  • {item.task}</Text>
-              {item.assignee && <Text color="gray">    Assignee: {item.assignee}</Text>}
-              {item.dueDate && <Text color="gray">    Due: {item.dueDate}</Text>}
+              {item.assignee && <Text color="gray">    {t('detail.assignee', language)} {item.assignee}</Text>}
+              {item.dueDate && <Text color="gray">    {t('detail.due_date', language)} {item.dueDate}</Text>}
             </Box>
           ))}
         </Box>
@@ -145,7 +148,7 @@ export function DetailScreen({
       {/* Policies */}
       {context.policies.length > 0 && (
         <Box marginY={1} flexDirection="column">
-          <Text bold color="blue">Policies ({context.policies.length})</Text>
+          <Text bold color="blue">{t('detail.policies', language)} ({context.policies.length})</Text>
           {context.policies.map((policy, i) => (
             <Text key={i}>  • {policy}</Text>
           ))}
@@ -155,7 +158,7 @@ export function DetailScreen({
       {/* Open Questions */}
       {context.openQuestions.length > 0 && (
         <Box marginY={1} flexDirection="column">
-          <Text bold color="magenta">Open Questions ({context.openQuestions.length})</Text>
+          <Text bold color="magenta">{t('detail.open_questions', language)} ({context.openQuestions.length})</Text>
           {context.openQuestions.map((question, i) => (
             <Text key={i}>  • {question}</Text>
           ))}
@@ -165,7 +168,7 @@ export function DetailScreen({
       {/* Tags */}
       {context.tags.length > 0 && (
         <Box marginY={1}>
-          <Text bold>Tags: </Text>
+          <Text bold>{t('detail.tags', language)} </Text>
           <Text color="magenta">#{context.tags.join(' #')}</Text>
         </Box>
       )}
@@ -174,17 +177,17 @@ export function DetailScreen({
       {relatedContexts.length > 0 && !showRelated && (
         <Box marginY={1} flexDirection="column">
           <Text bold color="cyan">
-            Related Contexts ({relatedContexts.length})
+            {t('detail.related', language)} ({relatedContexts.length})
           </Text>
           <Text color="gray" dimColor>
-            Press 'r' to view related contexts
+            {t('detail.hint_related', language)}
           </Text>
         </Box>
       )}
 
       {showRelated && relatedContexts.length > 0 && (
         <Box marginY={1} flexDirection="column">
-          <Text bold color="cyan">Related Contexts</Text>
+          <Text bold color="cyan">{t('detail.related', language)}</Text>
           <Box marginTop={1}>
             <SelectInput
               items={relatedContexts.map((result, i) => ({
@@ -203,9 +206,9 @@ export function DetailScreen({
 
       <Box marginTop={1} borderStyle="single" borderColor="gray" paddingX={1}>
         <Text color="gray" dimColor>
-          {showRelated ? 'Enter to view | ' : ''}
-          {relatedContexts.length > 0 && !showRelated ? "r for related | " : ''}
-          ESC to go back
+          {showRelated ? t('detail.hint_view_related', language) : ''}
+          {relatedContexts.length > 0 && !showRelated ? t('detail.hint_r_related', language) : ''}
+          {t('detail.hint', language)}
         </Text>
       </Box>
     </Box>

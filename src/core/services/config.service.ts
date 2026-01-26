@@ -3,6 +3,7 @@ import {
   getConfigStatus,
   validateApiKeyFormat,
   setApiKeyInFile,
+  saveFileConfig,
   type Config,
   type ConfigStatus,
 } from '../../adapters/config/index.js';
@@ -26,6 +27,38 @@ export class ConfigService {
    */
   getConfigStatus(): ConfigStatus {
     return getConfigStatus();
+  }
+
+  /**
+   * Set a config value (language or dbPath)
+   */
+  async setConfigValue<K extends 'language' | 'dbPath'>(
+    key: K,
+    value: Config[K]
+  ): Promise<{ success: boolean; error?: string }> {
+    // Validate
+    if (key === 'language') {
+      if (value !== 'ko' && value !== 'en') {
+        return { success: false, error: 'Invalid language. Must be "ko" or "en".' };
+      }
+    }
+
+    if (key === 'dbPath') {
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        return { success: false, error: 'Database path cannot be empty.' };
+      }
+    }
+
+    // Save to file
+    try {
+      saveFileConfig({ [key]: value });
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to save config',
+      };
+    }
   }
 
   /**

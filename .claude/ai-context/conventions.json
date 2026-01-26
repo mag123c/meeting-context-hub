@@ -96,6 +96,27 @@
     ]
   },
 
+  "internationalization": {
+    "module": "src/i18n/",
+    "functions": {
+      "t": {
+        "signature": "t(key: StringKey, lang: Language = 'ko'): string",
+        "description": "Simple translation helper"
+      },
+      "ti": {
+        "signature": "ti(key: StringKey, lang: Language, params: Record<string, string | number>): string",
+        "description": "Translation with parameter interpolation"
+      }
+    },
+    "languages": ["ko", "en"],
+    "stringLocation": "src/i18n/strings.ts",
+    "rules": [
+      "Use t() for static strings",
+      "Use ti() for strings with dynamic values",
+      "String keys follow dot notation: 'scope.key' (e.g., 'menu.title', 'settings.language')"
+    ]
+  },
+
   "testing": {
     "framework": "vitest",
     "location": "*.test.ts alongside source files",

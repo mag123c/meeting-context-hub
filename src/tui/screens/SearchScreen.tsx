@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { t, ti } from '../../i18n/index.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
 import type { SearchResult } from '../../types/index.js';
 
@@ -32,7 +33,7 @@ export function SearchScreen({
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
-      setError(new Error(language === 'ko' ? '검색어를 입력해주세요' : 'Please enter a search query'));
+      setError(new Error(t('search.empty_query', language)));
       return;
     }
 
@@ -74,8 +75,8 @@ export function SearchScreen({
   if (searching) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Search" subtitle="Searching contexts..." />
-        <Spinner message="Searching..." />
+        <Header title={t('search.title', language)} subtitle={t('search.searching', language)} />
+        <Spinner message={t('search.searching', language)} />
       </Box>
     );
   }
@@ -85,17 +86,17 @@ export function SearchScreen({
       return (
         <Box flexDirection="column" padding={1}>
           <Header
-            title="Search Results"
-            subtitle={`Query: "${query}" (${searchMethod})`}
+            title={t('search.results_title', language)}
+            subtitle={ti('search.results_subtitle', language, { query, count: 0, method: searchMethod })}
           />
 
           <Box marginY={1}>
-            <Text color="yellow">No results found</Text>
+            <Text color="yellow">{t('search.no_results', language)}</Text>
           </Box>
 
           <Box marginTop={1}>
             <Text color="gray" dimColor>
-              Press ESC to search again
+              {t('search.hint_results', language)}
             </Text>
           </Box>
         </Box>
@@ -115,8 +116,8 @@ export function SearchScreen({
     return (
       <Box flexDirection="column" padding={1}>
         <Header
-          title="Search Results"
-          subtitle={`Query: "${query}" | ${results.length} results (${searchMethod})`}
+          title={t('search.results_title', language)}
+          subtitle={ti('search.results_subtitle', language, { query, count: results.length, method: searchMethod })}
         />
 
         <Box marginY={1} flexDirection="column">
@@ -128,7 +129,7 @@ export function SearchScreen({
 
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            Enter to view | ESC to search again
+            {t('search.hint_results', language)}
           </Text>
         </Box>
       </Box>
@@ -139,17 +140,17 @@ export function SearchScreen({
   return (
     <Box flexDirection="column" padding={1}>
       <Header
-        title="Search Contexts"
-        subtitle="Enter keywords or a question to find related contexts"
+        title={t('search.title', language)}
+        subtitle={t('search.subtitle', language)}
       />
 
       <Box marginY={1} flexDirection="column">
-        <Text bold>Search Query:</Text>
+        <Text bold>{t('search.label', language)}</Text>
         <Box marginTop={1}>
           <TextInput
             value={query}
             onChange={setQuery}
-            placeholder="e.g., payment API, authentication flow..."
+            placeholder={t('search.placeholder', language)}
           />
         </Box>
       </Box>
@@ -162,7 +163,7 @@ export function SearchScreen({
 
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Enter to search | ESC to go back
+          {t('search.hint_input', language)}
         </Text>
       </Box>
     </Box>

@@ -6,6 +6,7 @@ import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { ErrorDisplay } from '../components/ErrorDisplay.js';
+import { t } from '../../i18n/index.js';
 import type { AddContextUseCase } from '../../core/usecases/add-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { Project, Context, SearchResult } from '../../types/index.js';
@@ -102,25 +103,25 @@ export function AddContext({
   if (loading) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Add Context" />
-        <Spinner message="Loading projects..." />
+        <Header title={t('add.title', language)} />
+        <Spinner message={t('add.loading_projects', language)} />
       </Box>
     );
   }
 
   if (step === 'select-project') {
     const projectItems = [
-      { label: '(No Project)', value: 'none' },
+      { label: t('add.no_project', language), value: 'none' },
       ...projects.map(p => ({ label: p.name, value: p.id })),
     ];
 
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Add Context" subtitle="Select a project (or none)" />
+        <Header title={t('add.title', language)} subtitle={t('add.select_project', language)} />
         <SelectInput items={projectItems} onSelect={handleProjectSelect} />
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            ESC to go back
+            {t('hint.esc_back', language)}
           </Text>
         </Box>
       </Box>
@@ -131,22 +132,22 @@ export function AddContext({
     return (
       <Box flexDirection="column" padding={1}>
         <Header
-          title="Add Context"
-          subtitle={selectedProjectId ? `Project: ${projects.find(p => p.id === selectedProjectId)?.name}` : 'No project'}
+          title={t('add.title', language)}
+          subtitle={selectedProjectId ? `${t('add.project_prefix', language)} ${projects.find(p => p.id === selectedProjectId)?.name}` : t('add.no_project', language)}
         />
         <Box marginBottom={1}>
           <Text color="gray">
-            Enter your meeting notes or discussion (Ctrl+Enter to submit):
+            {t('add.input_hint', language)}
           </Text>
         </Box>
         <TextInput
           value={input}
           onChange={setInput}
-          placeholder="Type your meeting notes here..."
+          placeholder={t('add.placeholder', language)}
         />
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            Ctrl+Enter to extract | ESC to go back
+            {t('add.hint', language)}
           </Text>
         </Box>
       </Box>
@@ -156,8 +157,8 @@ export function AddContext({
   if (step === 'extracting') {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Add Context" />
-        <Spinner message="Extracting insights with AI..." />
+        <Header title={t('add.title', language)} />
+        <Spinner message={t('add.extracting', language)} />
       </Box>
     );
   }
@@ -165,17 +166,17 @@ export function AddContext({
   if (step === 'result' && result) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Context Added!" subtitle="Successfully extracted and saved" />
+        <Header title={t('add.success_title', language)} subtitle={t('add.success_subtitle', language)} />
         <ContextCard context={result} />
         <Box marginTop={1}>
-          <Text color="green">Context saved successfully!</Text>
+          <Text color="green">{t('add.saved', language)}</Text>
         </Box>
 
         {/* Related Contexts */}
         {relatedContexts.length > 0 && (
           <Box marginTop={1} flexDirection="column">
             <Text bold color="cyan">
-              Related Contexts ({relatedContexts.length})
+              {t('add.related_contexts', language)} ({relatedContexts.length})
             </Text>
             {onNavigateToContext ? (
               <Box marginTop={1}>
@@ -200,9 +201,9 @@ export function AddContext({
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {relatedContexts.length > 0 && onNavigateToContext
-              ? 'Enter to view related | '
+              ? t('add.hint_related', language)
               : ''}
-            Press ESC to return to menu
+            {t('add.hint_result', language)}
           </Text>
         </Box>
       </Box>
@@ -212,7 +213,7 @@ export function AddContext({
   if (step === 'error' && error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Header title="Error" />
+        <Header title={t('common.error', language)} />
         <ErrorDisplay
           error={error}
           language={language}
@@ -225,8 +226,8 @@ export function AddContext({
   // Fallback (should never reach here)
   return (
     <Box flexDirection="column" padding={1}>
-      <Header title="Add Context" />
-      <Text color="gray">Loading...</Text>
+      <Header title={t('add.title', language)} />
+      <Text color="gray">{t('common.loading', language)}</Text>
     </Box>
   );
 }
