@@ -6,11 +6,21 @@
  */
 
 import { render } from 'ink';
+import { execSync } from 'child_process';
 import { App, cleanup } from './tui/index.js';
+import { autoUpdate } from './utils/update-notifier.js';
 
 // Clear terminal and add spacing
 console.clear();
 console.log('\n');
+
+// Auto-update check
+const updated = autoUpdate();
+if (updated) {
+  // Restart the app after update
+  execSync('mch', { stdio: 'inherit' });
+  process.exit(0);
+}
 
 // Handle process exit
 function handleExit(): void {

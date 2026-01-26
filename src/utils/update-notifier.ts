@@ -1,5 +1,6 @@
 import updateNotifier from 'update-notifier';
 import { createRequire } from 'module';
+import { execSync } from 'child_process';
 
 const require = createRequire(import.meta.url);
 
@@ -19,7 +20,7 @@ export function checkForUpdates(): UpdateInfo | null {
 
     const notifier = updateNotifier({
       pkg,
-      updateCheckInterval: 1000 * 60 * 60 * 24, // Check once per day
+      updateCheckInterval: 0, // Always check
     });
 
     if (notifier.update && notifier.update.latest !== pkg.version) {
@@ -41,4 +42,34 @@ export function checkForUpdates(): UpdateInfo | null {
  */
 export function getUpdateCommand(): string {
   return 'npm install -g meeting-context-hub@latest';
+}
+
+/**
+ * Auto-update to latest version
+ * Returns true if update was successful and app should restart
+ */
+export function autoUpdate(): boolean {
+  try {
+    const pkg = require('../../package.json');
+
+    const notifier = updateNotifier({
+      pkg,
+      updateCheckInterval: 0, // Always check
+    });
+
+    if (notifier.update && notifier.update.latest !== pkg.version) {
+      console.log(`\n🔄 Updating MCH: ${pkg.version} → ${notifier.update.latest}...\n`);
+
+      execSync('npm install -g meeting-context-hub@latest', {
+        stdio: 'inherit',
+      });
+
+      console.log('\n✅ Update complete! Restarting...\n');
+      return true;
+    }
+  } catch (error) {
+    console.error('❌ Auto-update failed:', error instanceof Error ? error.message : error);
+  }
+
+  return false;
 }
