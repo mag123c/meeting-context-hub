@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/mag123c/meeting-context-hub/compare/v2.4.0...v2.5.0) (2026-01-26)
+
+
+### Features
+
+* **tui:** add ASCII logo, version display, and terminal clear on startup ([9d53c4f](https://github.com/mag123c/meeting-context-hub/commit/9d53c4f74f17b80ceceb7ba1c4a6f378ba2766b8))
+
 # [2.4.0](https://github.com/mag123c/meeting-context-hub/compare/v2.3.0...v2.4.0) (2026-01-26)
 
 
