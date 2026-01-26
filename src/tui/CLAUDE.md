@@ -137,3 +137,46 @@ import { MultilineInput } from '../components/MultilineInput.js';
 - `ESC` - Cancel (handled by parent)
 - `Arrow keys` - Cursor navigation
 - `Backspace` - Delete character/merge lines
+
+## Version & Auto-Update
+
+### Version Module (`src/version.ts`)
+
+Provides version info with path resolution for both `src/` and `dist/`:
+
+```typescript
+import { VERSION, PACKAGE_NAME } from '../version.js';
+
+// VERSION: "2.6.2"
+// PACKAGE_NAME: "meeting-context-hub"
+```
+
+### Auto-Update (`src/utils/update-notifier.ts`)
+
+App checks for updates on every startup and auto-installs if new version available:
+
+```typescript
+import { autoUpdate, checkForUpdates } from '../utils/update-notifier.js';
+
+// Auto-update (used in index.tsx)
+const updated = autoUpdate();
+if (updated) {
+  execSync('mch', { stdio: 'inherit' });
+  process.exit(0);
+}
+
+// Manual check (used in App.tsx for banner)
+const updateInfo = checkForUpdates();
+// { current: "2.6.1", latest: "2.6.2", type: "patch" }
+```
+
+### MainMenu Logo
+
+ASCII art logo with version display:
+
+```
+ ███╗   ███╗     ██████╗     ██╗  ██╗
+ ████╗ ████║    ██╔════╝     ██║  ██║
+ ...
+Meeting Context Hub v2.6.2
+```
