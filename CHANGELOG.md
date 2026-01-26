@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/mag123c/meeting-context-hub/compare/v2.1.1...v2.2.0) (2026-01-26)
+
+
+### Features
+
+* **tui:** add SectionBox component and fix i18n default language ([af66a9e](https://github.com/mag123c/meeting-context-hub/commit/af66a9e353d33b917d049ae3adc09c60ebc5e85f))
+
 ## [2.1.1](https://github.com/mag123c/meeting-context-hub/compare/v2.1.0...v2.1.1) (2026-01-26)
 
 
