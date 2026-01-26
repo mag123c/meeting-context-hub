@@ -1,3 +1,10 @@
+# [2.7.0](https://github.com/mag123c/meeting-context-hub/compare/v2.6.3...v2.7.0) (2026-01-26)
+
+
+### Features
+
+* **tui:** add U key for update, compact logo ([8427460](https://github.com/mag123c/meeting-context-hub/commit/8427460df451a39f96ee51e883bdce9eea7a9a33))
+
 ## [2.6.3](https://github.com/mag123c/meeting-context-hub/compare/v2.6.2...v2.6.3) (2026-01-26)
 
 
