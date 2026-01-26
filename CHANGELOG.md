@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/mag123c/meeting-context-hub/compare/v2.0.0...v2.1.0) (2026-01-26)
+
+
+### Features
+
+* **core:** complete v0.4 - i18n system, settings enhancement, core separation ([f40d6f5](https://github.com/mag123c/meeting-context-hub/commit/f40d6f580db11c7e1a8f5d387f9ee7e78803a9f1))
+
 # [2.0.0](https://github.com/mag123c/meeting-context-hub/compare/v1.14.0...v2.0.0) (2026-01-26)
 
 
