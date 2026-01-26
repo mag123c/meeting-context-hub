@@ -1,8 +1,12 @@
 import updateNotifier from 'update-notifier';
-import { createRequire } from 'module';
 import { execSync } from 'child_process';
+import { VERSION, PACKAGE_NAME } from '../version.js';
 
-const require = createRequire(import.meta.url);
+// Construct pkg object for update-notifier
+const pkg = {
+  name: PACKAGE_NAME,
+  version: VERSION,
+};
 
 interface UpdateInfo {
   current: string;
@@ -15,17 +19,14 @@ interface UpdateInfo {
  */
 export function checkForUpdates(): UpdateInfo | null {
   try {
-    // Load package.json dynamically for ESM compatibility
-    const pkg = require('../../package.json');
-
     const notifier = updateNotifier({
       pkg,
       updateCheckInterval: 0, // Always check
     });
 
-    if (notifier.update && notifier.update.latest !== pkg.version) {
+    if (notifier.update && notifier.update.latest !== VERSION) {
       return {
-        current: pkg.version as string,
+        current: VERSION,
         latest: notifier.update.latest,
         type: notifier.update.type as UpdateInfo['type'],
       };
@@ -50,15 +51,13 @@ export function getUpdateCommand(): string {
  */
 export function autoUpdate(): boolean {
   try {
-    const pkg = require('../../package.json');
-
     const notifier = updateNotifier({
       pkg,
       updateCheckInterval: 0, // Always check
     });
 
-    if (notifier.update && notifier.update.latest !== pkg.version) {
-      console.log(`\n🔄 Updating MCH: ${pkg.version} → ${notifier.update.latest}...\n`);
+    if (notifier.update && notifier.update.latest !== VERSION) {
+      console.log(`\n🔄 Updating MCH: ${VERSION} → ${notifier.update.latest}...\n`);
 
       execSync('npm install -g meeting-context-hub@latest', {
         stdio: 'inherit',

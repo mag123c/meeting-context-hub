@@ -4,10 +4,7 @@ import SelectInput from 'ink-select-input';
 import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const pkg = require('../../package.json');
+import { VERSION } from '../../version.js';
 
 // ASCII Art Logo - Extra wide block style
 const LOGO = `
@@ -63,7 +60,7 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
         <Text color="cyan">{LOGO}</Text>
         <Box marginTop={0}>
           <Text color="gray">Meeting Context Hub </Text>
-          <Text color="cyan" bold>v{pkg.version}</Text>
+          <Text color="cyan" bold>v{VERSION}</Text>
         </Box>
         <Text color="gray" dimColor>{t('menu.subtitle', language)}</Text>
       </Box>
