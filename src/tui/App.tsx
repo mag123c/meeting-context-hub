@@ -1,8 +1,9 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import { useServices, cleanup, reinitializeServices } from './hooks/useServices.js';
 import { useNavigation } from './hooks/useNavigation.js';
 import { Spinner } from './components/Spinner.js';
+import { UpdateBanner } from './components/UpdateBanner.js';
 import { MainMenu } from './screens/MainMenu.js';
 import { AddContext } from './screens/AddContext.js';
 import { ListScreen } from './screens/ListScreen.js';
@@ -12,6 +13,12 @@ import { SettingsScreen } from './screens/SettingsScreen.js';
 import { SearchScreen } from './screens/SearchScreen.js';
 import { RecordScreen } from './screens/RecordScreen.js';
 import { RequiresOpenAI } from './components/RequiresOpenAI.js';
+import { checkForUpdates, getUpdateCommand } from '../utils/update-notifier.js';
+
+interface UpdateInfo {
+  current: string;
+  latest: string;
+}
 
 interface AppProps {
   onExit: () => void;
@@ -21,9 +28,18 @@ export function App({ onExit }: AppProps): React.ReactElement {
   const { services, config, error, loading, needsConfig } = useServices();
   const { screen, params, navigate, goBack } = useNavigation();
   const [reinitializing, setReinitializing] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
 
   // Get language from config, default to 'en'
   const language = config?.language || 'en';
+
+  // Check for updates on mount
+  useEffect(() => {
+    const update = checkForUpdates();
+    if (update) {
+      setUpdateInfo({ current: update.current, latest: update.latest });
+    }
+  }, []);
 
   const handleExit = useCallback(() => {
     cleanup();
@@ -88,7 +104,18 @@ export function App({ onExit }: AppProps): React.ReactElement {
   // Route to appropriate screen
   switch (screen) {
     case 'main':
-      return <MainMenu navigate={navigate} onExit={handleExit} language={language} />;
+      return (
+        <Box flexDirection="column">
+          {updateInfo && (
+            <UpdateBanner
+              currentVersion={updateInfo.current}
+              latestVersion={updateInfo.latest}
+              updateCommand={getUpdateCommand()}
+            />
+          )}
+          <MainMenu navigate={navigate} onExit={handleExit} language={language} />
+        </Box>
+      );
 
     case 'add':
       return (
