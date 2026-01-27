@@ -1,3 +1,10 @@
+# [2.11.0](https://github.com/mag123c/meeting-context-hub/compare/v2.10.0...v2.11.0) (2026-01-27)
+
+
+### Features
+
+* **tui:** improve update logic with auto-retry and new logo ([5721183](https://github.com/mag123c/meeting-context-hub/commit/5721183d0fd22ae2e5eeaf1217ce182e2a77ec49))
+
 # [2.10.0](https://github.com/mag123c/meeting-context-hub/compare/v2.9.1...v2.10.0) (2026-01-27)
 
 
