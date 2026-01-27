@@ -119,7 +119,30 @@ See `.claude/ai-context/` for detailed knowledge:
 
 ## Requirements
 
-- **Node.js** 18+
+- **Node.js** 20+ (required for better-sqlite3 native module)
+- **Build tools** (for native module compilation):
+  - macOS: `xcode-select --install`
+  - Windows: Visual Studio Build Tools with C++
+  - Linux: `build-essential`, `python3`
 - **sox** (for audio recording): `brew install sox`
 - **Anthropic API Key** (required)
 - **OpenAI API Key** (for embedding, whisper)
+
+## Troubleshooting
+
+### Native Module Build Issues
+
+**Problem**: `better-sqlite3` build fails during installation
+
+**Solutions**:
+1. Verify Node version: `node --version` (must be 20+)
+2. Install build tools (see Requirements above)
+3. Rebuild: `npm rebuild better-sqlite3`
+4. If update available in app, press `U` to update (may include fixes)
+
+### Update-Notifier Behavior
+
+- First startup spawns background npm check (~5 seconds)
+- Update banner appears after background check completes
+- If initialization error occurs with update available, shows update-only screen
+- Press `U` to update, then restart with `mch`

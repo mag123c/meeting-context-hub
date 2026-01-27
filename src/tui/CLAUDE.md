@@ -175,6 +175,16 @@ import { UpdateBanner } from '../components/UpdateBanner.js';
 - Success: Shows "Updated! Press Ctrl+C and run `mch` to restart"
 - Error: Shows error + manual command
 
+**Background Check Behavior:**
+- `update-notifier` spawns background process on first call
+- May return null initially (background process running)
+- App retries after 5 seconds to catch completed check
+
+**Error Screen with Update:**
+- If initialization error occurs AND update available → Show update-only screen
+- Rationale: Update may resolve issues (e.g., native module rebuild)
+- Error summary shown below update banner
+
 ### MainMenu Logo
 
 ASCII art logo (6 lines) with version:
