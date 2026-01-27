@@ -1,3 +1,10 @@
+## [2.11.4](https://github.com/mag123c/meeting-context-hub/compare/v2.11.3...v2.11.4) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** update logo to dot style ([dc68e9e](https://github.com/mag123c/meeting-context-hub/commit/dc68e9e4547f30651fc9d5760f13782b6d46bbb0))
+
 ## [2.11.3](https://github.com/mag123c/meeting-context-hub/compare/v2.11.2...v2.11.3) (2026-01-27)
 
 
