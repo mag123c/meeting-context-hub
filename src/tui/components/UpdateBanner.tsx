@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { performUpdate } from '../../utils/update-notifier.js';
 
@@ -20,19 +20,13 @@ export function UpdateBanner({
   const [updating, setUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<string>('');
 
   useInput((input, key) => {
-    if ((input === 'u' || input === 'U') && !updating && !updated) {
+    if ((input === 'u' || input === 'U') && !updating && !updated && !error) {
       setUpdating(true);
       setError(null);
-
-      const result = performUpdate();
-      if (result.success) {
-        setUpdated(true);
-      } else {
-        setError(result.error || 'Update failed');
-      }
-      setUpdating(false);
+      setProgress('Installing...');
     }
 
     // Enter to dismiss (skip update)
@@ -40,6 +34,24 @@ export function UpdateBanner({
       onDismiss();
     }
   });
+
+  useEffect(() => {
+    if (updating && progress === 'Installing...') {
+      // Run update in next tick to allow UI to render
+      const timer = setTimeout(() => {
+        const result = performUpdate((step) => setProgress(step));
+        if (result.success) {
+          setUpdated(true);
+        } else {
+          setError(result.error || 'Update failed');
+        }
+        setUpdating(false);
+        setProgress('');
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [updating, progress]);
 
   if (updated) {
     return (
@@ -67,7 +79,7 @@ export function UpdateBanner({
         marginBottom={1}
       >
         <Text color="red" bold>Update failed. Run manually:</Text>
-        <Text color="yellow">{error}</Text>
+        <Text color="yellow" wrap="wrap">{error}</Text>
       </Box>
     );
   }
@@ -80,7 +92,7 @@ export function UpdateBanner({
       marginBottom={1}
     >
       {updating ? (
-        <Text color="yellow">Updating...</Text>
+        <Text color="yellow">{progress || 'Updating...'}</Text>
       ) : (
         <>
           <Text color="yellow" bold>Update: </Text>

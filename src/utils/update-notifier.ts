@@ -51,17 +51,20 @@ interface UpdateResult {
   error?: string;
 }
 
+type ProgressCallback = (step: string) => void;
+
 /**
  * Perform update with automatic retry on ENOTEMPTY error
  * 1. Try npm install -g directly
  * 2. If failed, clean cache + uninstall + remove directory + reinstall
  * 3. Return result with error message if both attempts fail
  */
-export function performUpdate(): UpdateResult {
+export function performUpdate(onProgress?: ProgressCallback): UpdateResult {
   const pkg = 'meeting-context-hub';
 
   try {
     // First attempt: direct install
+    onProgress?.('Installing...');
     execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
     return { success: true };
   } catch {
@@ -72,6 +75,7 @@ export function performUpdate(): UpdateResult {
       const pkgDir = `${prefix}/lib/node_modules/${pkg}`;
 
       // Clean npm cache
+      onProgress?.('Cleaning cache...');
       try {
         execSync('npm cache clean --force', { stdio: 'pipe' });
       } catch {
@@ -79,6 +83,7 @@ export function performUpdate(): UpdateResult {
       }
 
       // Uninstall
+      onProgress?.('Uninstalling...');
       try {
         execSync(`npm uninstall -g ${pkg}`, { stdio: 'pipe' });
       } catch {
@@ -86,6 +91,7 @@ export function performUpdate(): UpdateResult {
       }
 
       // Force remove directory if exists
+      onProgress?.('Removing files...');
       try {
         execSync(`rm -rf "${pkgDir}"`, { stdio: 'pipe' });
       } catch {
@@ -93,9 +99,10 @@ export function performUpdate(): UpdateResult {
       }
 
       // Fresh install
+      onProgress?.('Reinstalling...');
       execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
       return { success: true };
-    } catch (secondError) {
+    } catch {
       const prefix = execSync('npm prefix -g', { stdio: 'pipe' }).toString().trim();
       return {
         success: false,
