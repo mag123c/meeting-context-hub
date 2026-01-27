@@ -19,7 +19,7 @@ interface ProjectScreenProps {
   language?: 'ko' | 'en';
 }
 
-type Mode = 'list' | 'create' | 'detail';
+type Mode = 'list' | 'create' | 'detail' | 'rename';
 
 interface ProjectWithCount extends Project {
   contextCount: number;
@@ -46,6 +46,10 @@ export function ProjectScreen({
   // Delete state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Rename state
+  const [renameValue, setRenameValue] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   const loadProjects = useCallback(async () => {
     try {
@@ -108,6 +112,23 @@ export function ProjectScreen({
     setDeleting(false);
   }, [selectedProject, manageProjectUseCase, loadProjects]);
 
+  const handleRenameProject = useCallback(async () => {
+    if (!selectedProject || !renameValue.trim()) return;
+
+    setRenaming(true);
+    setError(null);
+    try {
+      const updated = await manageProjectUseCase.updateProject(selectedProject.id, { name: renameValue.trim() });
+      setSelectedProject({ ...selectedProject, name: updated.name });
+      setMode('detail');
+      setRenameValue('');
+      await loadProjects();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to rename project'));
+    }
+    setRenaming(false);
+  }, [selectedProject, renameValue, manageProjectUseCase, loadProjects]);
+
   useInput((input, key) => {
     // Ignore inputs when delete dialog is shown
     if (showDeleteConfirm) return;
@@ -122,6 +143,10 @@ export function ProjectScreen({
       } else if (mode === 'detail') {
         setMode('list');
         setSelectedProject(null);
+      } else if (mode === 'rename') {
+        setMode('detail');
+        setRenameValue('');
+        setError(null);
       } else {
         goBack();
       }
@@ -138,12 +163,23 @@ export function ProjectScreen({
       setShowDeleteConfirm(true);
     }
 
+    // Rename project in detail mode
+    if (mode === 'detail' && input === 'r') {
+      setRenameValue(selectedProject?.name || '');
+      setMode('rename');
+      setError(null);
+    }
+
     if (mode === 'create' && key.return) {
       if (createStep === 'name' && newName.trim()) {
         setCreateStep('description');
       } else if (createStep === 'description') {
         handleCreateProject();
       }
+    }
+
+    if (mode === 'rename' && key.return) {
+      handleRenameProject();
     }
   });
 
@@ -245,9 +281,42 @@ export function ProjectScreen({
         </SectionBox>
         <Box marginTop={1}>
           <Text color="gray" dimColor>
-            d: {t('common.delete', language)} | {t('hint.esc_back', language)}
+            {t('project.hint_detail', language)}
           </Text>
         </Box>
+
+        {error && (
+          <Box marginTop={1}>
+            <ErrorText error={error} language={language} />
+          </Box>
+        )}
+      </Box>
+    );
+  }
+
+  // Rename mode
+  if (mode === 'rename' && selectedProject) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={t('project.rename', language)} />
+
+        {renaming ? (
+          <Spinner message={t('project.renaming', language)} />
+        ) : (
+          <>
+            <TextInput
+              label={t('project.new_name_label', language)}
+              value={renameValue}
+              onChange={setRenameValue}
+              placeholder={selectedProject.name}
+            />
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('project.hint_rename', language)}
+              </Text>
+            </Box>
+          </>
+        )}
 
         {error && (
           <Box marginTop={1}>

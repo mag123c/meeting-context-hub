@@ -139,8 +139,13 @@ export const UI_STRINGS = {
   'project.desc_label': { ko: '설명 (선택):', en: 'Description (optional):' },
   'project.desc_placeholder': { ko: '설명 입력... (Enter로 건너뛰기)', en: 'Enter description... (Enter to skip)' },
   'project.creating': { ko: '그룹 생성 중...', en: 'Creating group...' },
-  'project.hint_list': { ko: 'n: 새 그룹 | d: 삭제 | Enter: 상세 | ESC: 뒤로', en: 'n: New | d: Delete | Enter: Details | ESC: Back' },
+  'project.rename': { ko: '이름 수정', en: 'Rename' },
+  'project.renaming': { ko: '수정 중...', en: 'Renaming...' },
+  'project.new_name_label': { ko: '새 이름:', en: 'New name:' },
+  'project.hint_list': { ko: 'n: 새 그룹 | Enter: 상세 | ESC: 뒤로', en: 'n: New | Enter: Details | ESC: Back' },
   'project.hint_create': { ko: 'Enter로 계속 | ESC로 취소', en: 'Enter to continue | ESC to cancel' },
+  'project.hint_detail': { ko: 'r: 이름 수정 | d: 삭제 | ESC: 뒤로', en: 'r: Rename | d: Delete | ESC: Back' },
+  'project.hint_rename': { ko: 'Enter로 저장 | ESC로 취소', en: 'Enter to save | ESC to cancel' },
 
   // Record Screen
   'record.title': { ko: '미팅 녹음', en: 'Record Meeting' },
