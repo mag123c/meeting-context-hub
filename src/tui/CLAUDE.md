@@ -118,6 +118,7 @@ import { MultilineInput } from '../components/MultilineInput.js';
   value={text}
   onChange={setText}
   onSubmit={handleSubmit}
+  onCancel={handleCancel}
   placeholder="Enter text..."
   focus={true}
   maxDisplayLines={10}
@@ -130,6 +131,7 @@ import { MultilineInput } from '../components/MultilineInput.js';
 | value | string | - | Current text value |
 | onChange | (value: string) => void | - | Text change handler |
 | onSubmit | () => void | - | Submit handler (Ctrl+D) |
+| onCancel | () => void | - | Cancel handler (ESC) |
 | placeholder | string | '' | Placeholder text |
 | focus | boolean | true | Whether input is focused |
 | maxDisplayLines | number | 10 | Max visible lines before scroll |

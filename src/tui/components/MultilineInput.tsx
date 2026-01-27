@@ -5,6 +5,7 @@ interface MultilineInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  onCancel?: () => void;
   placeholder?: string;
   focus?: boolean;
   maxDisplayLines?: number;
@@ -14,6 +15,7 @@ export function MultilineInput({
   value,
   onChange,
   onSubmit,
+  onCancel,
   placeholder = '',
   focus = true,
   maxDisplayLines = 10,
@@ -34,8 +36,9 @@ export function MultilineInput({
         return;
       }
 
-      // Cancel handled by parent (ESC)
+      // Cancel: ESC
       if (key.escape) {
+        onCancel?.();
         return;
       }
 

@@ -382,6 +382,7 @@ export function DetailScreen({
                   value={editStringValue}
                   onChange={setEditStringValue}
                   onSubmit={handleSaveEdit}
+                  onCancel={handleCancelEdit}
                   placeholder=""
                   focus={true}
                   maxDisplayLines={15}
