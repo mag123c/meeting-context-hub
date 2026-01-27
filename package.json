@@ -33,7 +33,7 @@
   "homepage": "https://github.com/mag123c/meeting-context-hub#readme",
   "scripts": {
     "dev": "tsx src/index.tsx",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && chmod +x dist/index.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "vitest",
