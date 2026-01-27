@@ -244,6 +244,11 @@ import { UpdateBanner } from '../components/UpdateBanner.js';
 - Success: Shows "Updated! Press Ctrl+C and run `mch` to restart"
 - Error: Shows error + manual command
 
+**Update Logic (`performUpdate()` in `utils/update-notifier.ts`):**
+1. Try `npm install -g meeting-context-hub@latest`
+2. If failed (e.g., ENOTEMPTY) → `npm uninstall -g` then reinstall
+3. Return `{ success, error? }` for UI handling
+
 **Background Check Behavior:**
 - `update-notifier` spawns background process on first call
 - `updateCheckInterval: 0` ensures check runs every startup
@@ -258,14 +263,4 @@ import { UpdateBanner } from '../components/UpdateBanner.js';
 
 ### MainMenu Logo
 
-ASCII art logo (6 lines) with version:
-
-```
- ███╗   ███╗  ██████╗ ██╗  ██╗
- ████╗ ████║ ██╔════╝ ██║  ██║
- ██╔████╔██║ ██║      ███████║
- ██║╚██╔╝██║ ██║      ██╔══██║
- ██║ ╚═╝ ██║ ╚██████╗ ██║  ██║
- ╚═╝     ╚═╝  ╚═════╝ ╚═╝  ╚═╝
-Meeting Context Hub v2.7.2
-```
+ASCII art logo (18 lines) - MEETING / CONTEXT / HUB in bitmap style, version centered below.

@@ -1,4 +1,5 @@
 import updateNotifier from 'update-notifier';
+import { execSync } from 'child_process';
 import { VERSION, PACKAGE_NAME } from '../version.js';
 
 // Construct pkg object for update-notifier
@@ -43,4 +44,37 @@ export function checkForUpdates(): UpdateInfo | null {
  */
 export function getUpdateCommand(): string {
   return 'npm install -g meeting-context-hub@latest';
+}
+
+interface UpdateResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Perform update with automatic retry on ENOTEMPTY error
+ * 1. Try npm install -g directly
+ * 2. If failed, uninstall then reinstall
+ * 3. Return result with error message if both attempts fail
+ */
+export function performUpdate(): UpdateResult {
+  const pkg = 'meeting-context-hub';
+
+  try {
+    // First attempt: direct install
+    execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
+    return { success: true };
+  } catch {
+    // Second attempt: uninstall then reinstall
+    try {
+      execSync(`npm uninstall -g ${pkg}`, { stdio: 'pipe' });
+      execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
+      return { success: true };
+    } catch (secondError) {
+      return {
+        success: false,
+        error: secondError instanceof Error ? secondError.message : 'Update failed',
+      };
+    }
+  }
 }

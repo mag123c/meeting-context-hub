@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
-import { execSync } from 'child_process';
+import { performUpdate } from '../../utils/update-notifier.js';
 
 interface UpdateBannerProps {
   currentVersion: string;
@@ -28,14 +28,13 @@ export function UpdateBanner({
       setUpdating(true);
       setError(null);
 
-      try {
-        execSync(updateCommand, { stdio: 'pipe' });
+      const result = performUpdate();
+      if (result.success) {
         setUpdated(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Update failed');
-      } finally {
-        setUpdating(false);
+      } else {
+        setError(result.error || 'Update failed');
       }
+      setUpdating(false);
     }
 
     // Enter to dismiss (skip update)
