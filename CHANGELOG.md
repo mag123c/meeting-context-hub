@@ -1,3 +1,10 @@
+## [2.11.6](https://github.com/mag123c/meeting-context-hub/compare/v2.11.5...v2.11.6) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** revert to block logo, add app name before version ([28c9413](https://github.com/mag123c/meeting-context-hub/commit/28c94132d8495ae6ff644c577b09f88a68a3c338))
+
 ## [2.11.5](https://github.com/mag123c/meeting-context-hub/compare/v2.11.4...v2.11.5) (2026-01-27)
 
 
