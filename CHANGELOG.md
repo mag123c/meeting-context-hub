@@ -1,3 +1,10 @@
+## [2.11.5](https://github.com/mag123c/meeting-context-hub/compare/v2.11.4...v2.11.5) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** update logo to block style without curves ([020ad2b](https://github.com/mag123c/meeting-context-hub/commit/020ad2b7e0dbcdd2d669b006898d3b54fa8eca26))
+
 ## [2.11.4](https://github.com/mag123c/meeting-context-hub/compare/v2.11.3...v2.11.4) (2026-01-27)
 
 
