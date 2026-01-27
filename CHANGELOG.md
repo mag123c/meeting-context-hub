@@ -1,3 +1,10 @@
+## [2.8.2](https://github.com/mag123c/meeting-context-hub/compare/v2.8.1...v2.8.2) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** show update-only screen when error occurs with update available ([1cf4922](https://github.com/mag123c/meeting-context-hub/commit/1cf4922cffb11fb2103bae5d10f994725e2ef698))
+
 ## [2.8.1](https://github.com/mag123c/meeting-context-hub/compare/v2.8.0...v2.8.1) (2026-01-27)
 
 
