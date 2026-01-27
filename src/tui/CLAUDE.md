@@ -76,6 +76,7 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 | Spinner | Loading indicator |
 | ConfirmDialog | Confirmation dialog with keyboard navigation (←/→, Enter, ESC) |
 | GroupSelector | Modal for selecting/creating groups with list/create modes |
+| StringListEditor | List editor for string[] arrays (decisions, policies, tags) with a/d/Enter/ESC shortcuts |
 
 ## SectionBox Component
 
@@ -139,6 +140,65 @@ import { MultilineInput } from '../components/MultilineInput.js';
 - `ESC` - Cancel (handled by parent)
 - `Arrow keys` - Cursor navigation
 - `Backspace` - Delete character/merge lines
+
+## StringListEditor Component
+
+Component for editing string[] arrays (decisions, policies, tags):
+
+```typescript
+import { StringListEditor } from '../components/StringListEditor.js';
+
+<StringListEditor
+  items={decisions}
+  onChange={setDecisions}
+  onDone={handleSave}
+  language={language}
+/>
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | string[] | - | Array of strings to edit |
+| onChange | (items: string[]) => void | - | Change handler |
+| onDone | () => void | - | Done handler (ESC in list mode) |
+| language | 'ko' \| 'en' | 'en' | UI language |
+| focus | boolean | true | Whether input is focused |
+
+**Key bindings (list mode):**
+- `↑/↓` - Navigate items
+- `Enter` - Edit selected item
+- `a` - Add new item
+- `d` - Delete selected item
+- `ESC` - Done (calls onDone)
+
+**Key bindings (edit/add mode):**
+- `Enter` - Save and return to list
+- `ESC` - Cancel and return to list
+
+## Edit Mode (DetailScreen)
+
+DetailScreen supports inline editing of context fields:
+
+**Activation:** Press `e` key in DetailScreen
+
+**Editable fields:**
+- Title (single line TextInput)
+- Summary (MultilineInput)
+- Decisions (StringListEditor)
+- Policies (StringListEditor)
+- Tags (StringListEditor)
+
+**Flow:**
+1. Press `e` → Field selection menu
+2. Select field → Edit UI for that field type
+3. Save (Enter/Ctrl+D) or Cancel (ESC)
+4. Returns to DetailScreen with updated data
+
+**Features:**
+- Embedding regeneration on save (if EmbeddingService available)
+- Bilingual UI (ko/en)
+- Consistent keyboard shortcuts
 
 ## Version & Update
 

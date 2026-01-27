@@ -1,17 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
+import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { SectionBox } from '../components/SectionBox.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { GroupSelector } from '../components/GroupSelector.js';
+import { StringListEditor } from '../components/StringListEditor.js';
+import { MultilineInput } from '../components/MultilineInput.js';
 import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ManageContextUseCase } from '../../core/usecases/manage-context.usecase.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
 import type { Context, Project, SearchResult } from '../../types/index.js';
+
+type EditableField = 'title' | 'summary' | 'decisions' | 'policies' | 'tags';
 
 interface DetailScreenProps {
   contextId: string;
@@ -48,6 +53,13 @@ export function DetailScreen({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showGroupSelector, setShowGroupSelector] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Edit mode states
+  const [showEditMode, setShowEditMode] = useState(false);
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [editStringValue, setEditStringValue] = useState('');
+  const [editListValue, setEditListValue] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Load context data
   useEffect(() => {
@@ -147,12 +159,96 @@ export function DetailScreen({
     [manageProjectUseCase, handleGroupSelect]
   );
 
+  // Handle field selection for editing
+  const handleFieldSelect = useCallback(
+    (field: EditableField) => {
+      if (!context) return;
+      setEditingField(field);
+
+      switch (field) {
+        case 'title':
+          setEditStringValue(context.title);
+          break;
+        case 'summary':
+          setEditStringValue(context.summary);
+          break;
+        case 'decisions':
+          setEditListValue([...context.decisions]);
+          break;
+        case 'policies':
+          setEditListValue([...context.policies]);
+          break;
+        case 'tags':
+          setEditListValue([...context.tags]);
+          break;
+      }
+    },
+    [context]
+  );
+
+  // Handle save edit
+  const handleSaveEdit = useCallback(async () => {
+    if (!context || !editingField) return;
+
+    setSaving(true);
+    try {
+      const updates: Record<string, unknown> = {};
+
+      switch (editingField) {
+        case 'title':
+          updates.title = editStringValue;
+          break;
+        case 'summary':
+          updates.summary = editStringValue;
+          break;
+        case 'decisions':
+          updates.decisions = editListValue;
+          break;
+        case 'policies':
+          updates.policies = editListValue;
+          break;
+        case 'tags':
+          updates.tags = editListValue;
+          break;
+      }
+
+      await manageContextUseCase.updateContext(contextId, updates);
+
+      // Update local state
+      setContext((prev) => (prev ? { ...prev, ...updates } : null));
+
+      setEditingField(null);
+      setEditStringValue('');
+      setEditListValue([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }, [context, editingField, editStringValue, editListValue, contextId, manageContextUseCase]);
+
+  // Handle cancel edit
+  const handleCancelEdit = useCallback(() => {
+    if (editingField) {
+      setEditingField(null);
+      setEditStringValue('');
+      setEditListValue([]);
+    } else {
+      setShowEditMode(false);
+    }
+  }, [editingField]);
+
   useInput((input, key) => {
     // Ignore inputs when dialogs are shown
     if (showDeleteConfirm || showGroupSelector) return;
 
+    // Edit mode has its own input handling
+    if (showEditMode && editingField) return;
+
     if (key.escape) {
-      if (showRelated) {
+      if (showEditMode) {
+        handleCancelEdit();
+      } else if (showRelated) {
         setShowRelated(false);
       } else {
         goBack();
@@ -160,21 +256,27 @@ export function DetailScreen({
       return;
     }
 
+    // Edit context with 'e'
+    if (input === 'e' && !showEditMode) {
+      setShowEditMode(true);
+      return;
+    }
+
     // Delete context with 'd'
-    if (input === 'd') {
+    if (input === 'd' && !showEditMode) {
       setShowDeleteConfirm(true);
       return;
     }
 
     // Change group with 'g'
-    if (input === 'g') {
+    if (input === 'g' && !showEditMode) {
       loadProjects();
       setShowGroupSelector(true);
       return;
     }
 
     // Toggle related contexts view with 'r'
-    if (input === 'r' && relatedContexts.length > 0) {
+    if (input === 'r' && relatedContexts.length > 0 && !showEditMode) {
       setShowRelated(!showRelated);
     }
   });
@@ -240,6 +342,108 @@ export function DetailScreen({
           onCancel={() => setShowGroupSelector(false)}
           language={language}
         />
+      </Box>
+    );
+  }
+
+  // Show edit mode
+  if (showEditMode) {
+    // Saving state
+    if (saving) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Spinner message={t('edit.saving', language)} />
+        </Box>
+      );
+    }
+
+    // Editing a specific field
+    if (editingField) {
+      const isStringField = editingField === 'title' || editingField === 'summary';
+      const fieldLabel =
+        editingField === 'title'
+          ? t('edit.field_title', language)
+          : editingField === 'summary'
+            ? t('edit.field_summary', language)
+            : editingField === 'decisions'
+              ? t('edit.field_decisions', language)
+              : editingField === 'policies'
+                ? t('edit.field_policies', language)
+                : t('edit.field_tags', language);
+
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Header title={t('edit.title', language)} subtitle={fieldLabel} />
+
+          {isStringField ? (
+            editingField === 'summary' ? (
+              <Box flexDirection="column">
+                <MultilineInput
+                  value={editStringValue}
+                  onChange={setEditStringValue}
+                  onSubmit={handleSaveEdit}
+                  placeholder=""
+                  focus={true}
+                  maxDisplayLines={15}
+                />
+                <Box marginTop={1}>
+                  <Text color="gray" dimColor>
+                    Ctrl+D: {t('common.save', language)} | ESC: {t('common.cancel', language)}
+                  </Text>
+                </Box>
+              </Box>
+            ) : (
+              <Box flexDirection="column">
+                <Box>
+                  <Text color="yellow">&gt; </Text>
+                  <TextInput
+                    value={editStringValue}
+                    onChange={setEditStringValue}
+                    onSubmit={handleSaveEdit}
+                  />
+                </Box>
+                <Box marginTop={1}>
+                  <Text color="gray" dimColor>
+                    {t('edit.hint_editing', language)}
+                  </Text>
+                </Box>
+              </Box>
+            )
+          ) : (
+            <StringListEditor
+              items={editListValue}
+              onChange={setEditListValue}
+              onDone={handleSaveEdit}
+              language={language}
+            />
+          )}
+        </Box>
+      );
+    }
+
+    // Field selection
+    const fieldItems = [
+      { label: t('edit.field_title', language), value: 'title' as EditableField },
+      { label: t('edit.field_summary', language), value: 'summary' as EditableField },
+      { label: t('edit.field_decisions', language), value: 'decisions' as EditableField },
+      { label: t('edit.field_policies', language), value: 'policies' as EditableField },
+      { label: t('edit.field_tags', language), value: 'tags' as EditableField },
+    ];
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={t('edit.title', language)} subtitle={t('edit.select_field', language)} />
+        <SectionBox color="cyan">
+          <SelectInput
+            items={fieldItems}
+            onSelect={(item) => handleFieldSelect(item.value)}
+          />
+        </SectionBox>
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            {t('edit.hint_field_select', language)}
+          </Text>
+        </Box>
       </Box>
     );
   }

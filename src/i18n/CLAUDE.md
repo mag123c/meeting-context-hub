@@ -55,6 +55,7 @@ export const UI_STRINGS = {
 | list | List screen |
 | search | Search screen |
 | detail | Detail screen |
+| edit | Edit mode and field editing (title, summary, decisions, policies, tags) |
 | project | Group management (UI term: "Group", entity: "Project") |
 | record | Recording screen |
 | dialog | Confirmation dialogs and modals (delete, group change) |

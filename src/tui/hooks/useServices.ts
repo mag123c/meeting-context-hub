@@ -92,7 +92,7 @@ async function initializeServices(): Promise<void> {
         addContext: new AddContextUseCase(extractService, embeddingService, chainService, storage),
         listContexts: new ListContextsUseCase(storage),
         manageProject: new ManageProjectUseCase(storage),
-        manageContext: new ManageContextUseCase(storage),
+        manageContext: new ManageContextUseCase(storage, embeddingService),
         getContext: new GetContextUseCase(storage),
         searchContext: new SearchContextUseCase(storage, embeddingService, chainService),
         recordContext,
