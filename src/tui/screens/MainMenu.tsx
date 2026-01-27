@@ -6,27 +6,8 @@ import { t } from '../../i18n/index.js';
 import type { Screen } from '../hooks/useNavigation.js';
 import { VERSION } from '../../version.js';
 
-// ASCII Logo - MEETING CONTEXT HUB, compact bitmap style
-const LOGO = `
- ███╗   ███╗███████╗███████╗████████╗██╗███╗   ██╗ ██████╗
- ████╗ ████║██╔════╝██╔════╝╚══██╔══╝██║████╗  ██║██╔════╝
- ██╔████╔██║█████╗  █████╗     ██║   ██║██╔██╗ ██║██║  ███╗
- ██║╚██╔╝██║██╔══╝  ██╔══╝     ██║   ██║██║╚██╗██║██║   ██║
- ██║ ╚═╝ ██║███████╗███████╗   ██║   ██║██║ ╚████║╚██████╔╝
- ╚═╝     ╚═╝╚══════╝╚══════╝   ╚═╝   ╚═╝╚═╝  ╚═══╝ ╚═════╝
-  ██████╗ ██████╗ ███╗   ██╗████████╗███████╗██╗  ██╗████████╗
- ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔════╝╚██╗██╔╝╚══██╔══╝
- ██║     ██║   ██║██╔██╗ ██║   ██║   █████╗   ╚███╔╝    ██║
- ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══╝   ██╔██╗    ██║
- ╚██████╗╚██████╔╝██║ ╚████║   ██║   ███████╗██╔╝ ██╗   ██║
-  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝   ╚═╝
- ██╗  ██╗██╗   ██╗██████╗
- ██║  ██║██║   ██║██╔══██╗
- ███████║██║   ██║██████╔╝
- ██╔══██║██║   ██║██╔══██╗
- ██║  ██║╚██████╔╝██████╔╝
- ╚═╝  ╚═╝ ╚═════╝ ╚═════╝
-`.trim();
+// ASCII Logo - Single line style
+const LOGO = '▄▀ MEETING CONTEXT HUB ▀▄';
 
 interface MainMenuProps {
   navigate: (screen: Screen) => void;
@@ -67,9 +48,9 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
   return (
     <Box flexDirection="column" padding={1}>
       {/* Logo */}
-      <Box flexDirection="column" alignItems="center">
-        <Text color="cyan">{LOGO}</Text>
-        <Text color="gray">v{VERSION}</Text>
+      <Box>
+        <Text color="cyan" bold>{LOGO}</Text>
+        <Text color="gray"> v{VERSION}</Text>
       </Box>
 
       <SectionBox color="cyan" marginY={1}>
