@@ -1,3 +1,10 @@
+## [2.8.3](https://github.com/mag123c/meeting-context-hub/compare/v2.8.2...v2.8.3) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** improve update detection with instant polling and full-screen prompt ([4dba07a](https://github.com/mag123c/meeting-context-hub/commit/4dba07a01c132c3a2572ddb308cf557bb16690c7))
+
 ## [2.8.2](https://github.com/mag123c/meeting-context-hub/compare/v2.8.1...v2.8.2) (2026-01-27)
 
 
