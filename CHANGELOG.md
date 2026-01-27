@@ -1,3 +1,10 @@
+## [2.11.1](https://github.com/mag123c/meeting-context-hub/compare/v2.11.0...v2.11.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* **update:** aggressive cleanup for ENOTEMPTY errors ([6a8f19a](https://github.com/mag123c/meeting-context-hub/commit/6a8f19a74a7b84fd37e875dd0e51deeed01acaa4))
+
 # [2.11.0](https://github.com/mag123c/meeting-context-hub/compare/v2.10.0...v2.11.0) (2026-01-27)
 
 
