@@ -1,3 +1,10 @@
+## [2.11.9](https://github.com/mag123c/meeting-context-hub/compare/v2.11.8...v2.11.9) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** use pure ASCII art logo for better compatibility ([5e06264](https://github.com/mag123c/meeting-context-hub/commit/5e06264c7c38879072a63fe90147159dbea09d25))
+
 ## [2.11.8](https://github.com/mag123c/meeting-context-hub/compare/v2.11.7...v2.11.8) (2026-01-27)
 
 
