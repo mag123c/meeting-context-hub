@@ -54,7 +54,7 @@ interface UpdateResult {
 /**
  * Perform update with automatic retry on ENOTEMPTY error
  * 1. Try npm install -g directly
- * 2. If failed, uninstall then reinstall
+ * 2. If failed, clean cache + uninstall + remove directory + reinstall
  * 3. Return result with error message if both attempts fail
  */
 export function performUpdate(): UpdateResult {
@@ -65,15 +65,41 @@ export function performUpdate(): UpdateResult {
     execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
     return { success: true };
   } catch {
-    // Second attempt: uninstall then reinstall
+    // Second attempt: aggressive cleanup
     try {
-      execSync(`npm uninstall -g ${pkg}`, { stdio: 'pipe' });
+      // Get npm global prefix
+      const prefix = execSync('npm prefix -g', { stdio: 'pipe' }).toString().trim();
+      const pkgDir = `${prefix}/lib/node_modules/${pkg}`;
+
+      // Clean npm cache
+      try {
+        execSync('npm cache clean --force', { stdio: 'pipe' });
+      } catch {
+        // Ignore cache clean errors
+      }
+
+      // Uninstall
+      try {
+        execSync(`npm uninstall -g ${pkg}`, { stdio: 'pipe' });
+      } catch {
+        // Ignore uninstall errors
+      }
+
+      // Force remove directory if exists
+      try {
+        execSync(`rm -rf "${pkgDir}"`, { stdio: 'pipe' });
+      } catch {
+        // Ignore rm errors
+      }
+
+      // Fresh install
       execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
       return { success: true };
     } catch (secondError) {
+      const prefix = execSync('npm prefix -g', { stdio: 'pipe' }).toString().trim();
       return {
         success: false,
-        error: secondError instanceof Error ? secondError.message : 'Update failed',
+        error: `rm -rf ${prefix}/lib/node_modules/${pkg} && npm i -g ${pkg}@latest`,
       };
     }
   }

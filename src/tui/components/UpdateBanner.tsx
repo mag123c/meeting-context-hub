@@ -5,7 +5,6 @@ import { performUpdate } from '../../utils/update-notifier.js';
 interface UpdateBannerProps {
   currentVersion: string;
   latestVersion: string;
-  updateCommand: string;
   onDismiss?: () => void;
 }
 
@@ -16,7 +15,6 @@ interface UpdateBannerProps {
 export function UpdateBanner({
   currentVersion,
   latestVersion,
-  updateCommand,
   onDismiss,
 }: UpdateBannerProps): React.ReactElement {
   const [updating, setUpdating] = useState(false);
@@ -68,8 +66,8 @@ export function UpdateBanner({
         paddingX={1}
         marginBottom={1}
       >
-        <Text color="red" bold>Update failed.</Text>
-        <Text color="gray">Run manually: {updateCommand}</Text>
+        <Text color="red" bold>Update failed. Run manually:</Text>
+        <Text color="yellow">{error}</Text>
       </Box>
     );
   }

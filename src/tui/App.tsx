@@ -13,7 +13,7 @@ import { SettingsScreen } from './screens/SettingsScreen.js';
 import { SearchScreen } from './screens/SearchScreen.js';
 import { RecordScreen } from './screens/RecordScreen.js';
 import { RequiresOpenAI } from './components/RequiresOpenAI.js';
-import { checkForUpdates, getUpdateCommand } from '../utils/update-notifier.js';
+import { checkForUpdates } from '../utils/update-notifier.js';
 
 interface UpdateInfo {
   current: string;
@@ -129,8 +129,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
             <UpdateBanner
               currentVersion={updateInfo.current}
               latestVersion={updateInfo.latest}
-              updateCommand={getUpdateCommand()}
-            />
+                          />
           </Box>
           <Box marginTop={1} flexDirection="column">
             <Text color="red" dimColor>Error: {error.message.split('\n')[0]}</Text>
@@ -180,8 +179,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
             <UpdateBanner
               currentVersion={updateInfo.current}
               latestVersion={updateInfo.latest}
-              updateCommand={getUpdateCommand()}
-              onDismiss={() => setUpdateDismissed(true)}
+                            onDismiss={() => setUpdateDismissed(true)}
             />
           </Box>
         </Box>
@@ -198,8 +196,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
             <UpdateBanner
               currentVersion={updateInfo.current}
               latestVersion={updateInfo.latest}
-              updateCommand={getUpdateCommand()}
-            />
+                          />
           )}
           <MainMenu navigate={navigate} onExit={handleExit} language={language} />
         </Box>
