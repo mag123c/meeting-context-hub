@@ -34,11 +34,24 @@ export function App({ onExit }: AppProps): React.ReactElement {
   const language = config?.language || 'en';
 
   // Check for updates on mount
+  // update-notifier spawns background process on first call, so we retry after delay
   useEffect(() => {
     const update = checkForUpdates();
     if (update) {
       setUpdateInfo({ current: update.current, latest: update.latest });
+      return;
     }
+
+    // First call may return null (background check in progress)
+    // Retry after 5 seconds when background check should be complete
+    const timer = setTimeout(() => {
+      const retryUpdate = checkForUpdates();
+      if (retryUpdate) {
+        setUpdateInfo({ current: retryUpdate.current, latest: retryUpdate.latest });
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleExit = useCallback(() => {
