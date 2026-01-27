@@ -1,3 +1,10 @@
+## [2.11.8](https://github.com/mag123c/meeting-context-hub/compare/v2.11.7...v2.11.8) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** restart app on any key after update ([15b14aa](https://github.com/mag123c/meeting-context-hub/commit/15b14aac10a7c02a9555e80dcc5e436677738e81))
+
 ## [2.11.7](https://github.com/mag123c/meeting-context-hub/compare/v2.11.6...v2.11.7) (2026-01-27)
 
 
