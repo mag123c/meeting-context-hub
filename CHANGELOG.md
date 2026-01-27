@@ -1,3 +1,15 @@
+# [2.10.0](https://github.com/mag123c/meeting-context-hub/compare/v2.9.1...v2.10.0) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** add onCancel prop to MultilineInput for ESC key handling ([a81fd14](https://github.com/mag123c/meeting-context-hub/commit/a81fd14f273387e275f35c1d8bd77403bf02144a))
+
+
+### Features
+
+* **context:** add edit functionality for context fields ([796c8a0](https://github.com/mag123c/meeting-context-hub/commit/796c8a04f71597c85d34b013359a53e746e04616))
+
 ## [2.9.1](https://github.com/mag123c/meeting-context-hub/compare/v2.9.0...v2.9.1) (2026-01-27)
 
 
