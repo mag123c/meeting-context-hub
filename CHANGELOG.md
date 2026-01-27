@@ -1,3 +1,10 @@
+## [2.11.2](https://github.com/mag123c/meeting-context-hub/compare/v2.11.1...v2.11.2) (2026-01-27)
+
+
+### Bug Fixes
+
+* **update:** add progress indicator and fix error display ([cd0e296](https://github.com/mag123c/meeting-context-hub/commit/cd0e2964db5edb0925b735386a0bc943e5fac025))
+
 ## [2.11.1](https://github.com/mag123c/meeting-context-hub/compare/v2.11.0...v2.11.1) (2026-01-27)
 
 
