@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput, useApp } from 'ink';
+import { spawn } from 'child_process';
 import { performUpdate } from '../../utils/update-notifier.js';
 
 interface UpdateBannerProps {
@@ -17,6 +18,7 @@ export function UpdateBanner({
   latestVersion,
   onDismiss,
 }: UpdateBannerProps): React.ReactElement {
+  const { exit } = useApp();
   const [updating, setUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,15 @@ export function UpdateBanner({
     // Enter to dismiss (skip update)
     if (key.return && onDismiss && !updating && !updated) {
       onDismiss();
+    }
+
+    // Any key to restart after update
+    if (updated) {
+      spawn('mch', [], {
+        detached: true,
+        stdio: 'inherit',
+      });
+      exit();
     }
   });
 
@@ -63,7 +74,7 @@ export function UpdateBanner({
         marginBottom={1}
       >
         <Text color="green" bold>
-          ✓ Updated to v{latestVersion}! Press Ctrl+C and run `mch` to restart.
+          ✓ Updated to v{latestVersion}! Press any key to restart.
         </Text>
       </Box>
     );
