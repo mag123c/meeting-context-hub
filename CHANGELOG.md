@@ -1,3 +1,10 @@
+## [2.11.7](https://github.com/mag123c/meeting-context-hub/compare/v2.11.6...v2.11.7) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** adjust logo first line alignment ([83a0b68](https://github.com/mag123c/meeting-context-hub/commit/83a0b689c86e09ee0630607abc9a20cc54d27696))
+
 ## [2.11.6](https://github.com/mag123c/meeting-context-hub/compare/v2.11.5...v2.11.6) (2026-01-27)
 
 
