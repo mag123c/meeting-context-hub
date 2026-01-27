@@ -1,3 +1,10 @@
+## [2.9.1](https://github.com/mag123c/meeting-context-hub/compare/v2.9.0...v2.9.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* add execute permission to dist/index.js in build script ([35abd10](https://github.com/mag123c/meeting-context-hub/commit/35abd107ac14e69f1cfc3174c0ac440da2434d01))
+
 # [2.9.0](https://github.com/mag123c/meeting-context-hub/compare/v2.8.3...v2.9.0) (2026-01-27)
 
 
