@@ -1,3 +1,10 @@
+# [2.9.0](https://github.com/mag123c/meeting-context-hub/compare/v2.8.3...v2.9.0) (2026-01-27)
+
+
+### Features
+
+* **project:** add group rename functionality ([6df8c65](https://github.com/mag123c/meeting-context-hub/commit/6df8c658bd663ee01dfe72fe2a35a62e23e3816c))
+
 ## [2.8.3](https://github.com/mag123c/meeting-context-hub/compare/v2.8.2...v2.8.3) (2026-01-27)
 
 
