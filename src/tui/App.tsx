@@ -95,7 +95,39 @@ export function App({ onExit }: AppProps): React.ReactElement {
   }
 
   // If there's an error other than config, show it
+  // If update is available, show update banner only (update might fix the issue)
   if (error && !needsConfig) {
+    if (updateInfo) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Box
+            flexDirection="column"
+            borderStyle="double"
+            borderColor="yellow"
+            paddingX={2}
+            paddingY={1}
+          >
+            <Text color="yellow" bold>
+              Update Available: {updateInfo.current} → {updateInfo.latest}
+            </Text>
+            <Box marginY={1}>
+              <Text color="gray">
+                An error occurred during initialization. Updating may resolve this issue.
+              </Text>
+            </Box>
+            <UpdateBanner
+              currentVersion={updateInfo.current}
+              latestVersion={updateInfo.latest}
+              updateCommand={getUpdateCommand()}
+            />
+          </Box>
+          <Box marginTop={1} flexDirection="column">
+            <Text color="red" dimColor>Error: {error.message.split('\n')[0]}</Text>
+          </Box>
+        </Box>
+      );
+    }
+
     return (
       <Box flexDirection="column" padding={1}>
         <Text color="red" bold>
