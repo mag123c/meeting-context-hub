@@ -54,7 +54,10 @@ export function MainMenu({ navigate, onExit, language = 'en' }: MainMenuProps): 
       {/* Logo */}
       <Box flexDirection="column">
         <Text color="cyan">{LOGO}</Text>
-        <Text color="gray">v{VERSION}</Text>
+        <Text>
+          <Text color="white">Meeting Context Hub</Text>
+          <Text color="gray"> v{VERSION}</Text>
+        </Text>
       </Box>
 
       <SectionBox color="cyan" marginY={1}>
