@@ -6,6 +6,7 @@ interface UpdateBannerProps {
   currentVersion: string;
   latestVersion: string;
   updateCommand: string;
+  onDismiss?: () => void;
 }
 
 /**
@@ -16,12 +17,13 @@ export function UpdateBanner({
   currentVersion,
   latestVersion,
   updateCommand,
+  onDismiss,
 }: UpdateBannerProps): React.ReactElement {
   const [updating, setUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useInput((input) => {
+  useInput((input, key) => {
     if ((input === 'u' || input === 'U') && !updating && !updated) {
       setUpdating(true);
       setError(null);
@@ -34,6 +36,11 @@ export function UpdateBanner({
       } finally {
         setUpdating(false);
       }
+    }
+
+    // Enter to dismiss (skip update)
+    if (key.return && onDismiss && !updating && !updated) {
+      onDismiss();
     }
   });
 
@@ -85,6 +92,13 @@ export function UpdateBanner({
           <Text color="gray"> | Press </Text>
           <Text color="cyan" bold>U</Text>
           <Text color="gray"> to update</Text>
+          {onDismiss && (
+            <>
+              <Text color="gray"> | </Text>
+              <Text color="cyan" bold>Enter</Text>
+              <Text color="gray"> to skip</Text>
+            </>
+          )}
         </>
       )}
     </Box>

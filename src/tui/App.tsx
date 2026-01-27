@@ -29,29 +29,40 @@ export function App({ onExit }: AppProps): React.ReactElement {
   const { screen, params, navigate, goBack } = useNavigation();
   const [reinitializing, setReinitializing] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [checkingForUpdates, setCheckingForUpdates] = useState(true);
+  const [updateDismissed, setUpdateDismissed] = useState(false);
 
   // Get language from config, default to 'en'
   const language = config?.language || 'en';
 
   // Check for updates on mount
-  // update-notifier spawns background process on first call, so we retry after delay
+  // update-notifier spawns background process on first call, so we poll until ready
   useEffect(() => {
     const update = checkForUpdates();
     if (update) {
       setUpdateInfo({ current: update.current, latest: update.latest });
+      setCheckingForUpdates(false);
       return;
     }
 
     // First call may return null (background check in progress)
-    // Retry after 5 seconds when background check should be complete
-    const timer = setTimeout(() => {
+    // Poll every 1 second until update info is available (max 10 seconds)
+    let attempts = 0;
+    const maxAttempts = 10;
+    const timer = setInterval(() => {
+      attempts++;
       const retryUpdate = checkForUpdates();
       if (retryUpdate) {
         setUpdateInfo({ current: retryUpdate.current, latest: retryUpdate.latest });
+        setCheckingForUpdates(false);
+        clearInterval(timer);
+      } else if (attempts >= maxAttempts) {
+        setCheckingForUpdates(false);
+        clearInterval(timer);
       }
-    }, 5000);
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => clearInterval(timer);
   }, []);
 
   const handleExit = useCallback(() => {
@@ -134,6 +145,11 @@ export function App({ onExit }: AppProps): React.ReactElement {
           Initialization Error
         </Text>
         <Text color="red">{error.message}</Text>
+        {checkingForUpdates && (
+          <Box marginTop={1}>
+            <Spinner message="Checking for updates..." />
+          </Box>
+        )}
       </Box>
     );
   }
@@ -142,6 +158,33 @@ export function App({ onExit }: AppProps): React.ReactElement {
     return (
       <Box flexDirection="column" padding={1}>
         <Text color="red">Failed to initialize services</Text>
+      </Box>
+    );
+  }
+
+  // Show update-only screen on first launch if update is available
+  if (updateInfo && !updateDismissed) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Box
+          flexDirection="column"
+          borderStyle="double"
+          borderColor="yellow"
+          paddingX={2}
+          paddingY={1}
+        >
+          <Text color="yellow" bold>
+            Update Available: {updateInfo.current} → {updateInfo.latest}
+          </Text>
+          <Box marginTop={1}>
+            <UpdateBanner
+              currentVersion={updateInfo.current}
+              latestVersion={updateInfo.latest}
+              updateCommand={getUpdateCommand()}
+              onDismiss={() => setUpdateDismissed(true)}
+            />
+          </Box>
+        </Box>
       </Box>
     );
   }

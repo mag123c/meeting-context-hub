@@ -21,7 +21,7 @@ export function checkForUpdates(): UpdateInfo | null {
   try {
     const notifier = updateNotifier({
       pkg,
-      updateCheckInterval: 1000 * 60 * 60, // Check once per hour
+      updateCheckInterval: 0, // Always trigger background check
     });
 
     if (notifier.update && notifier.update.latest !== VERSION) {

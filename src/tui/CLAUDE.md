@@ -155,35 +155,44 @@ import { VERSION, PACKAGE_NAME } from '../version.js';
 
 ### Update Banner (`src/tui/components/UpdateBanner.tsx`)
 
-Shows update notification in main menu. Press `U` to update:
+Shows update notification. Press `U` to update, `Enter` to skip (when dismissible):
 
 ```typescript
 import { UpdateBanner } from '../components/UpdateBanner.js';
 
-{updateInfo && (
-  <UpdateBanner
-    currentVersion={updateInfo.current}
-    latestVersion={updateInfo.latest}
-    updateCommand={getUpdateCommand()}
-  />
-)}
+<UpdateBanner
+  currentVersion={updateInfo.current}
+  latestVersion={updateInfo.latest}
+  updateCommand={getUpdateCommand()}
+  onDismiss={() => setUpdateDismissed(true)}  // Optional: enables Enter to skip
+/>
 ```
 
+**Props:**
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| currentVersion | string | Yes | Current installed version |
+| latestVersion | string | Yes | Latest available version |
+| updateCommand | string | Yes | npm command to run update |
+| onDismiss | () => void | No | Callback when user presses Enter to skip |
+
 **States:**
-- Default: Shows version diff + "Press U to update"
+- Default: Shows version diff + "Press U to update" (+ "Enter to skip" if onDismiss provided)
 - Updating: Shows "Updating..."
 - Success: Shows "Updated! Press Ctrl+C and run `mch` to restart"
 - Error: Shows error + manual command
 
 **Background Check Behavior:**
 - `update-notifier` spawns background process on first call
-- May return null initially (background process running)
-- App retries after 5 seconds to catch completed check
+- `updateCheckInterval: 0` ensures check runs every startup
+- App polls every 1 second (max 10 attempts) until update info is available
+- Typically detects updates within 2 seconds
 
-**Error Screen with Update:**
-- If initialization error occurs AND update available → Show update-only screen
-- Rationale: Update may resolve issues (e.g., native module rebuild)
-- Error summary shown below update banner
+**Update Screen Flow:**
+1. **Normal startup + Update available** → Full-screen update prompt (U to update, Enter to skip)
+2. **Error + Update available** → Update-only screen (update may fix the issue)
+3. **Error + Checking** → Error screen with "Checking for updates..." spinner
+4. **No update** → Directly to MainMenu
 
 ### MainMenu Logo
 
