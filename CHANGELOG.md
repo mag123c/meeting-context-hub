@@ -1,3 +1,10 @@
+## [2.8.1](https://github.com/mag123c/meeting-context-hub/compare/v2.8.0...v2.8.1) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** add retry logic for update-notifier background check ([a361f56](https://github.com/mag123c/meeting-context-hub/commit/a361f56e2fc7fbe342ce6fdcd829b2fe9744eece))
+
 # [2.8.0](https://github.com/mag123c/meeting-context-hub/compare/v2.7.2...v2.8.0) (2026-01-26)
 
 
