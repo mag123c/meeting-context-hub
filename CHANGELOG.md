@@ -1,3 +1,10 @@
+## [2.11.10](https://github.com/mag123c/meeting-context-hub/compare/v2.11.9...v2.11.10) (2026-01-27)
+
+
+### Bug Fixes
+
+* **tui:** revert to block style logo ([2e215e6](https://github.com/mag123c/meeting-context-hub/commit/2e215e6082470ec3d646cd69f82bab6299aec940))
+
 ## [2.11.9](https://github.com/mag123c/meeting-context-hub/compare/v2.11.8...v2.11.9) (2026-01-27)
 
 
