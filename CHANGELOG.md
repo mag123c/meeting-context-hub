@@ -1,3 +1,10 @@
+# [2.14.0](https://github.com/mag123c/meeting-context-hub/compare/v2.13.0...v2.14.0) (2026-01-28)
+
+
+### Features
+
+* **update:** display cached update info instantly on startup ([e5e2b39](https://github.com/mag123c/meeting-context-hub/commit/e5e2b3934f3ca5173974e2396fab10e663b5a697))
+
 # [2.13.0](https://github.com/mag123c/meeting-context-hub/compare/v2.12.2...v2.13.0) (2026-01-28)
 
 
