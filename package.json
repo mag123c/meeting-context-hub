@@ -1,6 +1,6 @@
 {
   "name": "meeting-context-hub",
-  "version": "2.17.0",
+  "version": "2.17.1",
   "description": "TUI tool for managing meeting contexts with AI extraction and chaining",
   "type": "module",
   "main": "dist/index.js",

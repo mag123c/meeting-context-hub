@@ -1,3 +1,10 @@
+## [2.17.1](https://github.com/mag123c/meeting-context-hub/compare/v2.17.0...v2.17.1) (2026-01-28)
+
+
+### Bug Fixes
+
+* **db:** run migrations before index creation ([f3bda69](https://github.com/mag123c/meeting-context-hub/commit/f3bda69bdd4b373bbe262c4cfc6bb14939a7ca6f))
+
 # [2.17.0](https://github.com/mag123c/meeting-context-hub/compare/v2.16.0...v2.17.0) (2026-01-28)
 
 
