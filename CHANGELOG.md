@@ -1,3 +1,10 @@
+# [2.12.0](https://github.com/mag123c/meeting-context-hub/compare/v2.11.10...v2.12.0) (2026-01-28)
+
+
+### Features
+
+* **add-context:** add audio file path input with Whisper transcription ([a9a1fe7](https://github.com/mag123c/meeting-context-hub/commit/a9a1fe7c7ddf351fe1f04f32bf205a521de8d44f))
+
 ## [2.11.10](https://github.com/mag123c/meeting-context-hub/compare/v2.11.9...v2.11.10) (2026-01-27)
 
 
