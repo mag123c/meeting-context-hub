@@ -7,6 +7,7 @@ import { TextInput } from '../components/TextInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
 import { SectionBox } from '../components/SectionBox.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
+import { ScrollableList } from '../components/ScrollableList.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
@@ -735,18 +736,18 @@ export function ProjectScreen({
         {!saving && (
           <>
             <Box flexDirection="column" marginY={1} borderStyle="round" borderColor="cyan" paddingX={1}>
-              {dictEntries.length === 0 ? (
-                <Text color="gray">{t('dictionary.empty', language)}</Text>
-              ) : (
-                dictEntries.map((entry, index) => (
-                  <Box key={entry.id}>
-                    <Text color={index === dictSelectedIndex ? 'cyan' : undefined}>
-                      {index === dictSelectedIndex ? '> ' : '  '}
-                      {entry.source} {t('dictionary.arrow', language)} {entry.target}
-                    </Text>
-                  </Box>
-                ))
-              )}
+              <ScrollableList
+                items={dictEntries}
+                selectedIndex={dictSelectedIndex}
+                maxVisible={10}
+                emptyMessage={t('dictionary.empty', language)}
+                renderItem={(entry, _index, isSelected) => (
+                  <Text color={isSelected ? 'cyan' : undefined}>
+                    {isSelected ? '> ' : '  '}
+                    {entry.source} {t('dictionary.arrow', language)} {entry.target}
+                  </Text>
+                )}
+              />
             </Box>
 
             <Box marginTop={1}>
@@ -847,21 +848,23 @@ export function ProjectScreen({
         {!saving && (
           <>
             <Box flexDirection="column" marginY={1} borderStyle="round" borderColor="cyan" paddingX={1}>
-              {domainEntries.length === 0 ? (
-                <Text color="gray">{t('domain.empty', language)}</Text>
-              ) : (
-                domainEntries.map((entry, index) => (
-                  <Box key={entry.id}>
-                    <Text color={index === domainSelectedIndex ? 'cyan' : undefined}>
-                      {index === domainSelectedIndex ? '> ' : '  '}
+              <ScrollableList
+                items={domainEntries}
+                selectedIndex={domainSelectedIndex}
+                maxVisible={10}
+                emptyMessage={t('domain.empty', language)}
+                renderItem={(entry, _index, isSelected) => (
+                  <Box>
+                    <Text color={isSelected ? 'cyan' : undefined}>
+                      {isSelected ? '> ' : '  '}
                       [{entry.category}] {entry.title}
                     </Text>
                     <Text color={entry.enabled ? 'green' : 'gray'} dimColor={!entry.enabled}>
                       {' '}({entry.enabled ? t('domain.enabled', language) : t('domain.disabled', language)})
                     </Text>
                   </Box>
-                ))
-              )}
+                )}
+              />
             </Box>
 
             <Box marginTop={1}>

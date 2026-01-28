@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import TextInput from 'ink-text-input';
+import { ScrollableList } from './ScrollableList.js';
 import { t } from '../../i18n/index.js';
 
 interface StringListEditorProps {
@@ -153,14 +154,17 @@ export function StringListEditor({
 
   return (
     <Box flexDirection="column">
-      {items.map((item, index) => (
-        <Box key={index}>
-          <Text color={index === selectedIndex ? 'cyan' : undefined}>
-            {index === selectedIndex ? '> ' : '  '}
+      <ScrollableList
+        items={items}
+        selectedIndex={selectedIndex}
+        maxVisible={10}
+        renderItem={(item, index, isSelected) => (
+          <Text color={isSelected ? 'cyan' : undefined}>
+            {isSelected ? '> ' : '  '}
             {index + 1}. {item}
           </Text>
-        </Box>
-      ))}
+        )}
+      />
       <Box marginTop={1}>
         <Text color="gray" dimColor>
           {t('edit.hint_list_editing', language)}

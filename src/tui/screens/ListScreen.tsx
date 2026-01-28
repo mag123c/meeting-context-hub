@@ -4,6 +4,7 @@ import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { SectionBox } from '../components/SectionBox.js';
+import { ScrollableList } from '../components/ScrollableList.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ListContextsUseCase } from '../../core/usecases/list-contexts.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -125,15 +126,21 @@ export function ListScreen({
         </SectionBox>
       ) : (
         <SectionBox color="cyan">
-          {contexts.map((context, index) => (
-            <Box key={context.id} flexDirection="column" marginBottom={index < contexts.length - 1 ? 1 : 0}>
-              {index === selectedIndex && <Text color="cyan">&gt; </Text>}
-              <ContextCard context={context} selected={index === selectedIndex} />
-              <Text color="gray" dimColor>
-                {t('list.project', language)} {getProjectName(context.projectId)}
-              </Text>
-            </Box>
-          ))}
+          <ScrollableList
+            items={contexts}
+            selectedIndex={selectedIndex}
+            maxVisible={10}
+            emptyMessage={t('list.empty', language)}
+            renderItem={(context, index, isSelected) => (
+              <Box key={context.id} flexDirection="column" marginBottom={index < contexts.length - 1 ? 1 : 0}>
+                {isSelected && <Text color="cyan">&gt; </Text>}
+                <ContextCard context={context} selected={isSelected} />
+                <Text color="gray" dimColor>
+                  {t('list.project', language)} {getProjectName(context.projectId)}
+                </Text>
+              </Box>
+            )}
+          />
         </SectionBox>
       )}
 

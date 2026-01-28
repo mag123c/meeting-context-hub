@@ -79,6 +79,7 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 | ConfirmDialog | Confirmation dialog with keyboard navigation (←/→, Enter, ESC) |
 | GroupSelector | Modal for selecting/creating groups with list/create modes |
 | StringListEditor | List editor for string[] arrays (decisions, policies, tags) with a/d/Enter/ESC shortcuts |
+| ScrollableList | Generic scrollable list with viewport tracking and scroll indicators |
 
 ## SectionBox Component
 
@@ -146,6 +147,41 @@ import { MultilineInput } from '../components/MultilineInput.js';
 - `Tab` - Mode switch (calls onTabComplete)
 - `Arrow keys` - Cursor navigation
 - `Backspace` - Delete character/merge lines
+
+## ScrollableList Component
+
+Generic scrollable list with automatic viewport tracking:
+
+```typescript
+import { ScrollableList } from '../components/ScrollableList.js';
+
+<ScrollableList
+  items={entries}
+  selectedIndex={selectedIndex}
+  maxVisible={10}
+  emptyMessage="No items"
+  renderItem={(item, index, isSelected) => (
+    <Text color={isSelected ? 'cyan' : undefined}>
+      {isSelected ? '> ' : '  '}{item.name}
+    </Text>
+  )}
+/>
+```
+
+**Props:**
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| items | T[] | - | Array of items to display |
+| selectedIndex | number | - | Currently selected index |
+| renderItem | (item, index, isSelected) => ReactNode | - | Item renderer |
+| maxVisible | number | 10 | Max visible items before scroll |
+| showIndicator | boolean | true | Show ▲/▼ scroll indicators |
+| emptyMessage | string | 'No items' | Message when list is empty |
+
+**Features:**
+- Auto-scrolls to keep selection visible
+- Shows "▲ N more" / "▼ N more" indicators
+- Handles initial offset calculation
 
 ## StringListEditor Component
 
