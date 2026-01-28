@@ -1,4 +1,4 @@
-import type { Context, Project, ListOptions } from '../../types/index.js';
+import type { Context, Project, ListOptions, DictionaryEntry } from '../../types/index.js';
 
 /**
  * Storage provider interface (Port)
@@ -29,4 +29,13 @@ export interface StorageProvider {
 
   // Utility
   getContextCount(projectId?: string): Promise<number>;
+
+  // Dictionary operations
+  saveDictionaryEntry(entry: DictionaryEntry): Promise<void>;
+  getDictionaryEntry(id: string): Promise<DictionaryEntry | null>;
+  getDictionaryEntryBySource(source: string): Promise<DictionaryEntry | null>;
+  listDictionaryEntries(): Promise<DictionaryEntry[]>;
+  updateDictionaryEntry(id: string, updates: Partial<DictionaryEntry>): Promise<void>;
+  deleteDictionaryEntry(id: string): Promise<void>;
+  getAllDictionaryMappings(): Promise<Map<string, string>>;
 }

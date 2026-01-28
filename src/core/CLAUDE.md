@@ -36,6 +36,7 @@ import {
 | RetryService | Exponential backoff retry |
 | PathCompletionService | Path expansion (~) and autocompletion |
 | FileValidationService | Audio file existence and extension validation |
+| DictionaryService | STT correction via source→target mappings |
 
 ## Dependency Injection
 

@@ -256,6 +256,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           goBack={goBack}
           onConfigChange={handleConfigChange}
           language={language}
+          dictionaryService={services.dictionary}
         />
       );
 

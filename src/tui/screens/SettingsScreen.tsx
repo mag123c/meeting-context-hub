@@ -6,16 +6,19 @@ import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
 import { ConfigService } from '../../core/services/config.service.js';
-import { t } from '../../i18n/index.js';
+import { DictionaryService } from '../../core/services/dictionary.service.js';
+import { t, ti } from '../../i18n/index.js';
 import type { ConfigStatus } from '../../adapters/config/index.js';
+import type { DictionaryEntry } from '../../types/index.js';
 
 interface SettingsScreenProps {
   goBack: () => void;
   onConfigChange?: () => void;
   language?: 'ko' | 'en';
+  dictionaryService?: DictionaryService;
 }
 
-type Mode = 'view' | 'edit-anthropic' | 'edit-openai' | 'edit-language' | 'edit-dbpath';
+type Mode = 'view' | 'edit-anthropic' | 'edit-openai' | 'edit-language' | 'edit-dbpath' | 'dictionary-list' | 'dictionary-add' | 'dictionary-edit';
 
 const configService = new ConfigService();
 
@@ -23,6 +26,7 @@ export function SettingsScreen({
   goBack,
   onConfigChange,
   language = 'en',
+  dictionaryService,
 }: SettingsScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('view');
   const [status, setStatus] = useState<ConfigStatus | null>(null);
@@ -32,6 +36,14 @@ export function SettingsScreen({
   const [error, setError] = useState<Error | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // Dictionary state
+  const [dictEntries, setDictEntries] = useState<DictionaryEntry[]>([]);
+  const [dictSelectedIndex, setDictSelectedIndex] = useState(0);
+  const [dictSource, setDictSource] = useState('');
+  const [dictTarget, setDictTarget] = useState('');
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [dictInputStep, setDictInputStep] = useState<'source' | 'target'>('source');
 
   const loadStatus = useCallback(() => {
     try {
@@ -44,9 +56,25 @@ export function SettingsScreen({
     }
   }, []);
 
+  const loadDictionaryEntries = useCallback(async () => {
+    if (!dictionaryService) return;
+    try {
+      const entries = await dictionaryService.listEntries();
+      setDictEntries(entries);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load dictionary'));
+    }
+  }, [dictionaryService]);
+
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  useEffect(() => {
+    if (mode === 'dictionary-list') {
+      loadDictionaryEntries();
+    }
+  }, [mode, loadDictionaryEntries]);
 
   const handleSaveKey = useCallback(async (key: 'anthropic' | 'openai') => {
     if (!apiKeyInput.trim()) {
@@ -98,6 +126,76 @@ export function SettingsScreen({
     }
   }, [loadStatus, onConfigChange]);
 
+  const handleAddDictEntry = useCallback(async () => {
+    if (!dictionaryService || !dictSource.trim() || !dictTarget.trim()) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await dictionaryService.addEntry(dictSource.trim(), dictTarget.trim());
+      setSuccess(t('dictionary.added', language));
+      setDictSource('');
+      setDictTarget('');
+      setDictInputStep('source');
+      setMode('dictionary-list');
+      await loadDictionaryEntries();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to add entry'));
+    } finally {
+      setSaving(false);
+    }
+  }, [dictionaryService, dictSource, dictTarget, language, loadDictionaryEntries]);
+
+  const handleUpdateDictEntry = useCallback(async () => {
+    if (!dictionaryService || !editingEntryId || !dictSource.trim() || !dictTarget.trim()) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await dictionaryService.updateEntry(editingEntryId, {
+        source: dictSource.trim(),
+        target: dictTarget.trim(),
+      });
+      setSuccess(t('dictionary.updated', language));
+      setDictSource('');
+      setDictTarget('');
+      setDictInputStep('source');
+      setEditingEntryId(null);
+      setMode('dictionary-list');
+      await loadDictionaryEntries();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update entry'));
+    } finally {
+      setSaving(false);
+    }
+  }, [dictionaryService, editingEntryId, dictSource, dictTarget, language, loadDictionaryEntries]);
+
+  const handleDeleteDictEntry = useCallback(async () => {
+    if (!dictionaryService || dictEntries.length === 0) return;
+
+    const entry = dictEntries[dictSelectedIndex];
+    if (!entry) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await dictionaryService.deleteEntry(entry.id);
+      setSuccess(t('dictionary.deleted', language));
+      await loadDictionaryEntries();
+      setDictSelectedIndex((prev) => Math.max(0, prev - 1));
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete entry'));
+    } finally {
+      setSaving(false);
+    }
+  }, [dictionaryService, dictEntries, dictSelectedIndex, language, loadDictionaryEntries]);
+
   const handleSaveDbPath = useCallback(async () => {
     if (!dbPathInput.trim()) {
       setError(new Error(language === 'ko' ? '경로를 입력해주세요' : 'Path cannot be empty'));
@@ -124,15 +222,69 @@ export function SettingsScreen({
     }
   }, [dbPathInput, loadStatus, onConfigChange, language]);
 
-  useInput((_, key) => {
+  useInput((input, key) => {
     if (key.escape) {
-      if (mode !== 'view') {
+      if (mode === 'dictionary-add' || mode === 'dictionary-edit') {
+        setMode('dictionary-list');
+        setDictSource('');
+        setDictTarget('');
+        setDictInputStep('source');
+        setEditingEntryId(null);
+        setError(null);
+      } else if (mode === 'dictionary-list') {
+        setMode('view');
+        setError(null);
+      } else if (mode !== 'view') {
         setMode('view');
         setApiKeyInput('');
         setDbPathInput('');
         setError(null);
       } else {
         goBack();
+      }
+      return;
+    }
+
+    // Dictionary list mode navigation
+    if (mode === 'dictionary-list' && !saving) {
+      if (key.upArrow) {
+        setDictSelectedIndex((prev) => Math.max(0, prev - 1));
+      } else if (key.downArrow) {
+        setDictSelectedIndex((prev) => Math.min(dictEntries.length - 1, prev + 1));
+      } else if (input === 'a') {
+        setMode('dictionary-add');
+        setDictSource('');
+        setDictTarget('');
+        setDictInputStep('source');
+        setError(null);
+      } else if (input === 'd' && dictEntries.length > 0) {
+        handleDeleteDictEntry();
+      } else if (key.return && dictEntries.length > 0) {
+        const entry = dictEntries[dictSelectedIndex];
+        if (entry) {
+          setEditingEntryId(entry.id);
+          setDictSource(entry.source);
+          setDictTarget(entry.target);
+          setDictInputStep('source');
+          setMode('dictionary-edit');
+          setError(null);
+        }
+      }
+      return;
+    }
+
+    // Dictionary add/edit mode
+    if ((mode === 'dictionary-add' || mode === 'dictionary-edit') && !saving) {
+      if (key.return) {
+        if (dictInputStep === 'source' && dictSource.trim()) {
+          setDictInputStep('target');
+        } else if (dictInputStep === 'target' && dictTarget.trim()) {
+          if (mode === 'dictionary-add') {
+            handleAddDictEntry();
+          } else {
+            handleUpdateDictEntry();
+          }
+        }
       }
       return;
     }
@@ -280,6 +432,118 @@ export function SettingsScreen({
     );
   }
 
+  // Dictionary list mode
+  if (mode === 'dictionary-list') {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title={t('dictionary.title', language)}
+          subtitle={ti('dictionary.count', language, { count: dictEntries.length })}
+        />
+
+        {saving && <Spinner message={t('dictionary.deleting', language)} />}
+
+        {success && (
+          <Box marginY={1}>
+            <Text color="green">{success}</Text>
+          </Box>
+        )}
+
+        {error && (
+          <Box marginY={1}>
+            <ErrorText error={error} language={language} />
+          </Box>
+        )}
+
+        {!saving && (
+          <>
+            <Box flexDirection="column" marginY={1} borderStyle="round" borderColor="cyan" paddingX={1}>
+              {dictEntries.length === 0 ? (
+                <Text color="gray">{t('dictionary.empty', language)}</Text>
+              ) : (
+                dictEntries.map((entry, index) => (
+                  <Box key={entry.id}>
+                    <Text color={index === dictSelectedIndex ? 'cyan' : undefined}>
+                      {index === dictSelectedIndex ? '> ' : '  '}
+                      {entry.source} {t('dictionary.arrow', language)} {entry.target}
+                    </Text>
+                  </Box>
+                ))
+              )}
+            </Box>
+
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('dictionary.hint_list', language)}
+              </Text>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  }
+
+  // Dictionary add/edit mode
+  if (mode === 'dictionary-add' || mode === 'dictionary-edit') {
+    const isEdit = mode === 'dictionary-edit';
+    const title = isEdit ? t('dictionary.edit_title', language) : t('dictionary.add_title', language);
+    const spinnerMsg = isEdit ? t('dictionary.updating', language) : t('dictionary.adding', language);
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={title} />
+
+        {saving ? (
+          <Spinner message={spinnerMsg} />
+        ) : (
+          <>
+            <Box marginY={1} flexDirection="column">
+              <Box>
+                <Text color={dictInputStep === 'source' ? 'cyan' : 'gray'}>
+                  {t('dictionary.source_label', language)}{' '}
+                </Text>
+              </Box>
+              {dictInputStep === 'source' ? (
+                <TextInput
+                  value={dictSource}
+                  onChange={setDictSource}
+                  placeholder={t('dictionary.source_placeholder', language)}
+                />
+              ) : (
+                <Text>{dictSource}</Text>
+              )}
+            </Box>
+
+            {dictInputStep === 'target' && (
+              <Box marginY={1} flexDirection="column">
+                <Box>
+                  <Text color="cyan">{t('dictionary.target_label', language)} </Text>
+                </Box>
+                <TextInput
+                  value={dictTarget}
+                  onChange={setDictTarget}
+                  placeholder={t('dictionary.target_placeholder', language)}
+                />
+              </Box>
+            )}
+
+            {error && (
+              <Box marginY={1}>
+                <ErrorText error={error} language={language} />
+              </Box>
+            )}
+
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('dictionary.hint_form', language)}
+              </Text>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  }
+
   // View mode
   const menuItems = [
     {
@@ -297,6 +561,10 @@ export function SettingsScreen({
     {
       label: t('settings.change_db_path', language),
       value: 'dbpath',
+    },
+    {
+      label: t('dictionary.manage', language),
+      value: 'dictionary',
     },
     { label: t('common.back', language), value: 'back' },
   ];
@@ -365,6 +633,9 @@ export function SettingsScreen({
             } else if (item.value === 'dbpath') {
               setMode('edit-dbpath');
               setDbPathInput(status?.dbPath || '');
+            } else if (item.value === 'dictionary') {
+              setMode('dictionary-list');
+              setDictSelectedIndex(0);
               setError(null);
             }
           }}

@@ -193,6 +193,28 @@ export const UI_STRINGS = {
   'record.success_subtitle': { ko: '성공적으로 추출 및 저장됨', en: 'Successfully extracted and saved' },
   'record.saved': { ko: '컨텍스트가 저장되었습니다!', en: 'Context saved successfully!' },
 
+  // Dictionary strings
+  'dictionary.title': { ko: '용어 사전', en: 'Dictionary' },
+  'dictionary.subtitle': { ko: 'STT 오인식 교정을 위한 용어 사전', en: 'Dictionary for STT correction' },
+  'dictionary.manage': { ko: '용어 사전 관리', en: 'Manage Dictionary' },
+  'dictionary.empty': { ko: '등록된 용어가 없습니다. a를 눌러 추가하세요.', en: 'No entries yet. Press a to add one.' },
+  'dictionary.add_title': { ko: '용어 추가', en: 'Add Entry' },
+  'dictionary.edit_title': { ko: '용어 수정', en: 'Edit Entry' },
+  'dictionary.source_label': { ko: '오인식어:', en: 'Source (misrecognized):' },
+  'dictionary.source_placeholder': { ko: '예: 임포크', en: 'e.g., misrecognized word' },
+  'dictionary.target_label': { ko: '정정어:', en: 'Target (correct):' },
+  'dictionary.target_placeholder': { ko: '예: 인포크', en: 'e.g., correct word' },
+  'dictionary.adding': { ko: '추가 중...', en: 'Adding...' },
+  'dictionary.updating': { ko: '수정 중...', en: 'Updating...' },
+  'dictionary.deleting': { ko: '삭제 중...', en: 'Deleting...' },
+  'dictionary.added': { ko: '용어가 추가되었습니다.', en: 'Entry added successfully.' },
+  'dictionary.updated': { ko: '용어가 수정되었습니다.', en: 'Entry updated successfully.' },
+  'dictionary.deleted': { ko: '용어가 삭제되었습니다.', en: 'Entry deleted successfully.' },
+  'dictionary.hint_list': { ko: 'a: 추가 | d: 삭제 | Enter: 수정 | ESC: 뒤로', en: 'a: Add | d: Delete | Enter: Edit | ESC: Back' },
+  'dictionary.hint_form': { ko: 'Enter: 저장 | ESC: 취소', en: 'Enter: Save | ESC: Cancel' },
+  'dictionary.arrow': { ko: '→', en: '→' },
+  'dictionary.count': { ko: '{count}개 용어', en: '{count} entries' },
+
   // Dialog strings
   'dialog.delete_context_title': { ko: '컨텍스트 삭제', en: 'Delete Context' },
   'dialog.delete_context_message': { ko: '이 컨텍스트를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', en: 'Delete this context?\nThis action cannot be undone.' },

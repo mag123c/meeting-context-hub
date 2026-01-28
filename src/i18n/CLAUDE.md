@@ -59,6 +59,7 @@ export const UI_STRINGS = {
 | project | Group management (UI term: "Group", entity: "Project") |
 | record | Recording screen |
 | dialog | Confirmation dialogs and modals (delete, group change) |
+| dictionary | Dictionary management (STT correction terms) |
 
 ## Type Safety
 

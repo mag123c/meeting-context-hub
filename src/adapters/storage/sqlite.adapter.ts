@@ -7,6 +7,7 @@ import type {
   Project,
   ListOptions,
   ActionItem,
+  DictionaryEntry,
 } from '../../types/index.js';
 import { StorageError, ErrorCode } from '../../types/errors.js';
 
@@ -97,6 +98,22 @@ export class SQLiteAdapter implements StorageProvider {
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_contexts_project ON contexts(project_id);
       CREATE INDEX IF NOT EXISTS idx_contexts_created ON contexts(created_at DESC);
+    `);
+
+    // Dictionary table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS dictionary (
+        id TEXT PRIMARY KEY,
+        source TEXT NOT NULL UNIQUE,
+        target TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    // Dictionary index
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_dictionary_source ON dictionary(source);
     `);
   }
 
@@ -595,6 +612,204 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
+  // Dictionary operations
+
+  async saveDictionaryEntry(entry: DictionaryEntry): Promise<void> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        INSERT INTO dictionary (id, source, target, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+
+      stmt.run(
+        entry.id,
+        entry.source,
+        entry.target,
+        entry.createdAt.toISOString(),
+        entry.updatedAt.toISOString()
+      );
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+
+      const message = originalError?.message?.toLowerCase() ?? '';
+      if (message.includes('unique constraint')) {
+        throw new StorageError(
+          `Dictionary entry with source "${entry.source}" already exists`,
+          ErrorCode.DICTIONARY_DUPLICATE_SOURCE,
+          true,
+          originalError
+        );
+      }
+
+      throw new StorageError(
+        `Failed to save dictionary entry: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async getDictionaryEntry(id: string): Promise<DictionaryEntry | null> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM dictionary WHERE id = ?');
+      const row = stmt.get(id) as DictionaryRow | undefined;
+
+      if (!row) return null;
+      return this.rowToDictionaryEntry(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get dictionary entry: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async getDictionaryEntryBySource(source: string): Promise<DictionaryEntry | null> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM dictionary WHERE source = ?');
+      const row = stmt.get(source) as DictionaryRow | undefined;
+
+      if (!row) return null;
+      return this.rowToDictionaryEntry(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get dictionary entry by source: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async listDictionaryEntries(): Promise<DictionaryEntry[]> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM dictionary ORDER BY source ASC');
+      const rows = stmt.all() as DictionaryRow[];
+
+      return rows.map((row) => this.rowToDictionaryEntry(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list dictionary entries: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async updateDictionaryEntry(id: string, updates: Partial<DictionaryEntry>): Promise<void> {
+    try {
+      const db = this.getDb();
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
+
+      if (updates.source !== undefined) {
+        setClauses.push('source = ?');
+        params.push(updates.source);
+      }
+      if (updates.target !== undefined) {
+        setClauses.push('target = ?');
+        params.push(updates.target);
+      }
+
+      setClauses.push('updated_at = ?');
+      params.push(new Date().toISOString());
+      params.push(id);
+
+      if (setClauses.length === 1) return; // Only updated_at
+
+      const sql = `UPDATE dictionary SET ${setClauses.join(', ')} WHERE id = ?`;
+      db.prepare(sql).run(...params);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+
+      const message = originalError?.message?.toLowerCase() ?? '';
+      if (message.includes('unique constraint')) {
+        throw new StorageError(
+          `Dictionary entry with source "${updates.source}" already exists`,
+          ErrorCode.DICTIONARY_DUPLICATE_SOURCE,
+          true,
+          originalError
+        );
+      }
+
+      throw new StorageError(
+        `Failed to update dictionary entry: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async deleteDictionaryEntry(id: string): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare('DELETE FROM dictionary WHERE id = ?').run(id);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete dictionary entry: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async getAllDictionaryMappings(): Promise<Map<string, string>> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT source, target FROM dictionary');
+      const rows = stmt.all() as { source: string; target: string }[];
+
+      const mappings = new Map<string, string>();
+      for (const row of rows) {
+        mappings.set(row.source, row.target);
+      }
+      return mappings;
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get dictionary mappings: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
   // Helper methods
 
   private rowToContext(row: ContextRow): Context {
@@ -635,6 +850,16 @@ export class SQLiteAdapter implements StorageProvider {
       createdAt: new Date(row.created_at),
     };
   }
+
+  private rowToDictionaryEntry(row: DictionaryRow): DictionaryEntry {
+    return {
+      id: row.id,
+      source: row.source,
+      target: row.target,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    };
+  }
 }
 
 // Type definitions for database rows
@@ -659,4 +884,12 @@ interface ProjectRow {
   name: string;
   description: string | null;
   created_at: string;
+}
+
+interface DictionaryRow {
+  id: string;
+  source: string;
+  target: string;
+  created_at: string;
+  updated_at: string;
 }

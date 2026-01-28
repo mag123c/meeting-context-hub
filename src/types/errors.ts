@@ -38,6 +38,7 @@ export enum ErrorCode {
   CONTEXT_NOT_FOUND = 'CONTEXT_NOT_FOUND',
   PROJECT_NOT_FOUND = 'PROJECT_NOT_FOUND',
   PROJECT_NAME_DUPLICATE = 'PROJECT_NAME_DUPLICATE',
+  DICTIONARY_DUPLICATE_SOURCE = 'DICTIONARY_DUPLICATE_SOURCE',
 
   // Input
   INVALID_INPUT = 'INVALID_INPUT',
@@ -139,6 +140,10 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
   [ErrorCode.PROJECT_NAME_DUPLICATE]: {
     ko: '이미 같은 이름의 프로젝트가 존재합니다.',
     en: 'A project with this name already exists.',
+  },
+  [ErrorCode.DICTIONARY_DUPLICATE_SOURCE]: {
+    ko: '이미 같은 오인식어가 등록되어 있습니다.',
+    en: 'A dictionary entry with this source already exists.',
   },
 
   // Input

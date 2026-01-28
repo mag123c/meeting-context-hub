@@ -64,3 +64,12 @@ export interface SearchResult {
   context: Context;
   score: number;
 }
+
+// Dictionary entry for STT correction
+export interface DictionaryEntry {
+  id: string;
+  source: string; // Misrecognized text (e.g., "임포크")
+  target: string; // Corrected text (e.g., "인포크")
+  createdAt: Date;
+  updatedAt: Date;
+}

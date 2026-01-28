@@ -5,6 +5,7 @@ import type { Context, SearchResult } from '../../types/index.js';
 import { ExtractService } from '../services/extract.service.js';
 import { EmbeddingService } from '../services/embedding.service.js';
 import { ChainService } from '../services/chain.service.js';
+import { DictionaryService } from '../services/dictionary.service.js';
 import { createContext } from '../domain/context.js';
 
 export interface RecordContextResult {
@@ -17,6 +18,8 @@ export interface RecordContextResult {
  * Use case for recording audio, transcribing, and extracting context
  */
 export class RecordContextUseCase {
+  private dictionaryService: DictionaryService | null = null;
+
   constructor(
     private readonly recordingProvider: RecordingProvider,
     private readonly transcriptionProvider: TranscriptionProvider,
@@ -24,7 +27,10 @@ export class RecordContextUseCase {
     private readonly embeddingService: EmbeddingService,
     private readonly chainService: ChainService,
     private readonly storage: StorageProvider
-  ) {}
+  ) {
+    // Initialize dictionary service for STT correction
+    this.dictionaryService = new DictionaryService(storage);
+  }
 
   /**
    * Start recording
@@ -55,10 +61,17 @@ export class RecordContextUseCase {
   }
 
   /**
-   * Transcribe audio file
+   * Transcribe audio file and apply dictionary corrections
    */
   async transcribe(filePath: string): Promise<string> {
-    return this.transcriptionProvider.transcribeFile(filePath);
+    const rawText = await this.transcriptionProvider.transcribeFile(filePath);
+
+    // Apply dictionary corrections if available
+    if (this.dictionaryService) {
+      return this.dictionaryService.correctText(rawText);
+    }
+
+    return rawText;
   }
 
   /**
