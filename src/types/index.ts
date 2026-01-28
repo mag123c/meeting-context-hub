@@ -68,6 +68,7 @@ export interface SearchResult {
 // Dictionary entry for STT correction
 export interface DictionaryEntry {
   id: string;
+  projectId: string | null; // null = global, string = group-specific
   source: string; // Misrecognized text (e.g., "임포크")
   target: string; // Corrected text (e.g., "인포크")
   createdAt: Date;
@@ -80,6 +81,7 @@ export type PromptContextCategory = 'domain' | 'policy' | 'terminology' | 'custo
 // PromptContext entity - Domain knowledge for AI extraction
 export interface PromptContext {
   id: string;
+  projectId: string | null; // null = global, string = group-specific
   category: PromptContextCategory;
   title: string;
   content: string;

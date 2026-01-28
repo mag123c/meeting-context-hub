@@ -106,22 +106,29 @@ export class SQLiteAdapter implements StorageProvider {
     db.exec(`
       CREATE TABLE IF NOT EXISTS dictionary (
         id TEXT PRIMARY KEY,
-        source TEXT NOT NULL UNIQUE,
+        project_id TEXT,
+        source TEXT NOT NULL,
         target TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(project_id, source)
       )
     `);
 
-    // Dictionary index
+    // Dictionary indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_dictionary_source ON dictionary(source);
+      CREATE INDEX IF NOT EXISTS idx_dictionary_project ON dictionary(project_id);
     `);
+
+    // Migration: Add project_id to dictionary if it doesn't exist
+    this.migrateDictionaryTable();
 
     // PromptContext table
     db.exec(`
       CREATE TABLE IF NOT EXISTS prompt_contexts (
         id TEXT PRIMARY KEY,
+        project_id TEXT,
         category TEXT NOT NULL DEFAULT 'custom',
         title TEXT NOT NULL,
         content TEXT NOT NULL,
@@ -135,7 +142,50 @@ export class SQLiteAdapter implements StorageProvider {
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_enabled ON prompt_contexts(enabled);
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_category ON prompt_contexts(category);
+      CREATE INDEX IF NOT EXISTS idx_prompt_contexts_project ON prompt_contexts(project_id);
     `);
+
+    // Migration: Add project_id to prompt_contexts if it doesn't exist
+    this.migratePromptContextsTable();
+  }
+
+  /**
+   * Migrate dictionary table to add project_id column if it doesn't exist
+   */
+  private migrateDictionaryTable(): void {
+    const db = this.getDb();
+
+    // Check if project_id column exists
+    const tableInfo = db.pragma('table_info(dictionary)') as Array<{ name: string }>;
+    const hasProjectId = tableInfo.some((col) => col.name === 'project_id');
+
+    if (!hasProjectId) {
+      // Add project_id column (null = global)
+      db.exec('ALTER TABLE dictionary ADD COLUMN project_id TEXT');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_dictionary_project ON dictionary(project_id)');
+
+      // Drop old unique constraint and add new one with project_id
+      // SQLite doesn't support dropping constraints, so we need to recreate the table
+      // For now, the UNIQUE(project_id, source) constraint is only enforced on new tables
+      // Existing entries will have project_id = NULL (global)
+    }
+  }
+
+  /**
+   * Migrate prompt_contexts table to add project_id column if it doesn't exist
+   */
+  private migratePromptContextsTable(): void {
+    const db = this.getDb();
+
+    // Check if project_id column exists
+    const tableInfo = db.pragma('table_info(prompt_contexts)') as Array<{ name: string }>;
+    const hasProjectId = tableInfo.some((col) => col.name === 'project_id');
+
+    if (!hasProjectId) {
+      // Add project_id column (null = global)
+      db.exec('ALTER TABLE prompt_contexts ADD COLUMN project_id TEXT');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_prompt_contexts_project ON prompt_contexts(project_id)');
+    }
   }
 
   // Context operations
@@ -639,12 +689,13 @@ export class SQLiteAdapter implements StorageProvider {
     try {
       const db = this.getDb();
       const stmt = db.prepare(`
-        INSERT INTO dictionary (id, source, target, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO dictionary (id, project_id, source, target, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
         entry.id,
+        entry.projectId,
         entry.source,
         entry.target,
         entry.createdAt.toISOString(),
@@ -719,11 +770,28 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
-  async listDictionaryEntries(): Promise<DictionaryEntry[]> {
+  async listDictionaryEntries(projectId?: string | null): Promise<DictionaryEntry[]> {
     try {
       const db = this.getDb();
-      const stmt = db.prepare('SELECT * FROM dictionary ORDER BY source ASC');
-      const rows = stmt.all() as DictionaryRow[];
+      let sql = 'SELECT * FROM dictionary';
+      const params: unknown[] = [];
+
+      // If projectId is undefined, return all entries
+      // If projectId is null, return only global entries
+      // If projectId is a string, return only entries for that project
+      if (projectId !== undefined) {
+        if (projectId === null) {
+          sql += ' WHERE project_id IS NULL';
+        } else {
+          sql += ' WHERE project_id = ?';
+          params.push(projectId);
+        }
+      }
+
+      sql += ' ORDER BY source ASC';
+
+      const stmt = db.prepare(sql);
+      const rows = stmt.all(...params) as DictionaryRow[];
 
       return rows.map((row) => this.rowToDictionaryEntry(row));
     } catch (error) {
@@ -806,16 +874,28 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
-  async getAllDictionaryMappings(): Promise<Map<string, string>> {
+  async getAllDictionaryMappings(projectId?: string): Promise<Map<string, string>> {
     try {
       const db = this.getDb();
-      const stmt = db.prepare('SELECT source, target FROM dictionary');
-      const rows = stmt.all() as { source: string; target: string }[];
-
+      // Get global mappings first, then override with project-specific
       const mappings = new Map<string, string>();
-      for (const row of rows) {
+
+      // Get global mappings (project_id IS NULL)
+      const globalStmt = db.prepare('SELECT source, target FROM dictionary WHERE project_id IS NULL');
+      const globalRows = globalStmt.all() as { source: string; target: string }[];
+      for (const row of globalRows) {
         mappings.set(row.source, row.target);
       }
+
+      // If projectId is provided, overlay with project-specific mappings
+      if (projectId) {
+        const projectStmt = db.prepare('SELECT source, target FROM dictionary WHERE project_id = ?');
+        const projectRows = projectStmt.all(projectId) as { source: string; target: string }[];
+        for (const row of projectRows) {
+          mappings.set(row.source, row.target); // Overrides global
+        }
+      }
+
       return mappings;
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
@@ -837,12 +917,13 @@ export class SQLiteAdapter implements StorageProvider {
     try {
       const db = this.getDb();
       const stmt = db.prepare(`
-        INSERT INTO prompt_contexts (id, category, title, content, enabled, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO prompt_contexts (id, project_id, category, title, content, enabled, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       stmt.run(
         context.id,
+        context.projectId,
         context.category,
         context.title,
         context.content,
@@ -886,11 +967,28 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
-  async listPromptContexts(): Promise<PromptContext[]> {
+  async listPromptContexts(projectId?: string | null): Promise<PromptContext[]> {
     try {
       const db = this.getDb();
-      const stmt = db.prepare('SELECT * FROM prompt_contexts ORDER BY created_at DESC');
-      const rows = stmt.all() as PromptContextRow[];
+      let sql = 'SELECT * FROM prompt_contexts';
+      const params: unknown[] = [];
+
+      // If projectId is undefined, return all entries
+      // If projectId is null, return only global entries
+      // If projectId is a string, return only entries for that project
+      if (projectId !== undefined) {
+        if (projectId === null) {
+          sql += ' WHERE project_id IS NULL';
+        } else {
+          sql += ' WHERE project_id = ?';
+          params.push(projectId);
+        }
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      const stmt = db.prepare(sql);
+      const rows = stmt.all(...params) as PromptContextRow[];
 
       return rows.map((row) => this.rowToPromptContext(row));
     } catch (error) {
@@ -907,13 +1005,24 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
-  async listEnabledPromptContexts(): Promise<PromptContext[]> {
+  async listEnabledPromptContexts(projectId?: string): Promise<PromptContext[]> {
     try {
       const db = this.getDb();
-      const stmt = db.prepare('SELECT * FROM prompt_contexts WHERE enabled = 1 ORDER BY created_at DESC');
-      const rows = stmt.all() as PromptContextRow[];
+      // Get global enabled contexts first
+      const contexts: PromptContext[] = [];
 
-      return rows.map((row) => this.rowToPromptContext(row));
+      const globalStmt = db.prepare('SELECT * FROM prompt_contexts WHERE enabled = 1 AND project_id IS NULL ORDER BY created_at DESC');
+      const globalRows = globalStmt.all() as PromptContextRow[];
+      contexts.push(...globalRows.map((row) => this.rowToPromptContext(row)));
+
+      // If projectId is provided, add project-specific enabled contexts
+      if (projectId) {
+        const projectStmt = db.prepare('SELECT * FROM prompt_contexts WHERE enabled = 1 AND project_id = ? ORDER BY created_at DESC');
+        const projectRows = projectStmt.all(projectId) as PromptContextRow[];
+        contexts.push(...projectRows.map((row) => this.rowToPromptContext(row)));
+      }
+
+      return contexts;
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
       if (originalError instanceof StorageError) {
@@ -1035,6 +1144,7 @@ export class SQLiteAdapter implements StorageProvider {
   private rowToDictionaryEntry(row: DictionaryRow): DictionaryEntry {
     return {
       id: row.id,
+      projectId: row.project_id,
       source: row.source,
       target: row.target,
       createdAt: new Date(row.created_at),
@@ -1045,6 +1155,7 @@ export class SQLiteAdapter implements StorageProvider {
   private rowToPromptContext(row: PromptContextRow): PromptContext {
     return {
       id: row.id,
+      projectId: row.project_id,
       category: row.category as PromptContextCategory,
       title: row.title,
       content: row.content,
@@ -1081,6 +1192,7 @@ interface ProjectRow {
 
 interface DictionaryRow {
   id: string;
+  project_id: string | null;
   source: string;
   target: string;
   created_at: string;
@@ -1089,6 +1201,7 @@ interface DictionaryRow {
 
 interface PromptContextRow {
   id: string;
+  project_id: string | null;
   category: string;
   title: string;
   content: string;

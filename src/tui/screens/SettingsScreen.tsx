@@ -11,7 +11,6 @@ import { PromptContextService } from '../../core/services/prompt-context.service
 import { t, ti } from '../../i18n/index.js';
 import type { ConfigStatus } from '../../adapters/config/index.js';
 import type { DictionaryEntry, PromptContext, PromptContextCategory } from '../../types/index.js';
-import type { Screen } from '../hooks/useNavigation.js';
 
 interface SettingsScreenProps {
   goBack: () => void;
@@ -19,7 +18,6 @@ interface SettingsScreenProps {
   language?: 'ko' | 'en';
   dictionaryService?: DictionaryService;
   promptContextService?: PromptContextService;
-  navigate?: (screen: Screen) => void;
 }
 
 type Mode = 'view' | 'edit-anthropic' | 'edit-openai' | 'edit-language' | 'edit-context-language' | 'edit-dbpath' | 'dictionary-list' | 'dictionary-add' | 'dictionary-edit' | 'domain-list' | 'domain-add' | 'domain-edit';
@@ -32,7 +30,6 @@ export function SettingsScreen({
   language = 'en',
   dictionaryService,
   promptContextService,
-  navigate,
 }: SettingsScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('view');
   const [status, setStatus] = useState<ConfigStatus | null>(null);
@@ -924,16 +921,12 @@ export function SettingsScreen({
       value: 'dbpath',
     },
     {
-      label: t('dictionary.manage', language),
+      label: t('dictionary.manage_global', language),
       value: 'dictionary',
     },
     {
-      label: t('domain.manage', language),
+      label: t('domain.manage_global', language),
       value: 'domain',
-    },
-    {
-      label: t('translate.menu', language),
-      value: 'translate',
     },
     { label: t('common.back', language), value: 'back' },
   ];
@@ -1016,8 +1009,6 @@ export function SettingsScreen({
               setMode('domain-list');
               setDomainSelectedIndex(0);
               setError(null);
-            } else if (item.value === 'translate') {
-              navigate?.('translate');
             }
           }}
         />

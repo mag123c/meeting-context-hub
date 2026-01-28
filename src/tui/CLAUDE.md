@@ -206,6 +206,30 @@ DetailScreen supports inline editing of context fields:
 - Bilingual UI (ko/en)
 - Consistent keyboard shortcuts
 
+## Translation Mode (DetailScreen)
+
+Press `t` to translate context content to another language:
+
+**Flow:**
+1. Press `t` → Language selector (Korean/English)
+2. Select language → Preview generated
+3. Preview shows original vs translated
+4. Press `y` to apply, `n` or ESC to cancel
+
+## Group Settings (ProjectScreen)
+
+Press `c` in project detail mode to access group-specific settings:
+
+| Setting | Description |
+|---------|-------------|
+| Dictionary | Group-specific STT correction mappings |
+| Domain Knowledge | Group-specific AI prompt context |
+
+**Merge Logic:**
+- Global entries loaded first
+- Group-specific entries override global (same key)
+- Settings → Global, ProjectScreen → Group-specific
+
 ## External Editor (Korean IME Support)
 
 Terminal-based TUI cannot handle Korean IME composition. Use external editor:

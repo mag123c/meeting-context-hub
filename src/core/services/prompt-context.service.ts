@@ -10,13 +10,18 @@ export class PromptContextService {
 
   /**
    * Create a new prompt context
+   * @param title Title of the context
+   * @param content Content of the context
+   * @param category Category of the context
+   * @param projectId Optional project ID (null for global)
    */
   async create(
     title: string,
     content: string,
-    category: PromptContextCategory = 'custom'
+    category: PromptContextCategory = 'custom',
+    projectId: string | null = null
   ): Promise<PromptContext> {
-    const context = createPromptContext(title, content, category);
+    const context = createPromptContext(title, content, category, projectId);
     await this.storage.savePromptContext(context);
     return context;
   }
@@ -29,17 +34,19 @@ export class PromptContextService {
   }
 
   /**
-   * List all prompt contexts
+   * List prompt contexts
+   * @param projectId undefined = all entries, null = global only, string = project-specific only
    */
-  async list(): Promise<PromptContext[]> {
-    return this.storage.listPromptContexts();
+  async list(projectId?: string | null): Promise<PromptContext[]> {
+    return this.storage.listPromptContexts(projectId);
   }
 
   /**
-   * List only enabled prompt contexts
+   * List enabled prompt contexts
+   * @param projectId If provided, returns global + project-specific enabled contexts
    */
-  async listEnabled(): Promise<PromptContext[]> {
-    return this.storage.listEnabledPromptContexts();
+  async listEnabled(projectId?: string): Promise<PromptContext[]> {
+    return this.storage.listEnabledPromptContexts(projectId);
   }
 
   /**
@@ -71,9 +78,10 @@ export class PromptContextService {
 
   /**
    * Get formatted domain context string for AI prompt injection
+   * @param projectId If provided, includes both global and project-specific contexts
    */
-  async getDomainContextForPrompt(): Promise<string> {
-    const enabledContexts = await this.listEnabled();
+  async getDomainContextForPrompt(projectId?: string): Promise<string> {
+    const enabledContexts = await this.listEnabled(projectId);
     return formatPromptContextsForPrompt(enabledContexts);
   }
 }

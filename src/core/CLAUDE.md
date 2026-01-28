@@ -50,8 +50,24 @@ import {
 | RetryService | Exponential backoff retry |
 | PathCompletionService | Path expansion (~) and autocompletion |
 | FileValidationService | Audio file existence and extension validation |
-| DictionaryService | STT correction via source→target mappings (auto-applied in usecases) |
-| PromptContextService | Domain knowledge management for AI prompt injection |
+| DictionaryService | STT correction via source→target mappings (supports projectId for group-specific) |
+| PromptContextService | Domain knowledge management for AI prompt injection (supports projectId for group-specific) |
+
+## Group-specific Settings
+
+DictionaryService and PromptContextService support `projectId` parameter:
+
+```typescript
+// Global entries (projectId = null)
+await dictionaryService.addEntry('AWS', 'Amazon Web Services');
+
+// Group-specific entries (override global)
+await dictionaryService.addEntry('AWS', 'Acme Web System', projectId);
+
+// Merge: global + group-specific (group overrides global)
+const text = await dictionaryService.correctText(input, projectId);
+const domainContext = await promptContextService.getDomainContextForPrompt(projectId);
+```
 
 ## Dependency Injection
 

@@ -34,16 +34,16 @@ export interface StorageProvider {
   saveDictionaryEntry(entry: DictionaryEntry): Promise<void>;
   getDictionaryEntry(id: string): Promise<DictionaryEntry | null>;
   getDictionaryEntryBySource(source: string): Promise<DictionaryEntry | null>;
-  listDictionaryEntries(): Promise<DictionaryEntry[]>;
+  listDictionaryEntries(projectId?: string | null): Promise<DictionaryEntry[]>;
   updateDictionaryEntry(id: string, updates: Partial<DictionaryEntry>): Promise<void>;
   deleteDictionaryEntry(id: string): Promise<void>;
-  getAllDictionaryMappings(): Promise<Map<string, string>>;
+  getAllDictionaryMappings(projectId?: string): Promise<Map<string, string>>;
 
   // PromptContext operations
   savePromptContext(context: PromptContext): Promise<void>;
   getPromptContext(id: string): Promise<PromptContext | null>;
-  listPromptContexts(): Promise<PromptContext[]>;
-  listEnabledPromptContexts(): Promise<PromptContext[]>;
+  listPromptContexts(projectId?: string | null): Promise<PromptContext[]>;
+  listEnabledPromptContexts(projectId?: string): Promise<PromptContext[]>;
   updatePromptContext(id: string, updates: Partial<PromptContext>): Promise<void>;
   deletePromptContext(id: string): Promise<void>;
 }

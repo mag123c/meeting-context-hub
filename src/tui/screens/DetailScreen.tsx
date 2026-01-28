@@ -9,11 +9,13 @@ import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { GroupSelector } from '../components/GroupSelector.js';
 import { StringListEditor } from '../components/StringListEditor.js';
 import { MultilineInput } from '../components/MultilineInput.js';
+import { ErrorText } from '../components/ErrorDisplay.js';
 import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
 import type { ManageContextUseCase } from '../../core/usecases/manage-context.usecase.js';
 import type { SearchContextUseCase } from '../../core/usecases/search-context.usecase.js';
+import type { TranslateContextUseCase, TranslatePreview } from '../../core/usecases/translate-context.usecase.js';
 import type { Context, Project, SearchResult } from '../../types/index.js';
 
 type EditableField = 'title' | 'summary' | 'decisions' | 'policies' | 'tags';
@@ -24,6 +26,7 @@ interface DetailScreenProps {
   manageProjectUseCase: ManageProjectUseCase;
   manageContextUseCase: ManageContextUseCase;
   searchContextUseCase?: SearchContextUseCase;
+  translateContextUseCase?: TranslateContextUseCase;
   onNavigateToContext?: (contextId: string) => void;
   onDeleted?: () => void;
   goBack: () => void;
@@ -36,6 +39,7 @@ export function DetailScreen({
   manageProjectUseCase,
   manageContextUseCase,
   searchContextUseCase,
+  translateContextUseCase,
   onNavigateToContext,
   onDeleted,
   goBack,
@@ -60,6 +64,13 @@ export function DetailScreen({
   const [editStringValue, setEditStringValue] = useState('');
   const [editListValue, setEditListValue] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Translation states
+  const [showTranslateSelector, setShowTranslateSelector] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translatePreview, setTranslatePreview] = useState<TranslatePreview | null>(null);
+  const [translateError, setTranslateError] = useState<Error | null>(null);
+  const [applyingTranslation, setApplyingTranslation] = useState(false);
 
   // Load context data
   useEffect(() => {
@@ -238,12 +249,77 @@ export function DetailScreen({
     }
   }, [editingField]);
 
+  // Handle translation language selection
+  const handleSelectTranslateLanguage = useCallback(
+    async (targetLanguage: 'ko' | 'en') => {
+      if (!translateContextUseCase) return;
+
+      setTranslating(true);
+      setTranslateError(null);
+      setShowTranslateSelector(false);
+
+      try {
+        const preview = await translateContextUseCase.preview(contextId, targetLanguage);
+        setTranslatePreview(preview);
+      } catch (err) {
+        setTranslateError(err instanceof Error ? err : new Error('Failed to generate preview'));
+        setShowTranslateSelector(true);
+      } finally {
+        setTranslating(false);
+      }
+    },
+    [translateContextUseCase, contextId]
+  );
+
+  // Handle apply translation
+  const handleApplyTranslation = useCallback(async () => {
+    if (!translateContextUseCase || !translatePreview) return;
+
+    setApplyingTranslation(true);
+    setTranslateError(null);
+
+    try {
+      await translateContextUseCase.apply(translatePreview);
+
+      // Reload context to show updated data
+      const updatedContext = await getContextUseCase.execute(contextId);
+      if (updatedContext) {
+        setContext(updatedContext);
+      }
+
+      setTranslatePreview(null);
+    } catch (err) {
+      setTranslateError(err instanceof Error ? err : new Error('Failed to apply translation'));
+    } finally {
+      setApplyingTranslation(false);
+    }
+  }, [translateContextUseCase, translatePreview, getContextUseCase, contextId]);
+
+  // Handle cancel translation
+  const handleCancelTranslation = useCallback(() => {
+    setTranslatePreview(null);
+    setTranslateError(null);
+  }, []);
+
   useInput((input, key) => {
     // Ignore inputs when dialogs are shown
-    if (showDeleteConfirm || showGroupSelector) return;
+    if (showDeleteConfirm || showGroupSelector || showTranslateSelector) return;
 
     // Edit mode has its own input handling
     if (showEditMode && editingField) return;
+
+    // Translation preview mode has its own input handling
+    if (translatePreview) {
+      if (input === 'y' || input === 'Y') {
+        handleApplyTranslation();
+        return;
+      }
+      if (input === 'n' || input === 'N' || key.escape) {
+        handleCancelTranslation();
+        return;
+      }
+      return;
+    }
 
     if (key.escape) {
       if (showEditMode) {
@@ -272,6 +348,13 @@ export function DetailScreen({
     if (input === 'g' && !showEditMode) {
       loadProjects();
       setShowGroupSelector(true);
+      return;
+    }
+
+    // Translate context with 't'
+    if (input === 't' && !showEditMode && translateContextUseCase) {
+      setShowTranslateSelector(true);
+      setTranslateError(null);
       return;
     }
 
@@ -342,6 +425,118 @@ export function DetailScreen({
           onCancel={() => setShowGroupSelector(false)}
           language={language}
         />
+      </Box>
+    );
+  }
+
+  // Show translation language selector
+  if (showTranslateSelector) {
+    const languageItems = [
+      { label: t('translate.to_korean', language), value: 'ko' as const },
+      { label: t('translate.to_english', language), value: 'en' as const },
+    ];
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title={t('translate.title', language)}
+          subtitle={t('translate.select_language', language)}
+        />
+
+        <SectionBox title={t('translate.original', language)} color="gray">
+          <Text bold>{context.title}</Text>
+          <Text color="gray">{context.summary.substring(0, 100)}{context.summary.length > 100 ? '...' : ''}</Text>
+        </SectionBox>
+
+        {translateError && (
+          <Box marginY={1}>
+            <ErrorText error={translateError} language={language} />
+          </Box>
+        )}
+
+        <Box marginY={1}>
+          <SelectInput
+            items={languageItems}
+            onSelect={(item) => handleSelectTranslateLanguage(item.value)}
+          />
+        </Box>
+
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            {t('hint.esc_back', language)}
+          </Text>
+        </Box>
+      </Box>
+    );
+  }
+
+  // Show translating spinner
+  if (translating) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={t('translate.title', language)} />
+        <Spinner message={t('translate.generating_preview', language)} />
+      </Box>
+    );
+  }
+
+  // Show translation preview
+  if (translatePreview) {
+    if (applyingTranslation) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Header title={t('translate.title', language)} />
+          <Spinner message={t('translate.applying', language)} />
+        </Box>
+      );
+    }
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title={t('translate.preview_title', language)}
+          subtitle={t('translate.confirm_message', language)}
+        />
+
+        {translateError && (
+          <Box marginY={1}>
+            <ErrorText error={translateError} language={language} />
+          </Box>
+        )}
+
+        {/* Original */}
+        <SectionBox title={t('translate.original', language)} color="gray">
+          <Text bold>{translatePreview.original.title}</Text>
+          <Text>{translatePreview.original.summary}</Text>
+          {translatePreview.original.decisions.length > 0 && (
+            <Box marginTop={1} flexDirection="column">
+              <Text color="green" bold>{t('detail.decisions', language)}:</Text>
+              {translatePreview.original.decisions.map((d, i) => (
+                <Text key={i} color="gray">  • {d}</Text>
+              ))}
+            </Box>
+          )}
+        </SectionBox>
+
+        {/* Translated */}
+        <SectionBox title={t('translate.translated', language)} color="cyan">
+          <Text bold>{translatePreview.translated.title}</Text>
+          <Text>{translatePreview.translated.summary}</Text>
+          {translatePreview.translated.decisions.length > 0 && (
+            <Box marginTop={1} flexDirection="column">
+              <Text color="green" bold>{t('detail.decisions', language)}:</Text>
+              {translatePreview.translated.decisions.map((d, i) => (
+                <Text key={i} color="cyan">  • {d}</Text>
+              ))}
+            </Box>
+          )}
+        </SectionBox>
+
+        <Box marginTop={1}>
+          <Text color="gray" dimColor>
+            {t('translate.hint_preview', language)}
+          </Text>
+        </Box>
       </Box>
     );
   }

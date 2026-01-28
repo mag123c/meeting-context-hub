@@ -10,6 +10,7 @@ export type PromptContextCategory = 'domain' | 'policy' | 'terminology' | 'custo
  */
 export interface PromptContext {
   id: string;
+  projectId: string | null; // null = global, string = group-specific
   category: PromptContextCategory;
   title: string;
   content: string;
@@ -24,11 +25,13 @@ export interface PromptContext {
 export function createPromptContext(
   title: string,
   content: string,
-  category: PromptContextCategory = 'custom'
+  category: PromptContextCategory = 'custom',
+  projectId: string | null = null
 ): PromptContext {
   const now = new Date();
   return {
     id: randomUUID(),
+    projectId,
     category,
     title,
     content,

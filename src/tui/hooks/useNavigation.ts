@@ -9,8 +9,7 @@ export type Screen =
   | 'new-project'
   | 'settings'
   | 'search'
-  | 'record'
-  | 'translate';
+  | 'record';
 
 interface NavigationState {
   screen: Screen;
