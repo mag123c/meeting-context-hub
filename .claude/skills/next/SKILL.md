@@ -7,33 +7,29 @@ required_context:
 
 # Next
 
+## Position
+체인 외부. 세션 시작 시 상태 확인용.
+/next 완료 후 /clarify로 체인 진입 제안.
+
 ## Flow
 ```
-Read Planning → Git Log → Analyze → Present → Suggest /clarify
+Read Planning → Git Log → Analyze → Suggest /clarify
 ```
 
 ## Execution
-1. **Read Planning**: docs/planning/*.md, PLAN.md 체크
-2. **Git Log**: `git log --oneline -5`, `git status --short`
-3. **Analyze**: 현재 Phase, 완료/전체 태스크
-4. **Present**: 테이블 형식
-5. **Suggest**: 다음 태스크 + `/clarify` 제안
+1. **Read**: docs/planning/*.md, PLAN.md
+2. **Git**: `git log --oneline -5`, `git status --short`
+3. **Analyze**: Phase, 완료/전체
+4. **Suggest**: `/clarify` 제안
 
-## Output Format
+## Output
 ```markdown
-## Current Status
-- Phase: {current_phase}
-- Progress: {completed}/{total} tasks
-
-## Next Task
-**{task_name}**
-{brief_description}
-
-## Action
-Run `/clarify` to start: {task_summary}
+## Status: {phase} ({done}/{total})
+## Next: {task}
+## Action: /clarify {summary}
 ```
 
 ## Rules
-- planning 파일 없으면 git log + 코드 상태로 추론
-- 간결하게 출력 (5-10줄)
-- 항상 /clarify 연결 제안
+- planning 없으면 git log로 추론
+- 5-10줄
+- 항상 /clarify 연결

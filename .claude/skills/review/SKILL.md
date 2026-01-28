@@ -8,48 +8,29 @@ required_context:
 
 # Review
 
-## Purpose
-구현 완료 후 **부정적 관점**에서 검토. 문제를 찾는 것이 목표.
+## Chain (MUST)
+| 이전 | 현재 | 다음 (자동) |
+|------|------|-------------|
+| /verify | /review | /wrap (PASS 시 즉시) |
 
 ## Checklist
-
-### 1. Convention Violations
-- [ ] CLAUDE.md 규칙 위반
-- [ ] 네이밍 컨벤션 위반
-- [ ] 아키텍처 레이어 위반
-
-### 2. Code Quality
-- [ ] 불필요한 복잡성
-- [ ] 중복 코드
-- [ ] 매직 넘버/문자열
-- [ ] 에러 핸들링 누락
-
-### 3. Potential Bugs
-- [ ] 엣지 케이스 미처리
-- [ ] Null/undefined 체크 누락
-- [ ] 비동기 에러 처리
-
-### 4. Test Coverage
-- [ ] 누락된 테스트 케이스
-- [ ] 경계값 테스트
-- [ ] 에러 경로 테스트
+| Category | Items |
+|----------|-------|
+| Convention | CLAUDE.md 위반, 네이밍, 레이어 |
+| Quality | 복잡성, 중복, 매직넘버 |
+| Bugs | 엣지케이스, null, async |
+| Tests | 누락 케이스, 경계값, 에러경로 |
 
 ## Output
 ```markdown
 ## Review Result
-
-### Issues Found
-1. [CRITICAL/WARNING/INFO] 설명
-
-### Recommendations
-- 권장 수정사항
-
-### Verdict
-- [ ] PASS: 커밋 가능
-- [ ] FAIL: 수정 필요 (이유)
+### Issues: [CRITICAL/WARNING/INFO] 내용
+### Verdict: PASS | FAIL (이유)
 ```
 
 ## Rules
-- 문제를 찾는 것이 목적 (칭찬 금지)
-- 발견된 문제는 수정 후 재검증
-- FAIL 시 /implement로 돌아가 수정
+- 문제 찾기 목적 (칭찬 금지)
+- FAIL 시 수정 후 /verify부터 재실행
+
+## NEXT STEP (자동 실행)
+PASS 시 **즉시** `/wrap` 호출. "wrap할까요?" 묻지 말 것.

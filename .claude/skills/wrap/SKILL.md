@@ -7,36 +7,28 @@ required_context:
 
 # Wrap
 
+## Chain (MUST - 종료)
+| 이전 | 현재 | 다음 |
+|------|------|------|
+| /review PASS | /wrap | 세션 완료 |
+
 ## Flow
 ```
 Git Status → Doc Check → User Selection → Execute
 ```
 
-## Execution
-1. **Git Status**
-   ```bash
-   git status --short
-   git diff --stat HEAD~3
-   ```
-
-2. **Doc Check** (ai-context 규칙 준수)
-   | 변경 | 대상 |
-   |------|------|
-   | 아키텍처 | architecture.md |
-   | 컨벤션 | conventions.md |
-   | 모듈 | CLAUDE.md (tui, core, i18n 등) |
-
-3. **User Selection**: AskUserQuestion (문서만/커밋만/둘 다/건너뛰기)
-
-4. **Execute**: 선택 항목 실행
-
-## DSL Rules (ai-context)
-- 테이블 > 산문
-- 코드블록 > 설명
-- 핵심만, 라인수 최소화
+## Doc Update
+| 변경 | 대상 |
+|------|------|
+| 아키텍처 | architecture.md |
+| 컨벤션 | conventions.md |
 
 ## Commit
 ```
 {type}({scope}): {summary}
 ```
-**Note: No Co-Authored-By markers**
+No Co-Authored-By markers.
+
+## Rules
+- 테이블 > 산문
+- 핵심만, 라인수 최소화

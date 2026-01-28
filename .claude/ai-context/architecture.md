@@ -17,11 +17,7 @@ TUI[ink] → UseCases → Services → Adapters[AI/DB]
 
 ## Data Flow
 ```
-1. TUI → UseCase
-2. UseCase → Service (AI extract, embedding)
-3. Service → Adapter (Claude, OpenAI, SQLite)
-4. UseCase → ChainService (find related)
-5. Return → TUI
+TUI → UseCase → Service → Adapter → Return
 ```
 
 ## Error System
@@ -31,26 +27,14 @@ TUI[ink] → UseCases → Services → Adapters[AI/DB]
 | AIError | Extraction failures |
 | EmbeddingError | Vector generation |
 | StorageError | Database ops |
-| ConfigError | Missing keys |
-| InputError | Validation |
 
-## Deps
-```
-runtime: @anthropic-ai/sdk, openai, better-sqlite3, ink, react, zod
-dev: typescript, vitest, eslint
-```
+## Skill Chain (ENFORCED)
+| Step | Next | Auto |
+|------|------|------|
+| /clarify | Plan Mode | YES |
+| Plan 승인 | /implement | YES |
+| /implement | /verify | YES |
+| /verify PASS | /review | YES |
+| /review PASS | /wrap | YES |
 
-## Dev Workflow
-```
-/clarify → Plan Mode → /implement (TDD) → /verify → /review → /wrap
-```
-
-## Skills
-| Skill | Purpose |
-|-------|---------|
-| /clarify | Requirements → auto Plan Mode |
-| /implement | TDD (RED→GREEN→REFACTOR) → /verify → /review |
-| /verify | Self-healing test/build/lint |
-| /review | Negative perspective review |
-| /wrap | Session wrap-up |
-| /next | Session start status |
+**각 단계 완료 후 확인 없이 즉시 다음 호출**

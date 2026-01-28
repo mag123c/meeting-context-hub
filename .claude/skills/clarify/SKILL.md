@@ -7,21 +7,25 @@ required_context:
 
 # Clarify
 
+## Chain (MUST)
+| 이전 | 현재 | 다음 |
+|------|------|------|
+| 세션 시작 | /clarify | EnterPlanMode() → /implement |
+
 ## Flow
 ```
-Record Original → AskUserQuestion → Summary → EnterPlanMode()
+Record → AskUserQuestion → Summary → EnterPlanMode()
 ```
 
 ## Execution
-1. **Record**: 원본 요청 기록 + 모호한 부분 식별
-2. **Question**: AskUserQuestion으로 명확화 (구체적 옵션 제시)
-3. **Summary**: Before/After 비교 (Goal, Scope, Constraints, Success Criteria)
-4. **Auto Plan**: `EnterPlanMode()` 호출 (사용자 확인 없이)
+1. **Record**: 원본 요청 + 모호 식별
+2. **Question**: AskUserQuestion (구체적 옵션)
+3. **Summary**: Before/After (Goal, Scope, Constraints)
+4. **Auto Plan**: `EnterPlanMode()` 즉시 호출
 
 ## Rules
 - 가정 금지 → 질문
 - TDD 가능 수준까지 구체화
-- clarify 후 반드시 Plan Mode 진입
 
-## After Plan Approval
-Plan이 승인되면 즉시 `/implement` 스킬 호출하여 구현 시작
+## NEXT STEP (자동 실행)
+Plan 승인 시 **즉시** `/implement` 호출. "구현할까요?" 묻지 말 것.
