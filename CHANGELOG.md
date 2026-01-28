@@ -1,3 +1,10 @@
+## [2.12.1](https://github.com/mag123c/meeting-context-hub/compare/v2.12.0...v2.12.1) (2026-01-28)
+
+
+### Bug Fixes
+
+* **tui:** add Tab key support for mode switching in AddContext ([c92b70f](https://github.com/mag123c/meeting-context-hub/commit/c92b70fb5beee35663d4ab2888888c369346c1b6))
+
 # [2.12.0](https://github.com/mag123c/meeting-context-hub/compare/v2.11.10...v2.12.0) (2026-01-28)
 
 
