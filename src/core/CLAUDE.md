@@ -34,6 +34,8 @@ import {
 | ChainService | Cosine similarity for related contexts |
 | ConfigService | Configuration management |
 | RetryService | Exponential backoff retry |
+| PathCompletionService | Path expansion (~) and autocompletion |
+| FileValidationService | Audio file existence and extension validation |
 
 ## Dependency Injection
 

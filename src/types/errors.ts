@@ -24,6 +24,7 @@ export enum ErrorCode {
   // Transcription
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
   TRANSCRIPTION_FILE_NOT_FOUND = 'TRANSCRIPTION_FILE_NOT_FOUND',
+  TRANSCRIPTION_FILE_TOO_LARGE = 'TRANSCRIPTION_FILE_TOO_LARGE',
 
   // Recording
   RECORDING_FAILED = 'RECORDING_FAILED',
@@ -41,6 +42,7 @@ export enum ErrorCode {
   // Input
   INVALID_INPUT = 'INVALID_INPUT',
   INPUT_TOO_SHORT = 'INPUT_TOO_SHORT',
+  INVALID_FILE_EXTENSION = 'INVALID_FILE_EXTENSION',
 
   // Network
   NETWORK_ERROR = 'NETWORK_ERROR',
@@ -94,6 +96,10 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
     ko: '오디오 파일을 찾을 수 없습니다.',
     en: 'Audio file not found.',
   },
+  [ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE]: {
+    ko: '오디오 파일이 너무 큽니다. 자동으로 분할하여 처리합니다.',
+    en: 'Audio file is too large. Automatically splitting for processing.',
+  },
 
   // Recording
   [ErrorCode.RECORDING_FAILED]: {
@@ -143,6 +149,10 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
   [ErrorCode.INPUT_TOO_SHORT]: {
     ko: '입력이 너무 짧습니다. 더 자세한 내용을 입력해주세요.',
     en: 'Input is too short. Please provide more details.',
+  },
+  [ErrorCode.INVALID_FILE_EXTENSION]: {
+    ko: '지원하지 않는 파일 형식입니다.',
+    en: 'Unsupported file format.',
   },
 
   // Network
@@ -362,6 +372,11 @@ export function detectErrorCode(error: unknown): ErrorCode {
     // File not found
     if (message.includes('enoent') || message.includes('no such file')) {
       return ErrorCode.TRANSCRIPTION_FILE_NOT_FOUND;
+    }
+
+    // File too large (413 error from Whisper API)
+    if (message.includes('413') || message.includes('maximum content size')) {
+      return ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE;
     }
 
     // SQLite errors

@@ -207,6 +207,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
         <AddContext
           addContextUseCase={services.addContext}
           manageProjectUseCase={services.manageProject}
+          recordContextUseCase={services.recordContext}
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
           language={language}

@@ -71,6 +71,7 @@ import { ErrorDisplay } from '../components/ErrorDisplay.js';
 |-----------|---------|
 | SectionBox | Consistent bordered section container |
 | MultilineInput | Multiline text input with line numbers |
+| FilePathInput | Single-line file path input with Tab autocomplete |
 | ErrorDisplay | Error message with recovery guidance |
 | ErrorText | Inline error text |
 | Spinner | Loading indicator |
