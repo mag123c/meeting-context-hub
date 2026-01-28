@@ -272,6 +272,7 @@ export function AddContext({
             onChange={setInput}
             onSubmit={handleTextSubmit}
             onCancel={() => setStep('select-project')}
+            onTabComplete={handleTabComplete}
             placeholder={t('add.placeholder', language)}
             focus={true}
           />

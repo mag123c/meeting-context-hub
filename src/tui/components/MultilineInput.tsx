@@ -6,6 +6,7 @@ interface MultilineInputProps {
   onChange: (value: string) => void;
   onSubmit: () => void;
   onCancel?: () => void;
+  onTabComplete?: () => void;
   placeholder?: string;
   focus?: boolean;
   maxDisplayLines?: number;
@@ -16,6 +17,7 @@ export function MultilineInput({
   onChange,
   onSubmit,
   onCancel,
+  onTabComplete,
   placeholder = '',
   focus = true,
   maxDisplayLines = 10,
@@ -39,6 +41,12 @@ export function MultilineInput({
       // Cancel: ESC
       if (key.escape) {
         onCancel?.();
+        return;
+      }
+
+      // Tab: mode switch or autocomplete
+      if (key.tab) {
+        onTabComplete?.();
         return;
       }
 

@@ -133,6 +133,7 @@ import { MultilineInput } from '../components/MultilineInput.js';
 | onChange | (value: string) => void | - | Text change handler |
 | onSubmit | () => void | - | Submit handler (Ctrl+D) |
 | onCancel | () => void | - | Cancel handler (ESC) |
+| onTabComplete | () => void | - | Tab key handler (mode switch) |
 | placeholder | string | '' | Placeholder text |
 | focus | boolean | true | Whether input is focused |
 | maxDisplayLines | number | 10 | Max visible lines before scroll |
@@ -141,6 +142,7 @@ import { MultilineInput } from '../components/MultilineInput.js';
 - `Enter` - New line
 - `Ctrl+D` - Submit
 - `ESC` - Cancel (handled by parent)
+- `Tab` - Mode switch (calls onTabComplete)
 - `Arrow keys` - Cursor navigation
 - `Backspace` - Delete character/merge lines
 
