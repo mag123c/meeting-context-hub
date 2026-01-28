@@ -10,7 +10,7 @@ required_context:
 
 ## Flow
 ```
-Analysis → TDD(RED→GREEN→REFACTOR) → /verify → /review → Commit
+Analysis → TDD(RED→GREEN→REFACTOR) → /verify → /review → /wrap → Commit
 ```
 
 ## Execution
@@ -21,7 +21,8 @@ Analysis → TDD(RED→GREEN→REFACTOR) → /verify → /review → Commit
    - REFACTOR: 정리 (테스트 유지)
 3. **Verify**: `/verify` 호출 (자동)
 4. **Review**: `/review` 호출 (자동)
-5. **Commit**: Conventional Commits (No Co-Authored-By)
+5. **Wrap**: `/wrap` 호출 (자동)
+6. **Commit**: Conventional Commits (No Co-Authored-By)
 
 ## Commands
 ```bash
@@ -33,4 +34,4 @@ pnpm lint
 ## Rules
 - 테스트 없는 구현 금지
 - verify 실패 시 수정 후 재검증
-- review 통과 후 커밋
+- review 통과 후 wrap 실행 후 커밋
