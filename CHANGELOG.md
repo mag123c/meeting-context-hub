@@ -1,3 +1,10 @@
+# [2.15.0](https://github.com/mag123c/meeting-context-hub/compare/v2.14.0...v2.15.0) (2026-01-28)
+
+
+### Features
+
+* **extract:** add context language, domain knowledge, and external editor ([4eda0aa](https://github.com/mag123c/meeting-context-hub/commit/4eda0aae80e28aebe4e8497f8bf749870f90820d))
+
 # [2.14.0](https://github.com/mag123c/meeting-context-hub/compare/v2.13.0...v2.14.0) (2026-01-28)
 
 
