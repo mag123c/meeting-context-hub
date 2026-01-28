@@ -3,7 +3,7 @@ import { loadConfig, ConfigError, type Config } from '../../adapters/config/inde
 import { SQLiteAdapter } from '../../adapters/storage/index.js';
 import { ClaudeAdapter, OpenAIAdapter } from '../../adapters/ai/index.js';
 import { WhisperAdapter, SoxRecordingAdapter } from '../../adapters/audio/index.js';
-import { ExtractService, EmbeddingService, ChainService, DictionaryService } from '../../core/services/index.js';
+import { ExtractService, EmbeddingService, ChainService, DictionaryService, PromptContextService } from '../../core/services/index.js';
 import {
   AddContextUseCase,
   ListContextsUseCase,
@@ -23,6 +23,7 @@ interface Services {
   searchContext: SearchContextUseCase;
   recordContext: RecordContextUseCase | null;
   dictionary: DictionaryService;
+  promptContext: PromptContextService;
 }
 
 interface UseServicesResult {
@@ -98,6 +99,7 @@ async function initializeServices(): Promise<void> {
         searchContext: new SearchContextUseCase(storage, embeddingService, chainService),
         recordContext,
         dictionary: new DictionaryService(storage),
+        promptContext: new PromptContextService(storage),
       };
     }
   } catch (err) {

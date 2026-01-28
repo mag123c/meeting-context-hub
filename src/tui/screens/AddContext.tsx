@@ -11,6 +11,7 @@ import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import { PathCompletionService } from '../../core/services/path-completion.service.js';
 import { FileValidationService } from '../../core/services/file-validation.service.js';
+import { openExternalEditor, isEditorAvailable, getEditorName } from '../utils/external-editor.js';
 import { InputError, ErrorCode } from '../../types/errors.js';
 import type { AddContextUseCase } from '../../core/usecases/add-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -24,6 +25,7 @@ interface AddContextProps {
   onNavigateToContext?: (contextId: string) => void;
   goBack: () => void;
   language?: 'ko' | 'en';
+  contextLanguage?: 'ko' | 'en';
 }
 
 type InputMode = 'text' | 'file';
@@ -36,6 +38,7 @@ export function AddContext({
   onNavigateToContext,
   goBack,
   language = 'en',
+  contextLanguage = 'en',
 }: AddContextProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -88,6 +91,7 @@ export function AddContext({
       const { context, relatedContexts: related } = await addContextUseCase.execute({
         rawInput: input,
         projectId: selectedProjectId,
+        extractOptions: { language: contextLanguage },
       });
       setResult(context);
       setRelatedContexts(related);
@@ -96,7 +100,7 @@ export function AddContext({
       setError(err instanceof Error ? err : new Error('Failed to extract context'));
       setStep('error');
     }
-  }, [input, selectedProjectId, addContextUseCase]);
+  }, [input, selectedProjectId, addContextUseCase, contextLanguage]);
 
   // Handle file mode submit
   const handleFileSubmit = useCallback(async () => {
@@ -196,7 +200,28 @@ export function AddContext({
     setStep('input');
   }, []);
 
-  useInput((_, key) => {
+  // Handle external editor
+  const handleOpenExternalEditor = useCallback(() => {
+    if (!isEditorAvailable()) {
+      setError(new InputError(t('input.editor_error', language), ErrorCode.INVALID_INPUT, false));
+      return;
+    }
+
+    // Open editor with current input
+    const editedContent = openExternalEditor(input);
+
+    if (editedContent !== null) {
+      setInput(editedContent);
+    }
+  }, [input, language]);
+
+  useInput((inputKey, key) => {
+    // Handle 'e' key to open external editor in text input mode
+    if (inputKey === 'e' && step === 'input' && inputMode === 'text') {
+      handleOpenExternalEditor();
+      return;
+    }
+
     if (key.escape) {
       if (step === 'result' || step === 'error') {
         goBack();
@@ -267,15 +292,24 @@ export function AddContext({
         )}
 
         {inputMode === 'text' ? (
-          <MultilineInput
-            value={input}
-            onChange={setInput}
-            onSubmit={handleTextSubmit}
-            onCancel={() => setStep('select-project')}
-            onTabComplete={handleTabComplete}
-            placeholder={t('add.placeholder', language)}
-            focus={true}
-          />
+          <Box flexDirection="column">
+            <MultilineInput
+              value={input}
+              onChange={setInput}
+              onSubmit={handleTextSubmit}
+              onCancel={() => setStep('select-project')}
+              onTabComplete={handleTabComplete}
+              placeholder={t('add.placeholder', language)}
+              focus={true}
+            />
+            {isEditorAvailable() && (
+              <Box marginTop={1}>
+                <Text color="gray" dimColor>
+                  {t('input.external_editor', language)} ({getEditorName()})
+                </Text>
+              </Box>
+            )}
+          </Box>
         ) : (
           <Box flexDirection="column">
             <FilePathInput

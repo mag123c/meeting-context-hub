@@ -8,6 +8,8 @@ import type {
   ListOptions,
   ActionItem,
   DictionaryEntry,
+  PromptContext,
+  PromptContextCategory,
 } from '../../types/index.js';
 import { StorageError, ErrorCode } from '../../types/errors.js';
 
@@ -114,6 +116,25 @@ export class SQLiteAdapter implements StorageProvider {
     // Dictionary index
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_dictionary_source ON dictionary(source);
+    `);
+
+    // PromptContext table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS prompt_contexts (
+        id TEXT PRIMARY KEY,
+        category TEXT NOT NULL DEFAULT 'custom',
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    // PromptContext indexes
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_prompt_contexts_enabled ON prompt_contexts(enabled);
+      CREATE INDEX IF NOT EXISTS idx_prompt_contexts_category ON prompt_contexts(category);
     `);
   }
 
@@ -810,6 +831,166 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
+  // PromptContext operations
+
+  async savePromptContext(context: PromptContext): Promise<void> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare(`
+        INSERT INTO prompt_contexts (id, category, title, content, enabled, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      stmt.run(
+        context.id,
+        context.category,
+        context.title,
+        context.content,
+        context.enabled ? 1 : 0,
+        context.createdAt.toISOString(),
+        context.updatedAt.toISOString()
+      );
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to save prompt context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async getPromptContext(id: string): Promise<PromptContext | null> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM prompt_contexts WHERE id = ?');
+      const row = stmt.get(id) as PromptContextRow | undefined;
+
+      if (!row) return null;
+      return this.rowToPromptContext(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get prompt context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async listPromptContexts(): Promise<PromptContext[]> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM prompt_contexts ORDER BY created_at DESC');
+      const rows = stmt.all() as PromptContextRow[];
+
+      return rows.map((row) => this.rowToPromptContext(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list prompt contexts: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async listEnabledPromptContexts(): Promise<PromptContext[]> {
+    try {
+      const db = this.getDb();
+      const stmt = db.prepare('SELECT * FROM prompt_contexts WHERE enabled = 1 ORDER BY created_at DESC');
+      const rows = stmt.all() as PromptContextRow[];
+
+      return rows.map((row) => this.rowToPromptContext(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list enabled prompt contexts: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async updatePromptContext(id: string, updates: Partial<PromptContext>): Promise<void> {
+    try {
+      const db = this.getDb();
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
+
+      if (updates.category !== undefined) {
+        setClauses.push('category = ?');
+        params.push(updates.category);
+      }
+      if (updates.title !== undefined) {
+        setClauses.push('title = ?');
+        params.push(updates.title);
+      }
+      if (updates.content !== undefined) {
+        setClauses.push('content = ?');
+        params.push(updates.content);
+      }
+      if (updates.enabled !== undefined) {
+        setClauses.push('enabled = ?');
+        params.push(updates.enabled ? 1 : 0);
+      }
+
+      setClauses.push('updated_at = ?');
+      params.push(new Date().toISOString());
+      params.push(id);
+
+      if (setClauses.length === 1) return; // Only updated_at
+
+      const sql = `UPDATE prompt_contexts SET ${setClauses.join(', ')} WHERE id = ?`;
+      db.prepare(sql).run(...params);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to update prompt context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async deletePromptContext(id: string): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare('DELETE FROM prompt_contexts WHERE id = ?').run(id);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete prompt context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
   // Helper methods
 
   private rowToContext(row: ContextRow): Context {
@@ -860,6 +1041,18 @@ export class SQLiteAdapter implements StorageProvider {
       updatedAt: new Date(row.updated_at),
     };
   }
+
+  private rowToPromptContext(row: PromptContextRow): PromptContext {
+    return {
+      id: row.id,
+      category: row.category as PromptContextCategory,
+      title: row.title,
+      content: row.content,
+      enabled: row.enabled === 1,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    };
+  }
 }
 
 // Type definitions for database rows
@@ -890,6 +1083,16 @@ interface DictionaryRow {
   id: string;
   source: string;
   target: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PromptContextRow {
+  id: string;
+  category: string;
+  title: string;
+  content: string;
+  enabled: number;
   created_at: string;
   updated_at: string;
 }

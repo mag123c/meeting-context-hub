@@ -39,6 +39,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
 
   // Get language from config, default to 'en'
   const language = config?.language || 'en';
+  const contextLanguage = config?.contextLanguage || 'en';
 
   // Check for updates on mount
   // update-notifier spawns background process on first call, so we poll until ready
@@ -216,6 +217,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
           language={language}
+          contextLanguage={contextLanguage}
         />
       );
 
@@ -262,6 +264,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           onConfigChange={handleConfigChange}
           language={language}
           dictionaryService={services.dictionary}
+          promptContextService={services.promptContext}
         />
       );
 
@@ -286,6 +289,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           onNavigateToContext={(contextId) => navigate('detail', { contextId })}
           goBack={goBack}
           language={language}
+          contextLanguage={contextLanguage}
         />
       );
 

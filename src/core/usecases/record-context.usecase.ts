@@ -1,11 +1,13 @@
 import type { StorageProvider } from '../../adapters/storage/storage.interface.js';
 import type { TranscriptionProvider } from '../../adapters/audio/whisper.adapter.js';
 import type { RecordingProvider, RecordingEvents, RecordingState } from '../../adapters/audio/recording.adapter.js';
+import type { ExtractOptions } from '../../adapters/ai/ai.interface.js';
 import type { Context, SearchResult } from '../../types/index.js';
 import { ExtractService } from '../services/extract.service.js';
 import { EmbeddingService } from '../services/embedding.service.js';
 import { ChainService } from '../services/chain.service.js';
 import { DictionaryService } from '../services/dictionary.service.js';
+import { PromptContextService } from '../services/prompt-context.service.js';
 import { createContext } from '../domain/context.js';
 
 export interface RecordContextResult {
@@ -19,6 +21,7 @@ export interface RecordContextResult {
  */
 export class RecordContextUseCase {
   private dictionaryService: DictionaryService | null = null;
+  private promptContextService: PromptContextService | null = null;
 
   constructor(
     private readonly recordingProvider: RecordingProvider,
@@ -30,6 +33,8 @@ export class RecordContextUseCase {
   ) {
     // Initialize dictionary service for STT correction
     this.dictionaryService = new DictionaryService(storage);
+    // Initialize prompt context service for domain knowledge
+    this.promptContextService = new PromptContextService(storage);
   }
 
   /**
@@ -76,13 +81,32 @@ export class RecordContextUseCase {
 
   /**
    * Process transcription: extract context and save
+   * @param transcription - The transcribed text
+   * @param projectId - The project/group ID
+   * @param extractOptions - Options for AI extraction (language, domainContext)
    */
   async processTranscription(
     transcription: string,
-    projectId: string | null
+    projectId: string | null,
+    extractOptions?: ExtractOptions
   ): Promise<RecordContextResult> {
+    // 0. Get domain context for prompt injection
+    let domainContext: string | undefined;
+    if (this.promptContextService) {
+      const domainContextStr = await this.promptContextService.getDomainContextForPrompt();
+      if (domainContextStr) {
+        domainContext = domainContextStr;
+      }
+    }
+
+    // Merge extract options with domain context
+    const mergedOptions: ExtractOptions = {
+      ...extractOptions,
+      domainContext: domainContext || extractOptions?.domainContext,
+    };
+
     // 1. Extract structured data from transcription
-    const extracted = await this.extractService.extract(transcription);
+    const extracted = await this.extractService.extract(transcription, mergedOptions);
 
     // 2. Create context entity
     const context = createContext(transcription, extracted, projectId);
@@ -123,14 +147,16 @@ export class RecordContextUseCase {
 
   /**
    * Full flow: stop recording → transcribe → extract → save
+   * @param projectId - The project/group ID
+   * @param extractOptions - Options for AI extraction (language, domainContext)
    */
-  async completeRecording(projectId: string | null): Promise<RecordContextResult> {
+  async completeRecording(projectId: string | null, extractOptions?: ExtractOptions): Promise<RecordContextResult> {
     const filePath = this.stopRecording();
     if (!filePath) {
       throw new Error('No recording to process');
     }
 
     const transcription = await this.transcribe(filePath);
-    return this.processTranscription(transcription, projectId);
+    return this.processTranscription(transcription, projectId, extractOptions);
   }
 }

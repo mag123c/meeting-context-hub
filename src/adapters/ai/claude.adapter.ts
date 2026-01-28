@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import type { AIProvider } from './ai.interface.js';
+import type { AIProvider, ExtractOptions } from './ai.interface.js';
 import type { ExtractedContext, ActionItem } from '../../types/index.js';
 import { AIError, ErrorCode, detectErrorCode } from '../../types/errors.js';
 import { withRetry } from '../../core/services/retry.service.js';
@@ -32,8 +32,8 @@ export class ClaudeAdapter implements AIProvider {
     this.client = new Anthropic({ apiKey });
   }
 
-  async extract(input: string): Promise<ExtractedContext> {
-    const prompt = this.buildExtractionPrompt(input);
+  async extract(input: string, options?: ExtractOptions): Promise<ExtractedContext> {
+    const prompt = this.buildExtractionPrompt(input, options);
 
     try {
       const response = await withRetry(
@@ -116,12 +116,35 @@ export class ClaudeAdapter implements AIProvider {
     }
   }
 
-  private buildExtractionPrompt(input: string): string {
-    return `You are a meeting context extractor. Analyze the following discussion/meeting notes and extract structured information for developers.
+  private buildExtractionPrompt(input: string, options?: ExtractOptions): string {
+    const language = options?.language || 'en';
+    const domainContext = options?.domainContext;
 
+    // Language instruction
+    const langInstruction = language === 'ko'
+      ? 'IMPORTANT: Generate all output fields (title, summary, decisions, actionItems, policies, openQuestions, tags) in Korean (한국어).'
+      : 'IMPORTANT: Generate all output fields (title, summary, decisions, actionItems, policies, openQuestions, tags) in English.';
+
+    // Domain knowledge section
+    let domainSection = '';
+    if (domainContext) {
+      domainSection = `
+<domain-knowledge>
+${domainContext}
+</domain-knowledge>
+
+Use the above domain knowledge to better understand context-specific terminology, policies, and conventions when extracting information.
+
+`;
+    }
+
+    return `You are a meeting context extractor. Analyze the following discussion/meeting notes and extract structured information for developers.
+${domainSection}
 <input>
 ${input}
 </input>
+
+${langInstruction}
 
 Extract the following information and respond with ONLY a JSON object (no markdown, no explanation):
 

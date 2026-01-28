@@ -8,6 +8,7 @@ export interface Config {
   openaiApiKey: string | null;
   dbPath: string;
   language: 'ko' | 'en';
+  contextLanguage: 'ko' | 'en';
 }
 
 /**
@@ -18,6 +19,7 @@ export interface PartialConfig {
   openaiApiKey?: string;
   dbPath?: string;
   language?: 'ko' | 'en';
+  contextLanguage?: 'ko' | 'en';
 }
 
 /**
@@ -41,6 +43,7 @@ export interface ConfigStatus {
   };
   dbPath: string;
   language: 'ko' | 'en';
+  contextLanguage: 'ko' | 'en';
 }
 
 /**

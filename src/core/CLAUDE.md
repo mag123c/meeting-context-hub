@@ -6,8 +6,8 @@ UI-agnostic business logic layer. Can be used by TUI, GUI, or CLI.
 
 ```
 core/
-├── domain/      # Entities (Context, Project)
-├── services/    # Domain logic (Extract, Embed, Chain, Config)
+├── domain/      # Entities (Context, Project, PromptContext)
+├── services/    # Domain logic (Extract, Embed, Chain, Config, Dictionary, PromptContext)
 ├── usecases/    # Application logic orchestration
 └── index.ts     # Public API exports
 ```
@@ -29,14 +29,15 @@ import {
 
 | Service | Responsibility |
 |---------|----------------|
-| ExtractService | AI-based context extraction |
+| ExtractService | AI-based context extraction (supports language/domainContext options) |
 | EmbeddingService | Vector embedding generation |
 | ChainService | Cosine similarity for related contexts |
-| ConfigService | Configuration management |
+| ConfigService | Configuration management (language, contextLanguage, dbPath) |
 | RetryService | Exponential backoff retry |
 | PathCompletionService | Path expansion (~) and autocompletion |
 | FileValidationService | Audio file existence and extension validation |
-| DictionaryService | STT correction via source→target mappings |
+| DictionaryService | STT correction via source→target mappings (auto-applied in usecases) |
+| PromptContextService | Domain knowledge management for AI prompt injection |
 
 ## Dependency Injection
 

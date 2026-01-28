@@ -69,6 +69,11 @@ export const UI_STRINGS = {
   'settings.db_path_warning': { ko: '기존 데이터는 마이그레이션되지 않습니다. 앱을 재시작해야 적용됩니다.', en: 'Existing data will not be migrated. App restart required.' },
   'settings.db_path_saved': { ko: '데이터베이스 경로가 저장되었습니다!', en: 'Database path saved successfully!' },
   'settings.hint_edit': { ko: 'Enter로 저장 | ESC로 취소', en: 'Enter to save | ESC to cancel' },
+  'settings.context_language': { ko: '컨텍스트 저장 언어', en: 'Context Language' },
+  'settings.context_language_desc': { ko: 'AI가 추출한 내용의 언어', en: 'Language for AI-extracted content' },
+  'settings.change_context_language': { ko: '컨텍스트 언어 변경', en: 'Change Context Language' },
+  'settings.select_context_language': { ko: '컨텍스트 저장 언어를 선택하세요', en: 'Select language for extracted content' },
+  'settings.context_language_changed': { ko: '컨텍스트 언어가 변경되었습니다!', en: 'Context language changed successfully!' },
 
   // Add Context Screen
   'add.title': { ko: '컨텍스트 추가', en: 'Add Context' },
@@ -214,6 +219,40 @@ export const UI_STRINGS = {
   'dictionary.hint_form': { ko: 'Enter: 저장 | ESC: 취소', en: 'Enter: Save | ESC: Cancel' },
   'dictionary.arrow': { ko: '→', en: '→' },
   'dictionary.count': { ko: '{count}개 용어', en: '{count} entries' },
+
+  // Domain Knowledge strings
+  'domain.title': { ko: '도메인 지식', en: 'Domain Knowledge' },
+  'domain.subtitle': { ko: 'AI 추출 시 참조할 배경 지식', en: 'Background knowledge for AI extraction' },
+  'domain.manage': { ko: '도메인 지식 관리', en: 'Manage Domain Knowledge' },
+  'domain.empty': { ko: '등록된 도메인 지식이 없습니다. a를 눌러 추가하세요.', en: 'No domain knowledge yet. Press a to add one.' },
+  'domain.add_title': { ko: '도메인 지식 추가', en: 'Add Domain Knowledge' },
+  'domain.edit_title': { ko: '도메인 지식 수정', en: 'Edit Domain Knowledge' },
+  'domain.name_label': { ko: '제목:', en: 'Title:' },
+  'domain.name_placeholder': { ko: '예: MCH 프로젝트 개요', en: 'e.g., MCH Project Overview' },
+  'domain.content_label': { ko: '내용:', en: 'Content:' },
+  'domain.content_placeholder': { ko: '도메인 지식 내용을 입력하세요...', en: 'Enter domain knowledge content...' },
+  'domain.category_label': { ko: '카테고리:', en: 'Category:' },
+  'domain.category_domain': { ko: '도메인', en: 'Domain' },
+  'domain.category_policy': { ko: '정책', en: 'Policy' },
+  'domain.category_terminology': { ko: '용어', en: 'Terminology' },
+  'domain.category_custom': { ko: '사용자 정의', en: 'Custom' },
+  'domain.adding': { ko: '추가 중...', en: 'Adding...' },
+  'domain.updating': { ko: '수정 중...', en: 'Updating...' },
+  'domain.deleting': { ko: '삭제 중...', en: 'Deleting...' },
+  'domain.added': { ko: '도메인 지식이 추가되었습니다.', en: 'Domain knowledge added successfully.' },
+  'domain.updated': { ko: '도메인 지식이 수정되었습니다.', en: 'Domain knowledge updated successfully.' },
+  'domain.deleted': { ko: '도메인 지식이 삭제되었습니다.', en: 'Domain knowledge deleted successfully.' },
+  'domain.enabled': { ko: '활성', en: 'Enabled' },
+  'domain.disabled': { ko: '비활성', en: 'Disabled' },
+  'domain.hint_list': { ko: 'a: 추가 | d: 삭제 | t: 활성화 토글 | Enter: 수정 | ESC: 뒤로', en: 'a: Add | d: Delete | t: Toggle | Enter: Edit | ESC: Back' },
+  'domain.hint_form': { ko: 'Enter: 다음/저장 | ESC: 취소', en: 'Enter: Next/Save | ESC: Cancel' },
+  'domain.count': { ko: '{count}개 항목', en: '{count} entries' },
+
+  // External editor strings
+  'input.external_editor': { ko: '외부 편집기로 열기 (e)', en: 'Open in external editor (e)' },
+  'input.external_editor_hint': { ko: '$EDITOR 환경변수 설정 권장', en: 'Set $EDITOR env variable recommended' },
+  'input.opening_editor': { ko: '외부 편집기 열기...', en: 'Opening external editor...' },
+  'input.editor_error': { ko: '편집기를 열 수 없습니다', en: 'Failed to open editor' },
 
   // Dialog strings
   'dialog.delete_context_title': { ko: '컨텍스트 삭제', en: 'Delete Context' },

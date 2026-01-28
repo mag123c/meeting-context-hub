@@ -1,4 +1,4 @@
-import type { AIProvider } from '../../adapters/ai/ai.interface.js';
+import type { AIProvider, ExtractOptions } from '../../adapters/ai/ai.interface.js';
 import type { ExtractedContext } from '../../types/index.js';
 import { InputError, ErrorCode } from '../../types/errors.js';
 
@@ -13,8 +13,10 @@ export class ExtractService {
 
   /**
    * Extract structured context from raw input text
+   * @param input - Raw input text to extract from
+   * @param options - Extraction options (language, domainContext)
    */
-  async extract(input: string): Promise<ExtractedContext> {
+  async extract(input: string, options?: ExtractOptions): Promise<ExtractedContext> {
     // Validate input is not empty
     if (!input || input.trim().length === 0) {
       throw new InputError(
@@ -35,6 +37,6 @@ export class ExtractService {
       );
     }
 
-    return this.aiProvider.extract(trimmedInput);
+    return this.aiProvider.extract(trimmedInput, options);
   }
 }

@@ -7,18 +7,20 @@ import { Spinner } from '../components/Spinner.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
 import { ConfigService } from '../../core/services/config.service.js';
 import { DictionaryService } from '../../core/services/dictionary.service.js';
+import { PromptContextService } from '../../core/services/prompt-context.service.js';
 import { t, ti } from '../../i18n/index.js';
 import type { ConfigStatus } from '../../adapters/config/index.js';
-import type { DictionaryEntry } from '../../types/index.js';
+import type { DictionaryEntry, PromptContext, PromptContextCategory } from '../../types/index.js';
 
 interface SettingsScreenProps {
   goBack: () => void;
   onConfigChange?: () => void;
   language?: 'ko' | 'en';
   dictionaryService?: DictionaryService;
+  promptContextService?: PromptContextService;
 }
 
-type Mode = 'view' | 'edit-anthropic' | 'edit-openai' | 'edit-language' | 'edit-dbpath' | 'dictionary-list' | 'dictionary-add' | 'dictionary-edit';
+type Mode = 'view' | 'edit-anthropic' | 'edit-openai' | 'edit-language' | 'edit-context-language' | 'edit-dbpath' | 'dictionary-list' | 'dictionary-add' | 'dictionary-edit' | 'domain-list' | 'domain-add' | 'domain-edit';
 
 const configService = new ConfigService();
 
@@ -27,6 +29,7 @@ export function SettingsScreen({
   onConfigChange,
   language = 'en',
   dictionaryService,
+  promptContextService,
 }: SettingsScreenProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('view');
   const [status, setStatus] = useState<ConfigStatus | null>(null);
@@ -44,6 +47,15 @@ export function SettingsScreen({
   const [dictTarget, setDictTarget] = useState('');
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
   const [dictInputStep, setDictInputStep] = useState<'source' | 'target'>('source');
+
+  // Domain knowledge state
+  const [domainEntries, setDomainEntries] = useState<PromptContext[]>([]);
+  const [domainSelectedIndex, setDomainSelectedIndex] = useState(0);
+  const [domainTitle, setDomainTitle] = useState('');
+  const [domainContent, setDomainContent] = useState('');
+  const [domainCategory, setDomainCategory] = useState<PromptContextCategory>('custom');
+  const [editingDomainId, setEditingDomainId] = useState<string | null>(null);
+  const [domainInputStep, setDomainInputStep] = useState<'title' | 'content' | 'category'>('title');
 
   const loadStatus = useCallback(() => {
     try {
@@ -66,6 +78,16 @@ export function SettingsScreen({
     }
   }, [dictionaryService]);
 
+  const loadDomainEntries = useCallback(async () => {
+    if (!promptContextService) return;
+    try {
+      const entries = await promptContextService.list();
+      setDomainEntries(entries);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to load domain knowledge'));
+    }
+  }, [promptContextService]);
+
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
@@ -74,7 +96,10 @@ export function SettingsScreen({
     if (mode === 'dictionary-list') {
       loadDictionaryEntries();
     }
-  }, [mode, loadDictionaryEntries]);
+    if (mode === 'domain-list') {
+      loadDomainEntries();
+    }
+  }, [mode, loadDictionaryEntries, loadDomainEntries]);
 
   const handleSaveKey = useCallback(async (key: 'anthropic' | 'openai') => {
     if (!apiKeyInput.trim()) {
@@ -125,6 +150,26 @@ export function SettingsScreen({
       setError(new Error(result.error || 'Failed to save language'));
     }
   }, [loadStatus, onConfigChange]);
+
+  const handleSaveContextLanguage = useCallback(async (newLanguage: 'ko' | 'en') => {
+    setSaving(true);
+    setError(null);
+
+    const result = await configService.setConfigValue('contextLanguage', newLanguage);
+
+    setSaving(false);
+
+    if (result.success) {
+      setSuccess(t('settings.context_language_changed', language));
+      setMode('view');
+      loadStatus();
+      onConfigChange?.();
+
+      setTimeout(() => setSuccess(null), 3000);
+    } else {
+      setError(new Error(result.error || 'Failed to save context language'));
+    }
+  }, [loadStatus, onConfigChange, language]);
 
   const handleAddDictEntry = useCallback(async () => {
     if (!dictionaryService || !dictSource.trim() || !dictTarget.trim()) return;
@@ -196,6 +241,99 @@ export function SettingsScreen({
     }
   }, [dictionaryService, dictEntries, dictSelectedIndex, language, loadDictionaryEntries]);
 
+  // Domain knowledge handlers
+  const handleAddDomainEntry = useCallback(async () => {
+    if (!promptContextService || !domainTitle.trim() || !domainContent.trim()) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await promptContextService.create(domainTitle.trim(), domainContent.trim(), domainCategory);
+      setSuccess(t('domain.added', language));
+      setDomainTitle('');
+      setDomainContent('');
+      setDomainCategory('custom');
+      setDomainInputStep('title');
+      setMode('domain-list');
+      await loadDomainEntries();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to add domain knowledge'));
+    } finally {
+      setSaving(false);
+    }
+  }, [promptContextService, domainTitle, domainContent, domainCategory, language, loadDomainEntries]);
+
+  const handleUpdateDomainEntry = useCallback(async () => {
+    if (!promptContextService || !editingDomainId || !domainTitle.trim() || !domainContent.trim()) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await promptContextService.update(editingDomainId, {
+        title: domainTitle.trim(),
+        content: domainContent.trim(),
+        category: domainCategory,
+      });
+      setSuccess(t('domain.updated', language));
+      setDomainTitle('');
+      setDomainContent('');
+      setDomainCategory('custom');
+      setDomainInputStep('title');
+      setEditingDomainId(null);
+      setMode('domain-list');
+      await loadDomainEntries();
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to update domain knowledge'));
+    } finally {
+      setSaving(false);
+    }
+  }, [promptContextService, editingDomainId, domainTitle, domainContent, domainCategory, language, loadDomainEntries]);
+
+  const handleDeleteDomainEntry = useCallback(async () => {
+    if (!promptContextService || domainEntries.length === 0) return;
+
+    const entry = domainEntries[domainSelectedIndex];
+    if (!entry) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await promptContextService.delete(entry.id);
+      setSuccess(t('domain.deleted', language));
+      await loadDomainEntries();
+      setDomainSelectedIndex((prev) => Math.max(0, prev - 1));
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to delete domain knowledge'));
+    } finally {
+      setSaving(false);
+    }
+  }, [promptContextService, domainEntries, domainSelectedIndex, language, loadDomainEntries]);
+
+  const handleToggleDomainEnabled = useCallback(async () => {
+    if (!promptContextService || domainEntries.length === 0) return;
+
+    const entry = domainEntries[domainSelectedIndex];
+    if (!entry) return;
+
+    setSaving(true);
+    setError(null);
+
+    try {
+      await promptContextService.toggleEnabled(entry.id);
+      await loadDomainEntries();
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to toggle domain knowledge'));
+    } finally {
+      setSaving(false);
+    }
+  }, [promptContextService, domainEntries, domainSelectedIndex, loadDomainEntries]);
+
   const handleSaveDbPath = useCallback(async () => {
     if (!dbPathInput.trim()) {
       setError(new Error(language === 'ko' ? '경로를 입력해주세요' : 'Path cannot be empty'));
@@ -232,6 +370,17 @@ export function SettingsScreen({
         setEditingEntryId(null);
         setError(null);
       } else if (mode === 'dictionary-list') {
+        setMode('view');
+        setError(null);
+      } else if (mode === 'domain-add' || mode === 'domain-edit') {
+        setMode('domain-list');
+        setDomainTitle('');
+        setDomainContent('');
+        setDomainCategory('custom');
+        setDomainInputStep('title');
+        setEditingDomainId(null);
+        setError(null);
+      } else if (mode === 'domain-list') {
         setMode('view');
         setError(null);
       } else if (mode !== 'view') {
@@ -283,6 +432,54 @@ export function SettingsScreen({
             handleAddDictEntry();
           } else {
             handleUpdateDictEntry();
+          }
+        }
+      }
+      return;
+    }
+
+    // Domain list mode navigation
+    if (mode === 'domain-list' && !saving) {
+      if (key.upArrow) {
+        setDomainSelectedIndex((prev) => Math.max(0, prev - 1));
+      } else if (key.downArrow) {
+        setDomainSelectedIndex((prev) => Math.min(domainEntries.length - 1, prev + 1));
+      } else if (input === 'a') {
+        setMode('domain-add');
+        setDomainTitle('');
+        setDomainContent('');
+        setDomainCategory('custom');
+        setDomainInputStep('title');
+        setError(null);
+      } else if (input === 'd' && domainEntries.length > 0) {
+        handleDeleteDomainEntry();
+      } else if (input === 't' && domainEntries.length > 0) {
+        handleToggleDomainEnabled();
+      } else if (key.return && domainEntries.length > 0) {
+        const entry = domainEntries[domainSelectedIndex];
+        if (entry) {
+          setEditingDomainId(entry.id);
+          setDomainTitle(entry.title);
+          setDomainContent(entry.content);
+          setDomainCategory(entry.category);
+          setDomainInputStep('title');
+          setMode('domain-edit');
+          setError(null);
+        }
+      }
+      return;
+    }
+
+    // Domain add/edit mode
+    if ((mode === 'domain-add' || mode === 'domain-edit') && !saving) {
+      if (key.return) {
+        if (domainInputStep === 'title' && domainTitle.trim()) {
+          setDomainInputStep('content');
+        } else if (domainInputStep === 'content' && domainContent.trim()) {
+          if (mode === 'domain-add') {
+            handleAddDomainEntry();
+          } else {
+            handleUpdateDomainEntry();
           }
         }
       }
@@ -370,6 +567,48 @@ export function SettingsScreen({
               <SelectInput
                 items={languageItems}
                 onSelect={(item) => handleSaveLanguage(item.value)}
+              />
+            </Box>
+
+            {error && (
+              <Box marginY={1}>
+                <ErrorText error={error} language={language} />
+              </Box>
+            )}
+
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('hint.esc_cancel', language)}
+              </Text>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  }
+
+  // Context language selection mode
+  if (mode === 'edit-context-language') {
+    const contextLanguageItems = [
+      { label: `${t('settings.korean', language)} (한국어)`, value: 'ko' as const },
+      { label: `${t('settings.english', language)} (English)`, value: 'en' as const },
+    ];
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title={t('settings.change_context_language', language)}
+          subtitle={t('settings.select_context_language', language)}
+        />
+
+        {saving ? (
+          <Spinner message={t('settings.saving', language)} />
+        ) : (
+          <>
+            <Box marginY={1}>
+              <SelectInput
+                items={contextLanguageItems}
+                onSelect={(item) => handleSaveContextLanguage(item.value)}
               />
             </Box>
 
@@ -544,6 +783,121 @@ export function SettingsScreen({
     );
   }
 
+  // Domain list mode
+  if (mode === 'domain-list') {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header
+          title={t('domain.title', language)}
+          subtitle={ti('domain.count', language, { count: domainEntries.length })}
+        />
+
+        {saving && <Spinner message={t('domain.deleting', language)} />}
+
+        {success && (
+          <Box marginY={1}>
+            <Text color="green">{success}</Text>
+          </Box>
+        )}
+
+        {error && (
+          <Box marginY={1}>
+            <ErrorText error={error} language={language} />
+          </Box>
+        )}
+
+        {!saving && (
+          <>
+            <Box flexDirection="column" marginY={1} borderStyle="round" borderColor="cyan" paddingX={1}>
+              {domainEntries.length === 0 ? (
+                <Text color="gray">{t('domain.empty', language)}</Text>
+              ) : (
+                domainEntries.map((entry, index) => (
+                  <Box key={entry.id}>
+                    <Text color={index === domainSelectedIndex ? 'cyan' : undefined}>
+                      {index === domainSelectedIndex ? '> ' : '  '}
+                      [{entry.category}] {entry.title}
+                    </Text>
+                    <Text color={entry.enabled ? 'green' : 'gray'} dimColor={!entry.enabled}>
+                      {' '}({entry.enabled ? t('domain.enabled', language) : t('domain.disabled', language)})
+                    </Text>
+                  </Box>
+                ))
+              )}
+            </Box>
+
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('domain.hint_list', language)}
+              </Text>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  }
+
+  // Domain add/edit mode
+  if (mode === 'domain-add' || mode === 'domain-edit') {
+    const isEdit = mode === 'domain-edit';
+    const title = isEdit ? t('domain.edit_title', language) : t('domain.add_title', language);
+    const spinnerMsg = isEdit ? t('domain.updating', language) : t('domain.adding', language);
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Header title={title} />
+
+        {saving ? (
+          <Spinner message={spinnerMsg} />
+        ) : (
+          <>
+            <Box marginY={1} flexDirection="column">
+              <Box>
+                <Text color={domainInputStep === 'title' ? 'cyan' : 'gray'}>
+                  {t('domain.name_label', language)}{' '}
+                </Text>
+              </Box>
+              {domainInputStep === 'title' ? (
+                <TextInput
+                  value={domainTitle}
+                  onChange={setDomainTitle}
+                  placeholder={t('domain.name_placeholder', language)}
+                />
+              ) : (
+                <Text>{domainTitle}</Text>
+              )}
+            </Box>
+
+            {domainInputStep === 'content' && (
+              <Box marginY={1} flexDirection="column">
+                <Box>
+                  <Text color="cyan">{t('domain.content_label', language)} </Text>
+                </Box>
+                <TextInput
+                  value={domainContent}
+                  onChange={setDomainContent}
+                  placeholder={t('domain.content_placeholder', language)}
+                />
+              </Box>
+            )}
+
+            {error && (
+              <Box marginY={1}>
+                <ErrorText error={error} language={language} />
+              </Box>
+            )}
+
+            <Box marginTop={1}>
+              <Text color="gray" dimColor>
+                {t('domain.hint_form', language)}
+              </Text>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  }
+
   // View mode
   const menuItems = [
     {
@@ -559,12 +913,20 @@ export function SettingsScreen({
       value: 'language',
     },
     {
+      label: `${t('settings.change_context_language', language)} (${status?.contextLanguage === 'ko' ? '한국어' : 'English'})`,
+      value: 'context-language',
+    },
+    {
       label: t('settings.change_db_path', language),
       value: 'dbpath',
     },
     {
       label: t('dictionary.manage', language),
       value: 'dictionary',
+    },
+    {
+      label: t('domain.manage', language),
+      value: 'domain',
     },
     { label: t('common.back', language), value: 'back' },
   ];
@@ -600,6 +962,9 @@ export function SettingsScreen({
         <Box>
           <Text color="gray">{t('settings.language', language)}: {status?.language === 'ko' ? '한국어' : 'English'}</Text>
         </Box>
+        <Box>
+          <Text color="gray">{t('settings.context_language', language)}: {status?.contextLanguage === 'ko' ? '한국어' : 'English'}</Text>
+        </Box>
       </Box>
 
       {success && (
@@ -630,12 +995,19 @@ export function SettingsScreen({
             } else if (item.value === 'language') {
               setMode('edit-language');
               setError(null);
+            } else if (item.value === 'context-language') {
+              setMode('edit-context-language');
+              setError(null);
             } else if (item.value === 'dbpath') {
               setMode('edit-dbpath');
               setDbPathInput(status?.dbPath || '');
             } else if (item.value === 'dictionary') {
               setMode('dictionary-list');
               setDictSelectedIndex(0);
+              setError(null);
+            } else if (item.value === 'domain') {
+              setMode('domain-list');
+              setDomainSelectedIndex(0);
               setError(null);
             }
           }}

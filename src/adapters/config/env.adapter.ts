@@ -55,6 +55,10 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
     || (process.env.MCH_LANGUAGE as 'ko' | 'en')
     || 'en';
 
+  const contextLanguage = fileConfig?.contextLanguage
+    || (process.env.MCH_CONTEXT_LANGUAGE as 'ko' | 'en')
+    || 'en';
+
   // Validate required keys (only if requireKeys is true)
   if (requireKeys) {
     const missingKeys: string[] = [];
@@ -77,6 +81,7 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
     openaiApiKey,
     dbPath,
     language,
+    contextLanguage,
   };
 }
 
@@ -119,6 +124,10 @@ export function getConfigStatus(): ConfigStatus {
     || (process.env.MCH_LANGUAGE as 'ko' | 'en')
     || 'en';
 
+  const contextLanguage = fileConfig?.contextLanguage
+    || (process.env.MCH_CONTEXT_LANGUAGE as 'ko' | 'en')
+    || 'en';
+
   return {
     anthropicKey: {
       set: !!anthropicKey,
@@ -132,6 +141,7 @@ export function getConfigStatus(): ConfigStatus {
     },
     dbPath,
     language,
+    contextLanguage,
   };
 }
 

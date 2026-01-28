@@ -1,4 +1,4 @@
-import type { Context, Project, ListOptions, DictionaryEntry } from '../../types/index.js';
+import type { Context, Project, ListOptions, DictionaryEntry, PromptContext } from '../../types/index.js';
 
 /**
  * Storage provider interface (Port)
@@ -38,4 +38,12 @@ export interface StorageProvider {
   updateDictionaryEntry(id: string, updates: Partial<DictionaryEntry>): Promise<void>;
   deleteDictionaryEntry(id: string): Promise<void>;
   getAllDictionaryMappings(): Promise<Map<string, string>>;
+
+  // PromptContext operations
+  savePromptContext(context: PromptContext): Promise<void>;
+  getPromptContext(id: string): Promise<PromptContext | null>;
+  listPromptContexts(): Promise<PromptContext[]>;
+  listEnabledPromptContexts(): Promise<PromptContext[]>;
+  updatePromptContext(id: string, updates: Partial<PromptContext>): Promise<void>;
+  deletePromptContext(id: string): Promise<void>;
 }

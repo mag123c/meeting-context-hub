@@ -30,14 +30,14 @@ export class ConfigService {
   }
 
   /**
-   * Set a config value (language or dbPath)
+   * Set a config value (language, contextLanguage, or dbPath)
    */
-  async setConfigValue<K extends 'language' | 'dbPath'>(
+  async setConfigValue<K extends 'language' | 'contextLanguage' | 'dbPath'>(
     key: K,
     value: Config[K]
   ): Promise<{ success: boolean; error?: string }> {
     // Validate
-    if (key === 'language') {
+    if (key === 'language' || key === 'contextLanguage') {
       if (value !== 'ko' && value !== 'en') {
         return { success: false, error: 'Invalid language. Must be "ko" or "en".' };
       }

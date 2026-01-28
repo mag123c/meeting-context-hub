@@ -96,6 +96,8 @@ OPENAI_API_KEY=sk-xxx          # OpenAI (embedding, whisper)
 # Optional (can also be changed in Settings screen)
 MCH_DB_PATH=~/.mch/data.db     # Database location
 MCH_LANGUAGE=en                # UI language: 'ko' or 'en' (default: 'en')
+MCH_CONTEXT_LANGUAGE=en        # AI extraction output language: 'ko' or 'en'
+EDITOR=nano                    # External editor for Korean IME support
 ```
 
 ## Documentation

@@ -73,3 +73,17 @@ export interface DictionaryEntry {
   createdAt: Date;
   updatedAt: Date;
 }
+
+// PromptContext category types
+export type PromptContextCategory = 'domain' | 'policy' | 'terminology' | 'custom';
+
+// PromptContext entity - Domain knowledge for AI extraction
+export interface PromptContext {
+  id: string;
+  category: PromptContextCategory;
+  title: string;
+  content: string;
+  enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}

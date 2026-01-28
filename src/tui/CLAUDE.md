@@ -9,7 +9,8 @@ tui/
 ├── App.tsx          # Root component, routing
 ├── screens/         # Full-screen components
 ├── components/      # Reusable UI elements
-└── hooks/           # Custom React hooks
+├── hooks/           # Custom React hooks
+└── utils/           # Utilities (external-editor)
 ```
 
 ## i18n Usage
@@ -204,6 +205,31 @@ DetailScreen supports inline editing of context fields:
 - Embedding regeneration on save (if EmbeddingService available)
 - Bilingual UI (ko/en)
 - Consistent keyboard shortcuts
+
+## External Editor (Korean IME Support)
+
+Terminal-based TUI cannot handle Korean IME composition. Use external editor:
+
+```typescript
+import { openExternalEditor, isEditorAvailable, getEditorName } from '../utils/external-editor.js';
+
+// Check if editor is available
+if (isEditorAvailable()) {
+  const content = openExternalEditor(initialContent);
+  if (content !== null) {
+    // User saved and closed editor
+  }
+}
+```
+
+**Editor selection:**
+1. `$EDITOR` environment variable
+2. `$VISUAL` environment variable
+3. Default: `nano` (macOS) or first available from `nano`, `vim`, `vi`
+
+**AddContext integration:**
+- Press `e` in text input mode to open external editor
+- Hint shown when editor is available
 
 ## Version & Update
 

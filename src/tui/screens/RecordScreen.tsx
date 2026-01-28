@@ -17,6 +17,7 @@ interface RecordScreenProps {
   onNavigateToContext?: (contextId: string) => void;
   goBack: () => void;
   language?: 'ko' | 'en';
+  contextLanguage?: 'ko' | 'en';
 }
 
 type Step =
@@ -35,6 +36,7 @@ export function RecordScreen({
   onNavigateToContext,
   goBack,
   language = 'en',
+  contextLanguage = 'en',
 }: RecordScreenProps): React.ReactElement {
   const [step, setStep] = useState<Step>('select-project');
   const [projects, setProjects] = useState<Project[]>([]);
@@ -122,7 +124,8 @@ export function RecordScreen({
     try {
       const { context, relatedContexts: related } = await recordContextUseCase.processTranscription(
         editedTranscription,
-        selectedProjectId
+        selectedProjectId,
+        { language: contextLanguage }
       );
       setResult(context);
       setRelatedContexts(related);
@@ -131,7 +134,7 @@ export function RecordScreen({
       setError(err instanceof Error ? err : new Error('Failed to extract context'));
       setStep('error');
     }
-  }, [editedTranscription, selectedProjectId, recordContextUseCase]);
+  }, [editedTranscription, selectedProjectId, recordContextUseCase, contextLanguage]);
 
   const handleRetry = useCallback(() => {
     setError(null);
