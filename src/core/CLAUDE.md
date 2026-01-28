@@ -12,6 +12,19 @@ core/
 └── index.ts     # Public API exports
 ```
 
+## UseCases
+
+| UseCase | Responsibility |
+|---------|----------------|
+| AddContextUseCase | Create context from raw input (extract → embed → save) |
+| ListContextsUseCase | List contexts with pagination |
+| SearchContextUseCase | Semantic/keyword search |
+| ManageContextUseCase | Update/delete context, change group |
+| TranslateContextUseCase | Translate context content to ko/en (preview → apply) |
+| GetContextUseCase | Get single context by ID |
+| ManageProjectUseCase | CRUD for projects/groups |
+| RecordContextUseCase | Audio recording → transcribe → extract |
+
 ## Usage in GUI
 
 See `docs/GUI_INTEGRATION.md` for detailed integration guide.
@@ -21,6 +34,7 @@ import {
   AddContextUseCase,
   ListContextsUseCase,
   SearchContextUseCase,
+  TranslateContextUseCase,
   ConfigService,
 } from 'meeting-context-hub/core';
 ```

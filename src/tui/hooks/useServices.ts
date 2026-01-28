@@ -12,6 +12,7 @@ import {
   GetContextUseCase,
   SearchContextUseCase,
   RecordContextUseCase,
+  TranslateContextUseCase,
 } from '../../core/usecases/index.js';
 
 interface Services {
@@ -22,6 +23,7 @@ interface Services {
   getContext: GetContextUseCase;
   searchContext: SearchContextUseCase;
   recordContext: RecordContextUseCase | null;
+  translateContext: TranslateContextUseCase;
   dictionary: DictionaryService;
   promptContext: PromptContextService;
 }
@@ -98,6 +100,7 @@ async function initializeServices(): Promise<void> {
         getContext: new GetContextUseCase(storage),
         searchContext: new SearchContextUseCase(storage, embeddingService, chainService),
         recordContext,
+        translateContext: new TranslateContextUseCase(storage, ai, embeddingService),
         dictionary: new DictionaryService(storage),
         promptContext: new PromptContextService(storage),
       };

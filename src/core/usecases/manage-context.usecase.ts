@@ -11,6 +11,7 @@ export interface UpdateContextInput {
   decisions?: string[];
   actionItems?: ActionItem[];
   policies?: string[];
+  openQuestions?: string[];
   tags?: string[];
 }
 

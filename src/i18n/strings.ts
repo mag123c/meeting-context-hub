@@ -254,6 +254,25 @@ export const UI_STRINGS = {
   'input.opening_editor': { ko: '외부 편집기 열기...', en: 'Opening external editor...' },
   'input.editor_error': { ko: '편집기를 열 수 없습니다', en: 'Failed to open editor' },
 
+  // Translate strings
+  'translate.menu': { ko: '컨텍스트 번역', en: 'Translate Context' },
+  'translate.title': { ko: '컨텍스트 번역', en: 'Translate Context' },
+  'translate.subtitle': { ko: '컨텍스트 내용을 다른 언어로 번역합니다', en: 'Translate context content to another language' },
+  'translate.select_context': { ko: '번역할 컨텍스트 선택', en: 'Select context to translate' },
+  'translate.select_language': { ko: '번역 대상 언어 선택', en: 'Select target language' },
+  'translate.generating_preview': { ko: '번역 미리보기 생성 중...', en: 'Generating translation preview...' },
+  'translate.preview_title': { ko: '번역 미리보기', en: 'Translation Preview' },
+  'translate.original': { ko: '원본', en: 'Original' },
+  'translate.translated': { ko: '번역됨', en: 'Translated' },
+  'translate.confirm_message': { ko: '이 번역을 적용하시겠습니까?', en: 'Apply this translation?' },
+  'translate.applying': { ko: '번역 적용 중...', en: 'Applying translation...' },
+  'translate.success': { ko: '번역이 적용되었습니다!', en: 'Translation applied!' },
+  'translate.empty': { ko: '번역할 컨텍스트가 없습니다.', en: 'No contexts to translate.' },
+  'translate.hint_select': { ko: '↑/↓ 이동 | Enter: 선택 | n/p: 페이지 | ESC: 뒤로', en: '↑/↓ Navigate | Enter: Select | n/p: Page | ESC: Back' },
+  'translate.hint_preview': { ko: 'y: 적용 | n: 취소 | ESC: 뒤로', en: 'y: Apply | n: Cancel | ESC: Back' },
+  'translate.to_korean': { ko: '한국어로 번역', en: 'Translate to Korean' },
+  'translate.to_english': { ko: '영어로 번역', en: 'Translate to English' },
+
   // Dialog strings
   'dialog.delete_context_title': { ko: '컨텍스트 삭제', en: 'Delete Context' },
   'dialog.delete_context_message': { ko: '이 컨텍스트를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.', en: 'Delete this context?\nThis action cannot be undone.' },

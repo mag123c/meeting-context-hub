@@ -5,3 +5,4 @@ export { ManageContextUseCase, type UpdateContextInput } from './manage-context.
 export { GetContextUseCase } from './get-context.usecase.js';
 export { SearchContextUseCase, type SearchContextResult } from './search-context.usecase.js';
 export { RecordContextUseCase, type RecordContextResult } from './record-context.usecase.js';
+export { TranslateContextUseCase, type TranslatePreview } from './translate-context.usecase.js';

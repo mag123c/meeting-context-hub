@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { z } from 'zod';
-import type { AIProvider, ExtractOptions } from './ai.interface.js';
+import type { AIProvider, ExtractOptions, TranslateOptions } from './ai.interface.js';
 import type { ExtractedContext, ActionItem } from '../../types/index.js';
 import { AIError, ErrorCode, detectErrorCode } from '../../types/errors.js';
 import { withRetry } from '../../core/services/retry.service.js';
@@ -174,6 +174,129 @@ Rules:
 - tags: Generate 3-7 relevant tags for categorization
 
 If a field has no content, use an empty array [].
+Respond with ONLY the JSON object, no additional text.`;
+  }
+
+  async translate(context: ExtractedContext, options: TranslateOptions): Promise<ExtractedContext> {
+    const prompt = this.buildTranslationPrompt(context, options);
+
+    try {
+      const response = await withRetry(
+        () =>
+          this.client.messages.create({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 4096,
+            messages: [
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+          }),
+        {
+          maxAttempts: 3,
+          baseDelayMs: 1000,
+          onRetry: (error, attempt) => {
+            console.error(`[AI Translation] Retry ${attempt}: ${error.message}`);
+          },
+        }
+      );
+
+      // Extract text from response
+      const textBlock = response.content.find((block) => block.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') {
+        throw new AIError(
+          'No text response from Claude',
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true
+        );
+      }
+
+      // Parse JSON from response
+      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new AIError(
+          'No JSON found in Claude response',
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true
+        );
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+      const validated = ExtractedContextSchema.parse(parsed);
+
+      return {
+        title: validated.title,
+        summary: validated.summary,
+        decisions: validated.decisions,
+        actionItems: validated.actionItems as ActionItem[],
+        policies: validated.policies,
+        openQuestions: validated.openQuestions,
+        tags: validated.tags,
+      };
+    } catch (error) {
+      // Don't wrap AIError
+      if (error instanceof AIError) {
+        throw error;
+      }
+
+      if (error instanceof z.ZodError) {
+        throw new AIError(
+          `Invalid translation result: ${error.message}`,
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true,
+          error
+        );
+      }
+
+      const originalError = error instanceof Error ? error : undefined;
+      const errorCode = detectErrorCode(error);
+
+      throw new AIError(
+        `Failed to translate context: ${originalError?.message ?? 'Unknown error'}`,
+        errorCode,
+        true,
+        originalError
+      );
+    }
+  }
+
+  private buildTranslationPrompt(context: ExtractedContext, options: TranslateOptions): string {
+    const targetLanguage = options.targetLanguage;
+    const langName = targetLanguage === 'ko' ? 'Korean (한국어)' : 'English';
+
+    return `You are a technical translator specializing in software development contexts. Translate the following structured meeting context to ${langName}.
+
+<context>
+${JSON.stringify(context, null, 2)}
+</context>
+
+IMPORTANT RULES:
+1. Translate the content to ${langName}
+2. Preserve technical terms (e.g., API, REST, OAuth, JWT, GraphQL, etc.) as-is - do not translate them
+3. Preserve proper nouns, names of people, and identifiers as-is
+4. Preserve the "assignee" and "dueDate" fields exactly as-is (do not translate names)
+5. For tags, keep commonly-used English technical terms (api, design, rest, etc.) but translate descriptive tags if needed
+6. Maintain the same JSON structure
+
+Respond with ONLY a JSON object (no markdown, no explanation):
+
+{
+  "title": "Translated title",
+  "summary": "Translated summary",
+  "decisions": ["Translated decision 1", "Translated decision 2"],
+  "actionItems": [
+    {
+      "task": "Translated task description",
+      "assignee": "Original assignee (unchanged)",
+      "dueDate": "Original due date (unchanged)"
+    }
+  ],
+  "policies": ["Translated policy 1", "Translated policy 2"],
+  "openQuestions": ["Translated question 1", "Translated question 2"],
+  "tags": ["tag1", "tag2"]
+}
+
 Respond with ONLY the JSON object, no additional text.`;
   }
 }

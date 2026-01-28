@@ -11,6 +11,14 @@ export interface ExtractOptions {
 }
 
 /**
+ * Options for context translation
+ */
+export interface TranslateOptions {
+  /** Target language for translation */
+  targetLanguage: 'ko' | 'en';
+}
+
+/**
  * AI provider interface (Port)
  */
 export interface AIProvider {
@@ -18,6 +26,11 @@ export interface AIProvider {
    * Extract structured context from raw input text
    */
   extract(input: string, options?: ExtractOptions): Promise<ExtractedContext>;
+
+  /**
+   * Translate extracted context to target language (optional)
+   */
+  translate?(context: ExtractedContext, options: TranslateOptions): Promise<ExtractedContext>;
 }
 
 // Re-export AIError as AIExtractionError for backward compatibility

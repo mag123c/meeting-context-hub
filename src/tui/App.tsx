@@ -12,6 +12,7 @@ import { ProjectScreen } from './screens/ProjectScreen.js';
 import { SettingsScreen } from './screens/SettingsScreen.js';
 import { SearchScreen } from './screens/SearchScreen.js';
 import { RecordScreen } from './screens/RecordScreen.js';
+import { TranslateScreen } from './screens/TranslateScreen.js';
 import { RequiresOpenAI } from './components/RequiresOpenAI.js';
 import { checkForUpdates, getCachedUpdateInfo } from '../utils/update-notifier.js';
 
@@ -265,6 +266,7 @@ export function App({ onExit }: AppProps): React.ReactElement {
           language={language}
           dictionaryService={services.dictionary}
           promptContextService={services.promptContext}
+          navigate={navigate}
         />
       );
 
@@ -290,6 +292,15 @@ export function App({ onExit }: AppProps): React.ReactElement {
           goBack={goBack}
           language={language}
           contextLanguage={contextLanguage}
+        />
+      );
+
+    case 'translate':
+      return (
+        <TranslateScreen
+          translateContextUseCase={services.translateContext}
+          goBack={goBack}
+          language={language}
         />
       );
 
