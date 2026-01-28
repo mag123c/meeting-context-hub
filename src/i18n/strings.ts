@@ -88,7 +88,7 @@ export const UI_STRINGS = {
   'add.loading_projects': { ko: '그룹 로딩 중...', en: 'Loading groups...' },
   'add.mode_text': { ko: '텍스트 입력', en: 'Text Input' },
   'add.mode_file': { ko: '파일 경로', en: 'File Path' },
-  'add.file_placeholder': { ko: '오디오 파일 경로 입력...', en: 'Enter audio file path...' },
+  'add.file_placeholder': { ko: '~/Desktop/audio.wav (상대경로는 ~ 기준)', en: '~/Desktop/audio.wav (relative paths from ~)' },
   'add.supported_formats': { ko: '지원 형식:', en: 'Supported formats:' },
   'add.transcribing': { ko: 'Whisper로 오디오 변환 중...', en: 'Transcribing audio with Whisper...' },
   'add.hint_file': { ko: 'Tab: 자동완성/모드전환 | Ctrl+D: 제출', en: 'Tab: Autocomplete/Switch mode | Ctrl+D: Submit' },

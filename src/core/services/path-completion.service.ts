@@ -7,14 +7,21 @@ import * as path from 'path';
  */
 export class PathCompletionService {
   /**
-   * Expand ~ to home directory
+   * Expand path to absolute path
+   * - ~ → home directory
+   * - /absolute → as is
+   * - relative → home directory + relative
    */
   expandPath(inputPath: string): string {
     if (!inputPath) return inputPath;
     if (inputPath.startsWith('~')) {
       return path.join(os.homedir(), inputPath.slice(1));
     }
-    return inputPath;
+    if (path.isAbsolute(inputPath)) {
+      return inputPath;
+    }
+    // Relative path → resolve from home directory
+    return path.join(os.homedir(), inputPath);
   }
 
   /**
