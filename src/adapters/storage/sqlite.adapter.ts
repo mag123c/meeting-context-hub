@@ -96,6 +96,9 @@ export class SQLiteAdapter implements StorageProvider {
       )
     `);
 
+    // Migration: Add project_id to contexts if it doesn't exist
+    this.migrateContextsTable();
+
     // Indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_contexts_project ON contexts(project_id);
@@ -115,14 +118,14 @@ export class SQLiteAdapter implements StorageProvider {
       )
     `);
 
+    // Migration: Add project_id to dictionary if it doesn't exist
+    this.migrateDictionaryTable();
+
     // Dictionary indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_dictionary_source ON dictionary(source);
       CREATE INDEX IF NOT EXISTS idx_dictionary_project ON dictionary(project_id);
     `);
-
-    // Migration: Add project_id to dictionary if it doesn't exist
-    this.migrateDictionaryTable();
 
     // PromptContext table
     db.exec(`
@@ -138,15 +141,32 @@ export class SQLiteAdapter implements StorageProvider {
       )
     `);
 
+    // Migration: Add project_id to prompt_contexts if it doesn't exist
+    this.migratePromptContextsTable();
+
     // PromptContext indexes
     db.exec(`
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_enabled ON prompt_contexts(enabled);
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_category ON prompt_contexts(category);
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_project ON prompt_contexts(project_id);
     `);
+  }
 
-    // Migration: Add project_id to prompt_contexts if it doesn't exist
-    this.migratePromptContextsTable();
+  /**
+   * Migrate contexts table to add project_id column if it doesn't exist
+   */
+  private migrateContextsTable(): void {
+    const db = this.getDb();
+
+    // Check if project_id column exists
+    const tableInfo = db.pragma('table_info(contexts)') as Array<{ name: string }>;
+    const hasProjectId = tableInfo.some((col) => col.name === 'project_id');
+
+    if (!hasProjectId) {
+      // Add project_id column (null = uncategorized)
+      db.exec('ALTER TABLE contexts ADD COLUMN project_id TEXT REFERENCES projects(id) ON DELETE SET NULL');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_contexts_project ON contexts(project_id)');
+    }
   }
 
   /**
