@@ -1,3 +1,10 @@
+# [2.17.0](https://github.com/mag123c/meeting-context-hub/compare/v2.16.0...v2.17.0) (2026-01-28)
+
+
+### Features
+
+* **translate,settings:** move translation to DetailScreen, add group-specific settings ([9817ea3](https://github.com/mag123c/meeting-context-hub/commit/9817ea3fe1e56a28e4da2f2ac0ede793cc28af4c))
+
 # [2.16.0](https://github.com/mag123c/meeting-context-hub/compare/v2.15.0...v2.16.0) (2026-01-28)
 
 
