@@ -1,3 +1,10 @@
+# [2.16.0](https://github.com/mag123c/meeting-context-hub/compare/v2.15.0...v2.16.0) (2026-01-28)
+
+
+### Features
+
+* **translate:** add context translation feature ([2210631](https://github.com/mag123c/meeting-context-hub/commit/2210631d70be3f4ff5ef1a0ce004c5e58a83e775))
+
 # [2.15.0](https://github.com/mag123c/meeting-context-hub/compare/v2.14.0...v2.15.0) (2026-01-28)
 
 
