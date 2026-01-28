@@ -252,11 +252,16 @@ import { UpdateBanner } from '../components/UpdateBanner.js';
 2. If failed (e.g., ENOTEMPTY) → `npm uninstall -g` then reinstall
 3. Return `{ success, error? }` for UI handling
 
-**Background Check Behavior:**
-- `update-notifier` spawns background process on first call
-- `updateCheckInterval: 0` ensures check runs every startup
-- App polls every 1 second (max 10 attempts) until update info is available
-- Typically detects updates within 2 seconds
+**Update Check Behavior:**
+
+| Scenario | Behavior |
+|----------|----------|
+| Cached update exists | Instant display (no loading) via `getCachedUpdateInfo()` |
+| No cache | Background check + polling (max 10s) via `checkForUpdates()` |
+
+- `getCachedUpdateInfo()`: Reads cache synchronously (24h interval, no trigger)
+- `checkForUpdates()`: Triggers background check (interval: 0)
+- useState initializers read cache for instant startup
 
 **Update Screen Flow:**
 1. **Normal startup + Update available** → Full-screen update prompt (U to update, Enter to skip)

@@ -13,7 +13,7 @@ import { SettingsScreen } from './screens/SettingsScreen.js';
 import { SearchScreen } from './screens/SearchScreen.js';
 import { RecordScreen } from './screens/RecordScreen.js';
 import { RequiresOpenAI } from './components/RequiresOpenAI.js';
-import { checkForUpdates } from '../utils/update-notifier.js';
+import { checkForUpdates, getCachedUpdateInfo } from '../utils/update-notifier.js';
 
 interface UpdateInfo {
   current: string;
@@ -28,8 +28,13 @@ export function App({ onExit }: AppProps): React.ReactElement {
   const { services, config, error, loading, needsConfig } = useServices();
   const { screen, params, navigate, goBack } = useNavigation();
   const [reinitializing, setReinitializing] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
-  const [checkingForUpdates, setCheckingForUpdates] = useState(true);
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(() => {
+    const cached = getCachedUpdateInfo();
+    return cached ? { current: cached.current, latest: cached.latest } : null;
+  });
+  const [checkingForUpdates, setCheckingForUpdates] = useState(() => {
+    return getCachedUpdateInfo() === null; // If cached, check is already complete
+  });
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
   // Get language from config, default to 'en'

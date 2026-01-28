@@ -15,6 +15,30 @@ interface UpdateInfo {
 }
 
 /**
+ * Get cached update info synchronously (no background check)
+ * Returns cached result from previous session if available
+ */
+export function getCachedUpdateInfo(): UpdateInfo | null {
+  try {
+    const notifier = updateNotifier({
+      pkg,
+      updateCheckInterval: 1000 * 60 * 60 * 24, // 24 hours (don't trigger check)
+    });
+
+    if (notifier.update && notifier.update.latest !== VERSION) {
+      return {
+        current: VERSION,
+        latest: notifier.update.latest,
+        type: notifier.update.type as UpdateInfo['type'],
+      };
+    }
+  } catch {
+    // Silently fail
+  }
+  return null;
+}
+
+/**
  * Check for updates and return update info if available
  * Shows banner in App.tsx if update is available
  */
