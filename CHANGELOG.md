@@ -1,3 +1,10 @@
+## [2.12.2](https://github.com/mag123c/meeting-context-hub/compare/v2.12.1...v2.12.2) (2026-01-28)
+
+
+### Bug Fixes
+
+* **path-completion:** resolve relative paths from home directory ([2b93777](https://github.com/mag123c/meeting-context-hub/commit/2b93777afefdd4767c29115c287cf1623dff6d28))
+
 ## [2.12.1](https://github.com/mag123c/meeting-context-hub/compare/v2.12.0...v2.12.1) (2026-01-28)
 
 
