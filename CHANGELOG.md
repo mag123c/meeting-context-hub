@@ -1,3 +1,15 @@
+# [2.13.0](https://github.com/mag123c/meeting-context-hub/compare/v2.12.2...v2.13.0) (2026-01-28)
+
+
+### Bug Fixes
+
+* **tui:** prevent stdin conflict on UpdateBanner restart ([4efbfd0](https://github.com/mag123c/meeting-context-hub/commit/4efbfd0a670aca46ed346600c90c2cdaa0a19e46))
+
+
+### Features
+
+* **dictionary:** add STT correction dictionary feature ([1e2f916](https://github.com/mag123c/meeting-context-hub/commit/1e2f9166d9ba28a752888de13dd093725a89ab8b))
+
 ## [2.12.2](https://github.com/mag123c/meeting-context-hub/compare/v2.12.1...v2.12.2) (2026-01-28)
 
 
