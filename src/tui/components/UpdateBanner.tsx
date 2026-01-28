@@ -38,10 +38,11 @@ export function UpdateBanner({
 
     // Any key to restart after update
     if (updated) {
-      spawn('mch', [], {
+      const child = spawn('mch', [], {
         detached: true,
-        stdio: 'inherit',
+        stdio: 'ignore',
       });
+      child.unref();
       exit();
     }
   });
