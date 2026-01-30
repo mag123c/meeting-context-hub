@@ -1,3 +1,15 @@
+# [2.19.0](https://github.com/mag123c/meeting-context-hub/compare/v2.18.0...v2.19.0) (2026-01-30)
+
+
+### Bug Fixes
+
+* **i18n:** update string keys ([f3867f1](https://github.com/mag123c/meeting-context-hub/commit/f3867f1ec59cae8f12eb35493c353dc889819519))
+
+
+### Features
+
+* **tui:** add real-time autocomplete with ↑↓ selection to FilePathInput ([43e5668](https://github.com/mag123c/meeting-context-hub/commit/43e56680dabf1c8574f402c4e0c87968f32a06db))
+
 # [2.18.0](https://github.com/mag123c/meeting-context-hub/compare/v2.17.1...v2.18.0) (2026-01-28)
 
 
