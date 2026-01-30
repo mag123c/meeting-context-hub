@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { ScrollableList } from './ScrollableList.js';
 
 interface FilePathInputProps {
   value: string;
@@ -7,10 +8,10 @@ interface FilePathInputProps {
   onSubmit?: () => void;
   onCancel?: () => void;
   onTabComplete?: () => void;
+  onSelectCompletion?: (path: string) => void;
   placeholder?: string;
   focus?: boolean;
   completions?: string[];
-  selectedCompletion?: number;
 }
 
 export function FilePathInput({
@@ -19,17 +20,23 @@ export function FilePathInput({
   onSubmit,
   onCancel,
   onTabComplete,
+  onSelectCompletion,
   placeholder = '',
   focus = true,
   completions = [],
-  selectedCompletion = 0,
 }: FilePathInputProps): React.ReactElement {
   const [cursorPos, setCursorPos] = useState(value.length);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   // Sync cursor position with value changes
   useEffect(() => {
     setCursorPos(value.length);
   }, [value]);
+
+  // Reset selection when completions change
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [completions]);
 
   useInput(
     (input, key) => {
@@ -47,9 +54,23 @@ export function FilePathInput({
         return;
       }
 
-      // Tab: Autocomplete
+      // ↑↓: Navigate completions
+      if (key.upArrow && completions.length > 0) {
+        setSelectedIndex(prev => Math.max(0, prev - 1));
+        return;
+      }
+      if (key.downArrow && completions.length > 0) {
+        setSelectedIndex(prev => Math.min(completions.length - 1, prev + 1));
+        return;
+      }
+
+      // Tab: Select completion or fallback to tab complete
       if (key.tab) {
-        onTabComplete?.();
+        if (completions.length > 0) {
+          onSelectCompletion?.(completions[selectedIndex]);
+        } else {
+          onTabComplete?.();
+        }
         return;
       }
 
@@ -134,19 +155,16 @@ export function FilePathInput({
           <Text color="cyan" dimColor>
             Completions:
           </Text>
-          {completions.slice(0, 5).map((completion, idx) => (
-            <Box key={completion}>
-              <Text color={idx === selectedCompletion ? 'cyan' : 'gray'}>
-                {idx === selectedCompletion ? '▸ ' : '  '}
-                {completion}
+          <ScrollableList
+            items={completions}
+            selectedIndex={selectedIndex}
+            maxVisible={10}
+            renderItem={(item, _idx, isSelected) => (
+              <Text color={isSelected ? 'cyan' : 'gray'}>
+                {isSelected ? '▸ ' : '  '}{item}
               </Text>
-            </Box>
-          ))}
-          {completions.length > 5 && (
-            <Text color="gray" dimColor>
-              ... and {completions.length - 5} more
-            </Text>
-          )}
+            )}
+          />
         </Box>
       )}
     </Box>

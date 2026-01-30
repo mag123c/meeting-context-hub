@@ -12,6 +12,8 @@ vi.mock('../../core/services/path-completion.service.js', () => ({
   })),
 }));
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 describe('FilePathInput', () => {
   const defaultProps = {
     value: '',
@@ -43,7 +45,6 @@ describe('FilePathInput', () => {
   });
 
   it('should display completions when available', () => {
-    // This test verifies the component structure with completions passed as prop
     const { lastFrame } = render(
       <FilePathInput
         {...defaultProps}
@@ -89,7 +90,131 @@ describe('FilePathInput', () => {
     const { lastFrame } = render(
       <FilePathInput {...defaultProps} value="/Users/test/file" />
     );
-    // Should not contain the completions section header
     expect(lastFrame()).not.toContain('Completions:');
+  });
+
+  it('should highlight first completion by default', () => {
+    const { lastFrame } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3']}
+        focus={true}
+      />
+    );
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('▸ /Users/test/a.mp3');
+  });
+
+  it('should move selection down on ↓ key', async () => {
+    const { stdin, lastFrame } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3', '/Users/test/c.mp3']}
+        focus={true}
+      />
+    );
+
+    stdin.write('\x1B[B');
+    await delay(50);
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('▸ /Users/test/b.mp3');
+  });
+
+  it('should move selection up on ↑ key', async () => {
+    const { stdin, lastFrame } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3', '/Users/test/c.mp3']}
+        focus={true}
+      />
+    );
+
+    stdin.write('\x1B[B');
+    await delay(50);
+    stdin.write('\x1B[B');
+    await delay(50);
+    stdin.write('\x1B[A');
+    await delay(50);
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('▸ /Users/test/b.mp3');
+  });
+
+  it('should call onSelectCompletion with selected item on Tab when completions exist', async () => {
+    const onSelectCompletion = vi.fn();
+    const { stdin } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3']}
+        onSelectCompletion={onSelectCompletion}
+        focus={true}
+      />
+    );
+
+    stdin.write('\x1B[B');
+    await delay(50);
+    stdin.write('\t');
+    await delay(50);
+
+    expect(onSelectCompletion).toHaveBeenCalledWith('/Users/test/b.mp3');
+  });
+
+  it('should call onTabComplete on Tab when no completions', () => {
+    const onTabComplete = vi.fn();
+    const { stdin } = render(
+      <FilePathInput
+        {...defaultProps}
+        value=""
+        completions={[]}
+        onTabComplete={onTabComplete}
+        focus={true}
+      />
+    );
+
+    stdin.write('\t');
+    expect(onTabComplete).toHaveBeenCalled();
+  });
+
+  it('should not move selection below last item', async () => {
+    const { stdin, lastFrame } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3']}
+        focus={true}
+      />
+    );
+
+    for (let i = 0; i < 5; i++) {
+      stdin.write('\x1B[B');
+      await delay(50);
+    }
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('▸ /Users/test/b.mp3');
+  });
+
+  it('should not move selection above first item', async () => {
+    const { stdin, lastFrame } = render(
+      <FilePathInput
+        {...defaultProps}
+        value="/Users/test/"
+        completions={['/Users/test/a.mp3', '/Users/test/b.mp3']}
+        focus={true}
+      />
+    );
+
+    stdin.write('\x1B[A');
+    await delay(50);
+    stdin.write('\x1B[A');
+    await delay(50);
+
+    const frame = lastFrame() ?? '';
+    expect(frame).toContain('▸ /Users/test/a.mp3');
   });
 });

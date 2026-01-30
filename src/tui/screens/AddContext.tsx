@@ -11,7 +11,7 @@ import { SectionBox } from '../components/SectionBox.js';
 import { t } from '../../i18n/index.js';
 import { PathCompletionService } from '../../core/services/path-completion.service.js';
 import { FileValidationService } from '../../core/services/file-validation.service.js';
-import { openExternalEditor, isEditorAvailable, getEditorName } from '../utils/external-editor.js';
+import { openExternalEditor, isEditorAvailable } from '../utils/external-editor.js';
 import { InputError, ErrorCode } from '../../types/errors.js';
 import type { AddContextUseCase } from '../../core/usecases/add-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -152,11 +152,10 @@ export function AddContext({
     }
   }, [filePath, selectedProjectId, recordContextUseCase, pathCompletionService, fileValidationService]);
 
-  // Handle Tab for autocomplete or mode switch
+  // Handle Tab for mode switch (empty input only)
   const handleTabComplete = useCallback(() => {
     if (!fileInputAvailable) return;
 
-    // If input is empty, switch mode
     if (inputMode === 'text' && !input.trim()) {
       setInputMode('file');
       return;
@@ -165,35 +164,30 @@ export function AddContext({
       setInputMode('text');
       return;
     }
+  }, [inputMode, input, filePath, fileInputAvailable]);
 
-    // In file mode, do autocomplete
-    if (inputMode === 'file' && filePath.trim()) {
-      const expanded = pathCompletionService.expandPath(filePath);
-      const comps = pathCompletionService.getCompletions(expanded);
-      setCompletions(comps);
-
-      if (comps.length === 1) {
-        // Single match - apply completion
-        setFilePath(comps[0]);
-        setCompletions([]);
-      } else if (comps.length > 1) {
-        // Multiple matches - apply common prefix
-        const commonPrefix = pathCompletionService.findCommonPrefix(comps);
-        if (commonPrefix.length > expanded.length) {
-          setFilePath(commonPrefix);
-        }
-      }
-    }
-  }, [inputMode, input, filePath, fileInputAvailable, pathCompletionService]);
-
-  // Handle file path changes
+  // Handle file path changes (real-time completions)
   const handleFilePathChange = useCallback((value: string) => {
     setFilePath(value);
-    // Clear completions when user types
-    if (completions.length > 0) {
+    if (value.trim()) {
+      const expanded = pathCompletionService.expandPath(value);
+      const comps = pathCompletionService.getCompletions(expanded);
+      setCompletions(comps);
+    } else {
       setCompletions([]);
     }
-  }, [completions.length]);
+  }, [pathCompletionService]);
+
+  // Handle Tab selection of a completion
+  const handleSelectCompletion = useCallback((selectedPath: string) => {
+    setFilePath(selectedPath);
+    if (selectedPath.endsWith('/')) {
+      const comps = pathCompletionService.getCompletions(selectedPath);
+      setCompletions(comps);
+    } else {
+      setCompletions([]);
+    }
+  }, [pathCompletionService]);
 
   const handleRetry = useCallback(() => {
     setError(null);
@@ -215,13 +209,7 @@ export function AddContext({
     }
   }, [input, language]);
 
-  useInput((inputKey, key) => {
-    // Handle 'e' key to open external editor in text input mode
-    if (inputKey === 'e' && step === 'input' && inputMode === 'text') {
-      handleOpenExternalEditor();
-      return;
-    }
-
+  useInput((_inputKey, key) => {
     if (key.escape) {
       if (step === 'result' || step === 'error') {
         goBack();
@@ -292,24 +280,16 @@ export function AddContext({
         )}
 
         {inputMode === 'text' ? (
-          <Box flexDirection="column">
-            <MultilineInput
-              value={input}
-              onChange={setInput}
-              onSubmit={handleTextSubmit}
-              onCancel={() => setStep('select-project')}
-              onTabComplete={handleTabComplete}
-              placeholder={t('add.placeholder', language)}
-              focus={true}
-            />
-            {isEditorAvailable() && (
-              <Box marginTop={1}>
-                <Text color="gray" dimColor>
-                  {t('input.external_editor', language)} ({getEditorName()})
-                </Text>
-              </Box>
-            )}
-          </Box>
+          <MultilineInput
+            value={input}
+            onChange={setInput}
+            onSubmit={handleTextSubmit}
+            onCancel={() => setStep('select-project')}
+            onTabComplete={handleTabComplete}
+            onOpenEditor={isEditorAvailable() ? handleOpenExternalEditor : undefined}
+            placeholder={t('add.placeholder', language)}
+            focus={true}
+          />
         ) : (
           <Box flexDirection="column">
             <FilePathInput
@@ -318,6 +298,7 @@ export function AddContext({
               onSubmit={handleFileSubmit}
               onCancel={() => setStep('select-project')}
               onTabComplete={handleTabComplete}
+              onSelectCompletion={handleSelectCompletion}
               placeholder={t('add.file_placeholder', language)}
               focus={true}
               completions={completions}
