@@ -259,7 +259,7 @@ export const UI_STRINGS = {
   'domain.count': { ko: '{count}개 항목', en: '{count} entries' },
 
   // External editor strings
-  'input.external_editor': { ko: '외부 편집기로 열기 (e)', en: 'Open in external editor (e)' },
+  'input.external_editor': { ko: '외부 편집기로 열기 (Ctrl+E)', en: 'Open in external editor (Ctrl+E)' },
   'input.external_editor_hint': { ko: '$EDITOR 환경변수 설정 권장', en: 'Set $EDITOR env variable recommended' },
   'input.opening_editor': { ko: '외부 편집기 열기...', en: 'Opening external editor...' },
   'input.editor_error': { ko: '편집기를 열 수 없습니다', en: 'Failed to open editor' },
