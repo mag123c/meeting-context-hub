@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { TextInput } from '../components/TextInput.js';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
@@ -10,6 +10,7 @@ import { GroupSelector } from '../components/GroupSelector.js';
 import { StringListEditor } from '../components/StringListEditor.js';
 import { MultilineInput } from '../components/MultilineInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { useExternalEditor } from '../hooks/useExternalEditor.js';
 import { t } from '../../i18n/index.js';
 import type { GetContextUseCase } from '../../core/usecases/get-context.usecase.js';
 import type { ManageProjectUseCase } from '../../core/usecases/manage-project.usecase.js';
@@ -71,6 +72,12 @@ export function DetailScreen({
   const [translatePreview, setTranslatePreview] = useState<TranslatePreview | null>(null);
   const [translateError, setTranslateError] = useState<Error | null>(null);
   const [applyingTranslation, setApplyingTranslation] = useState(false);
+
+  // External editor
+  const { handleOpenEditor, editorAvailable } = useExternalEditor({
+    getValue: () => editStringValue,
+    onResult: (content) => setEditStringValue(content),
+  });
 
   // Load context data
   useEffect(() => {
@@ -572,32 +579,24 @@ export function DetailScreen({
 
           {isStringField ? (
             editingField === 'summary' ? (
+              <MultilineInput
+                value={editStringValue}
+                onChange={setEditStringValue}
+                onSubmit={handleSaveEdit}
+                onCancel={handleCancelEdit}
+                onOpenEditor={editorAvailable ? handleOpenEditor : undefined}
+                placeholder=""
+                focus={true}
+                maxDisplayLines={15}
+              />
+            ) : (
               <Box flexDirection="column">
-                <MultilineInput
+                <TextInput
                   value={editStringValue}
                   onChange={setEditStringValue}
                   onSubmit={handleSaveEdit}
-                  onCancel={handleCancelEdit}
-                  placeholder=""
-                  focus={true}
-                  maxDisplayLines={15}
+                  onOpenEditor={editorAvailable ? handleOpenEditor : undefined}
                 />
-                <Box marginTop={1}>
-                  <Text color="gray" dimColor>
-                    Ctrl+D: {t('common.save', language)} | ESC: {t('common.cancel', language)}
-                  </Text>
-                </Box>
-              </Box>
-            ) : (
-              <Box flexDirection="column">
-                <Box>
-                  <Text color="yellow">&gt; </Text>
-                  <TextInput
-                    value={editStringValue}
-                    onChange={setEditStringValue}
-                    onSubmit={handleSaveEdit}
-                  />
-                </Box>
                 <Box marginTop={1}>
                   <Text color="gray" dimColor>
                     {t('edit.hint_editing', language)}

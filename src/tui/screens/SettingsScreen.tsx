@@ -4,6 +4,7 @@ import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
 import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
+import { useExternalEditor } from '../hooks/useExternalEditor.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
 import { ScrollableList } from '../components/ScrollableList.js';
 import { ConfigService } from '../../core/services/config.service.js';
@@ -57,6 +58,12 @@ export function SettingsScreen({
   const [domainCategory, setDomainCategory] = useState<PromptContextCategory>('custom');
   const [editingDomainId, setEditingDomainId] = useState<string | null>(null);
   const [domainInputStep, setDomainInputStep] = useState<'title' | 'content' | 'category'>('title');
+
+  // External editor for domain content
+  const { handleOpenEditor: handleDomainEditor, editorAvailable: domainEditorAvailable } = useExternalEditor({
+    getValue: () => domainContent,
+    onResult: (content) => setDomainContent(content),
+  });
 
   const loadStatus = useCallback(() => {
     try {
@@ -879,6 +886,7 @@ export function SettingsScreen({
                 <TextInput
                   value={domainContent}
                   onChange={setDomainContent}
+                  onOpenEditor={domainEditorAvailable ? handleDomainEditor : undefined}
                   placeholder={t('domain.content_placeholder', language)}
                 />
               </Box>

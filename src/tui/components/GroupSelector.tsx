@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
-import TextInput from 'ink-text-input';
+import { TextInput } from './TextInput.js';
 import type { Project } from '../../types/index.js';
 import { t } from '../../i18n/index.js';
 

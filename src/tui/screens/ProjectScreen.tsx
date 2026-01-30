@@ -5,6 +5,7 @@ import { Header } from '../components/Header.js';
 import { Spinner } from '../components/Spinner.js';
 import { TextInput } from '../components/TextInput.js';
 import { ErrorText } from '../components/ErrorDisplay.js';
+import { useExternalEditor } from '../hooks/useExternalEditor.js';
 import { SectionBox } from '../components/SectionBox.js';
 import { ConfirmDialog } from '../components/ConfirmDialog.js';
 import { ScrollableList } from '../components/ScrollableList.js';
@@ -76,6 +77,12 @@ export function ProjectScreen({
   const [domainCategory, setDomainCategory] = useState<PromptContextCategory>('custom');
   const [editingDomainId, setEditingDomainId] = useState<string | null>(null);
   const [domainInputStep, setDomainInputStep] = useState<'title' | 'content'>('title');
+
+  // External editor for domain content
+  const { handleOpenEditor: handleDomainEditor, editorAvailable: domainEditorAvailable } = useExternalEditor({
+    getValue: () => domainContent,
+    onResult: (content) => setDomainContent(content),
+  });
 
   const loadProjects = useCallback(async () => {
     try {
@@ -917,6 +924,7 @@ export function ProjectScreen({
                 <TextInput
                   value={domainContent}
                   onChange={setDomainContent}
+                  onOpenEditor={domainEditorAvailable ? handleDomainEditor : undefined}
                   placeholder={t('domain.content_placeholder', language)}
                 />
               </Box>

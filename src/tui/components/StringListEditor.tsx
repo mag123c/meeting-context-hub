@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { TextInput } from './TextInput.js';
 import { ScrollableList } from './ScrollableList.js';
 import { t } from '../../i18n/index.js';
 
@@ -118,15 +118,12 @@ export function StringListEditor({
             {mode === 'edit' ? `${t('common.edit', language)}:` : `${t('edit.add_item', language)}:`}
           </Text>
         </Box>
-        <Box>
-          <Text color="yellow">&gt; </Text>
-          <TextInput
-            value={editValue}
-            onChange={setEditValue}
-            onSubmit={handleEditSubmit}
-            placeholder={t('edit.new_item_placeholder', language)}
-          />
-        </Box>
+        <TextInput
+          value={editValue}
+          onChange={setEditValue}
+          onSubmit={handleEditSubmit}
+          placeholder={t('edit.new_item_placeholder', language)}
+        />
         <Box marginTop={1}>
           <Text color="gray" dimColor>
             {t('edit.hint_editing', language)}

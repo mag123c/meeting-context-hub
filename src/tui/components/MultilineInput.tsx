@@ -7,6 +7,7 @@ interface MultilineInputProps {
   onSubmit: () => void;
   onCancel?: () => void;
   onTabComplete?: () => void;
+  onOpenEditor?: () => void;
   placeholder?: string;
   focus?: boolean;
   maxDisplayLines?: number;
@@ -18,6 +19,7 @@ export function MultilineInput({
   onSubmit,
   onCancel,
   onTabComplete,
+  onOpenEditor,
   placeholder = '',
   focus = true,
   maxDisplayLines = 10,
@@ -35,6 +37,12 @@ export function MultilineInput({
       // Submit: Ctrl+D
       if (key.ctrl && input === 'd') {
         onSubmit();
+        return;
+      }
+
+      // External editor: Ctrl+E
+      if (key.ctrl && input === 'e') {
+        onOpenEditor?.();
         return;
       }
 
@@ -220,7 +228,7 @@ export function MultilineInput({
       {/* Hint */}
       <Box marginTop={1}>
         <Text color="gray" dimColor>
-          Ctrl+D to submit | ESC to cancel
+          Ctrl+D to submit | ESC to cancel{onOpenEditor ? ' | Ctrl+E: editor' : ''}
         </Text>
       </Box>
     </Box>

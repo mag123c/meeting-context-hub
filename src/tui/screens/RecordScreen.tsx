@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Text, useInput } from 'ink';
 import SelectInput from 'ink-select-input';
 import { Header } from '../components/Header.js';
-import { TextInput } from '../components/TextInput.js';
 import { Spinner } from '../components/Spinner.js';
 import { ContextCard } from '../components/ContextCard.js';
 import { ErrorDisplay } from '../components/ErrorDisplay.js';
@@ -25,7 +24,6 @@ type Step =
   | 'ready'
   | 'recording'
   | 'transcribing'
-  | 'review'
   | 'extracting'
   | 'result'
   | 'error';
@@ -42,7 +40,6 @@ export function RecordScreen({
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [duration, setDuration] = useState(0);
-  const [editedTranscription, setEditedTranscription] = useState('');
   const [result, setResult] = useState<Context | null>(null);
   const [relatedContexts, setRelatedContexts] = useState<SearchResult[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -98,7 +95,7 @@ export function RecordScreen({
     }
   }, [recordContextUseCase]);
 
-  const stopAndTranscribe = useCallback(async () => {
+  const stopAndProcess = useCallback(async () => {
     setStep('transcribing');
     setError(null);
 
@@ -109,21 +106,10 @@ export function RecordScreen({
       }
 
       const text = await recordContextUseCase.transcribe(filePath);
-      setEditedTranscription(text);
-      setStep('review');
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to transcribe'));
-      setStep('error');
-    }
-  }, [recordContextUseCase]);
+      setStep('extracting');
 
-  const processTranscription = useCallback(async () => {
-    setStep('extracting');
-    setError(null);
-
-    try {
       const { context, relatedContexts: related } = await recordContextUseCase.processTranscription(
-        editedTranscription,
+        text,
         selectedProjectId,
         { language: contextLanguage }
       );
@@ -131,10 +117,10 @@ export function RecordScreen({
       setRelatedContexts(related);
       setStep('result');
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to extract context'));
+      setError(err instanceof Error ? err : new Error('Failed to process recording'));
       setStep('error');
     }
-  }, [editedTranscription, selectedProjectId, recordContextUseCase, contextLanguage]);
+  }, [selectedProjectId, recordContextUseCase, contextLanguage]);
 
   const handleRetry = useCallback(() => {
     setError(null);
@@ -149,8 +135,6 @@ export function RecordScreen({
         setStep('ready');
       } else if (step === 'result' || step === 'error') {
         goBack();
-      } else if (step === 'review') {
-        setStep('ready');
       } else if (step === 'ready') {
         setStep('select-project');
       } else {
@@ -166,13 +150,8 @@ export function RecordScreen({
     }
 
     if (input === ' ' && step === 'recording') {
-      stopAndTranscribe();
+      stopAndProcess();
       return;
-    }
-
-    // Ctrl+Enter to submit transcription
-    if (key.ctrl && key.return && step === 'review' && editedTranscription.trim()) {
-      processTranscription();
     }
   });
 
@@ -266,34 +245,6 @@ export function RecordScreen({
       <Box flexDirection="column" padding={1}>
         <Header title={t('record.processing', language)} />
         <Spinner message={t('record.transcribing', language)} />
-      </Box>
-    );
-  }
-
-  if (step === 'review') {
-    return (
-      <Box flexDirection="column" padding={1}>
-        <Header
-          title={t('record.review_title', language)}
-          subtitle={t('record.review_subtitle', language)}
-        />
-
-        <Box marginY={1} flexDirection="column">
-          <Text bold>{t('record.transcription_label', language)}</Text>
-          <Box marginTop={1} borderStyle="round" borderColor="gray" padding={1}>
-            <TextInput
-              value={editedTranscription}
-              onChange={setEditedTranscription}
-              placeholder={t('record.transcription_placeholder', language)}
-            />
-          </Box>
-        </Box>
-
-        <Box marginTop={1}>
-          <Text color="gray" dimColor>
-            {t('record.review_hint', language)}
-          </Text>
-        </Box>
       </Box>
     );
   }
