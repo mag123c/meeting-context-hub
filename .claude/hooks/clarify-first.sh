@@ -1,4 +1,5 @@
 #!/bin/bash
+# 세션 첫 프롬프트에 /clarify 강제
 set -e
 INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // "unknown"')
