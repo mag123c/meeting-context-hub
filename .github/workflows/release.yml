@@ -11,6 +11,10 @@ permissions:
   issues: write
   pull-requests: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -20,6 +24,9 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --tags --force
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
