@@ -55,3 +55,8 @@ scopes: tui|core|adapters|config|i18n
 ```
 Example: `feat(core): add context update functionality`
 **Note: No Co-Authored-By markers**
+
+## Project Decisions
+
+설계 결정 히스토리는 `.dev/DECISIONS.md` 참조.
+새 기능 구현 시 기존 결정과 충돌하지 않는지 확인할 것.

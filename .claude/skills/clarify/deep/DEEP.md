@@ -187,9 +187,16 @@ Semantic 판단 기준 — 다음이 변경되면 Semantic:
 그 외 (문구, 포맷, 필드 완성도) → Cosmetic.
 
 **OKAY**:
-1. DRAFT 삭제: `Bash("rm .dev/specs/{name}/DRAFT.md")`
-2. 사용자에게 플랜 준비 완료 안내
-3. `EnterPlanMode()` 호출
+1. ~~DRAFT 삭제~~ → **DRAFT 보존** (컴파운딩용)
+2. **DECISIONS.md에 요약 append**:
+   ```markdown
+   ## {date}: {feature-name}
+   - **결정**: {User Decisions에서 핵심 1-3개}
+   - **이유**: {Why에서 핵심}
+   - **참조**: .dev/specs/{name}/PLAN.md
+   ```
+3. 사용자에게 플랜 준비 완료 안내
+4. `EnterPlanMode()` 호출
 
 ---
 
