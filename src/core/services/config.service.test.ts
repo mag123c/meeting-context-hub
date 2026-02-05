@@ -11,7 +11,6 @@ vi.mock('../../adapters/config/index.js', () => ({
 }));
 
 import {
-  loadConfig,
   getConfigStatus,
   saveFileConfig,
 } from '../../adapters/config/index.js';
