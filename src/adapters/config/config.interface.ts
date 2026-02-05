@@ -1,4 +1,10 @@
 import { ConfigError, ErrorCode } from '../../types/errors.js';
+import type {
+  TranscriptionMode,
+  WhisperModel,
+  TranscriptionConfig,
+} from '../audio/whisper.types.js';
+import { DEFAULT_TRANSCRIPTION_CONFIG } from '../audio/whisper.types.js';
 
 /**
  * Configuration interface
@@ -9,6 +15,7 @@ export interface Config {
   dbPath: string;
   language: 'ko' | 'en';
   contextLanguage: 'ko' | 'en';
+  transcription: TranscriptionConfig;
 }
 
 /**
@@ -20,7 +27,18 @@ export interface PartialConfig {
   dbPath?: string;
   language?: 'ko' | 'en';
   contextLanguage?: 'ko' | 'en';
+  transcription?: Partial<TranscriptionConfig>;
 }
+
+/**
+ * Get default transcription config
+ */
+export function getDefaultTranscriptionConfig(): TranscriptionConfig {
+  return { ...DEFAULT_TRANSCRIPTION_CONFIG };
+}
+
+// Re-export transcription types for convenience
+export type { TranscriptionMode, WhisperModel, TranscriptionConfig };
 
 /**
  * Config source tracking

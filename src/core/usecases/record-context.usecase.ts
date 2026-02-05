@@ -1,5 +1,5 @@
 import type { StorageProvider } from '../../adapters/storage/storage.interface.js';
-import type { TranscriptionProvider } from '../../adapters/audio/whisper.adapter.js';
+import type { TranscriptionProvider } from '../../adapters/audio/whisper.types.js';
 import type { RecordingProvider, RecordingEvents, RecordingState } from '../../adapters/audio/recording.adapter.js';
 import type { ExtractOptions } from '../../adapters/ai/ai.interface.js';
 import type { Context, SearchResult } from '../../types/index.js';

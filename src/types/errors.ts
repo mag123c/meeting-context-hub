@@ -25,6 +25,8 @@ export enum ErrorCode {
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
   TRANSCRIPTION_FILE_NOT_FOUND = 'TRANSCRIPTION_FILE_NOT_FOUND',
   TRANSCRIPTION_FILE_TOO_LARGE = 'TRANSCRIPTION_FILE_TOO_LARGE',
+  TRANSCRIPTION_MODEL_NOT_FOUND = 'TRANSCRIPTION_MODEL_NOT_FOUND',
+  TRANSCRIPTION_MODEL_DOWNLOAD_FAILED = 'TRANSCRIPTION_MODEL_DOWNLOAD_FAILED',
 
   // Recording
   RECORDING_FAILED = 'RECORDING_FAILED',
@@ -100,6 +102,14 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
   [ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE]: {
     ko: '오디오 파일이 너무 큽니다. 자동으로 분할하여 처리합니다.',
     en: 'Audio file is too large. Automatically splitting for processing.',
+  },
+  [ErrorCode.TRANSCRIPTION_MODEL_NOT_FOUND]: {
+    ko: 'Whisper 모델을 찾을 수 없습니다. 모델을 다운로드해주세요.',
+    en: 'Whisper model not found. Please download the model.',
+  },
+  [ErrorCode.TRANSCRIPTION_MODEL_DOWNLOAD_FAILED]: {
+    ko: '모델 다운로드에 실패했습니다. 네트워크 연결을 확인해주세요.',
+    en: 'Failed to download model. Please check your network connection.',
   },
 
   // Recording

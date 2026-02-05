@@ -2,7 +2,11 @@
  * Audio Splitter Utility
  *
  * Splits large WAV files into smaller chunks for Whisper API (25MB limit)
+ * Supports both size-based and VAD-based splitting with overlap
  */
+
+import { splitByVad } from './vad.service.js';
+import { DEFAULT_VAD_CONFIG, type VadConfig } from './whisper.types.js';
 
 export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB (safe margin under 25MB limit)
 
@@ -184,4 +188,99 @@ export function mergeTranscriptions(transcriptions: string[]): string {
     .map((t) => t.trim())
     .filter((t) => t.length > 0)
     .join(' ');
+}
+
+/**
+ * Find longest common suffix/prefix overlap between two strings
+ */
+function findOverlap(prev: string, next: string): number {
+  const prevWords = prev.split(/\s+/);
+  const nextWords = next.split(/\s+/);
+
+  // Try to find overlapping word sequences (up to 10 words)
+  const maxOverlapWords = Math.min(10, prevWords.length, nextWords.length);
+
+  for (let len = maxOverlapWords; len >= 2; len--) {
+    const prevSuffix = prevWords.slice(-len).join(' ');
+    const nextPrefix = nextWords.slice(0, len).join(' ');
+
+    if (prevSuffix === nextPrefix) {
+      return len;
+    }
+  }
+
+  return 0;
+}
+
+/**
+ * Merge transcriptions with overlap removal
+ * Handles duplicate content at chunk boundaries from VAD overlap
+ */
+export function mergeTranscriptionsWithOverlap(transcriptions: string[]): string {
+  const trimmed = transcriptions
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  if (trimmed.length === 1) {
+    return trimmed[0];
+  }
+
+  let result = trimmed[0];
+
+  for (let i = 1; i < trimmed.length; i++) {
+    const overlapWords = findOverlap(result, trimmed[i]);
+
+    if (overlapWords > 0) {
+      // Skip the overlapping words from the next transcription
+      const nextWords = trimmed[i].split(/\s+/);
+      const nonOverlapping = nextWords.slice(overlapWords).join(' ');
+      if (nonOverlapping) {
+        result += ' ' + nonOverlapping;
+      }
+    } else {
+      result += ' ' + trimmed[i];
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Split WAV buffer using VAD (Voice Activity Detection)
+ * Falls back to size-based splitting if VAD doesn't produce small enough chunks
+ */
+export function splitWavBufferWithVad(
+  buffer: Buffer,
+  vadConfig: Partial<VadConfig> = {}
+): Buffer[] {
+  const config = { ...DEFAULT_VAD_CONFIG, ...vadConfig };
+
+  // First try VAD-based splitting
+  const vadChunks = splitByVad(buffer, config);
+
+  // Check if any chunk exceeds MAX_CHUNK_SIZE
+  const needsSizeSplit = vadChunks.some((chunk) => chunk.length > MAX_CHUNK_SIZE);
+
+  if (!needsSizeSplit) {
+    return vadChunks;
+  }
+
+  // If VAD chunks are too large, apply size-based splitting to each
+  const finalChunks: Buffer[] = [];
+
+  for (const chunk of vadChunks) {
+    if (chunk.length > MAX_CHUNK_SIZE) {
+      // Apply size-based splitting
+      const sizeChunks = splitWavBuffer(chunk);
+      finalChunks.push(...sizeChunks);
+    } else {
+      finalChunks.push(chunk);
+    }
+  }
+
+  return finalChunks;
 }

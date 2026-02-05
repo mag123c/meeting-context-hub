@@ -2,10 +2,11 @@ import { config as dotenvConfig } from 'dotenv';
 import { resolve } from 'path';
 import { homedir } from 'os';
 import { existsSync } from 'fs';
-import type { Config, ConfigStatus, ConfigSource } from './config.interface.js';
-import { ConfigError } from './config.interface.js';
+import type { Config, ConfigStatus, ConfigSource, TranscriptionConfig } from './config.interface.js';
+import { ConfigError, getDefaultTranscriptionConfig } from './config.interface.js';
 import { ErrorCode } from '../../types/errors.js';
 import { loadFileConfig } from './file-config.adapter.js';
+import type { TranscriptionMode, WhisperModel } from '../audio/whisper.types.js';
 
 /**
  * Mask API key for display (show first 7 and last 4 chars)
@@ -59,6 +60,20 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
     || (process.env.MCH_CONTEXT_LANGUAGE as 'ko' | 'en')
     || 'en';
 
+  // Transcription config
+  const defaultTranscription = getDefaultTranscriptionConfig();
+  const transcription: TranscriptionConfig = {
+    mode: (fileConfig?.transcription?.mode
+      || (process.env.MCH_TRANSCRIPTION_MODE as TranscriptionMode)
+      || defaultTranscription.mode),
+    localModel: (fileConfig?.transcription?.localModel
+      || (process.env.MCH_TRANSCRIPTION_MODEL as WhisperModel)
+      || defaultTranscription.localModel),
+    useVad: fileConfig?.transcription?.useVad ?? defaultTranscription.useVad,
+    chunkOverlapMs: fileConfig?.transcription?.chunkOverlapMs ?? defaultTranscription.chunkOverlapMs,
+    vocabulary: fileConfig?.transcription?.vocabulary ?? defaultTranscription.vocabulary,
+  };
+
   // Validate required keys (only if requireKeys is true)
   if (requireKeys) {
     const missingKeys: string[] = [];
@@ -82,6 +97,7 @@ export function loadConfig(options?: { requireKeys?: boolean }): Config {
     dbPath,
     language,
     contextLanguage,
+    transcription,
   };
 }
 

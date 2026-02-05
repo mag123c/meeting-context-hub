@@ -4,6 +4,8 @@ import {
   needsSplit,
   splitWavBuffer,
   mergeTranscriptions,
+  mergeTranscriptionsWithOverlap,
+  splitWavBufferWithVad,
   MAX_CHUNK_SIZE,
 } from './audio-splitter.js';
 
@@ -197,7 +199,132 @@ describe('AudioSplitter', () => {
       expect(merged).toBe('Hello World');
     });
   });
+
+  describe('mergeTranscriptionsWithOverlap', () => {
+    it('should remove duplicate phrases at boundaries', () => {
+      const transcriptions = [
+        '안녕하세요 오늘 회의를 시작하겠습니다',
+        '회의를 시작하겠습니다 첫 번째 안건은',
+        '첫 번째 안건은 프로젝트 진행 상황입니다',
+      ];
+
+      const merged = mergeTranscriptionsWithOverlap(transcriptions);
+
+      // Should remove duplicated "회의를 시작하겠습니다" and "첫 번째 안건은"
+      expect(merged).not.toContain('회의를 시작하겠습니다 회의를 시작하겠습니다');
+      expect(merged).not.toContain('첫 번째 안건은 첫 번째 안건은');
+    });
+
+    it('should handle no overlap', () => {
+      const transcriptions = ['Hello world', 'Goodbye world'];
+
+      const merged = mergeTranscriptionsWithOverlap(transcriptions);
+
+      expect(merged).toBe('Hello world Goodbye world');
+    });
+
+    it('should handle single transcription', () => {
+      const merged = mergeTranscriptionsWithOverlap(['Single text']);
+
+      expect(merged).toBe('Single text');
+    });
+
+    it('should handle empty array', () => {
+      const merged = mergeTranscriptionsWithOverlap([]);
+
+      expect(merged).toBe('');
+    });
+  });
+
+  describe('splitWavBufferWithVad', () => {
+    it('should use VAD-based splitting', () => {
+      // Create audio with speech-silence-speech pattern
+      const sampleRate = 16000;
+      const samples: number[] = [];
+
+      // 500ms of speech (440Hz tone)
+      for (let i = 0; i < 8000; i++) {
+        samples.push(Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 0.5);
+      }
+
+      // 1000ms of silence
+      for (let i = 0; i < 16000; i++) {
+        samples.push(0.001 * Math.random());
+      }
+
+      // 500ms of speech
+      for (let i = 0; i < 8000; i++) {
+        samples.push(Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 0.5);
+      }
+
+      const buffer = createTestWavWithSamples(samples, sampleRate);
+      const chunks = splitWavBufferWithVad(buffer);
+
+      // Should split at silence
+      expect(chunks.length).toBeGreaterThanOrEqual(1);
+
+      // Each chunk should be valid WAV
+      for (const chunk of chunks) {
+        expect(chunk.slice(0, 4).toString()).toBe('RIFF');
+        expect(chunk.slice(8, 12).toString()).toBe('WAVE');
+      }
+    });
+
+    it('should fall back to size-based splitting for large files', () => {
+      // Create a large file (25MB) with continuous audio
+      const dataSize = 25 * 1024 * 1024;
+      const header = createValidWavHeader({
+        sampleRate: 16000,
+        channels: 1,
+        bitsPerSample: 16,
+        dataSize,
+      });
+      const data = Buffer.alloc(dataSize);
+
+      // Fill with non-zero values to prevent VAD from splitting
+      for (let i = 0; i < dataSize; i += 2) {
+        data.writeInt16LE(Math.floor(Math.random() * 10000), i);
+      }
+
+      const wavBuffer = Buffer.concat([header, data]);
+      const chunks = splitWavBufferWithVad(wavBuffer);
+
+      // Should split due to size limit
+      expect(chunks.length).toBeGreaterThan(1);
+
+      // Each chunk should be under max size
+      for (const chunk of chunks) {
+        expect(chunk.length).toBeLessThanOrEqual(MAX_CHUNK_SIZE);
+      }
+    });
+  });
 });
+
+/**
+ * Helper to create a WAV buffer from sample values
+ */
+function createTestWavWithSamples(
+  samples: number[],
+  sampleRate = 16000,
+  channels = 1,
+  bitsPerSample = 16
+): Buffer {
+  const bytesPerSample = bitsPerSample / 8;
+  const dataSize = samples.length * bytesPerSample;
+  const header = createValidWavHeader({
+    sampleRate,
+    channels,
+    bitsPerSample,
+    dataSize,
+  });
+
+  const data = Buffer.alloc(dataSize);
+  for (let i = 0; i < samples.length; i++) {
+    data.writeInt16LE(Math.round(samples[i] * 32767), i * 2);
+  }
+
+  return Buffer.concat([header, data]);
+}
 
 /**
  * Helper to create a valid WAV header
