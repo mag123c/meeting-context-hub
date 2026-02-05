@@ -26,6 +26,13 @@
 
 * **adapters:** add local Whisper transcription with VAD ([85a0918](https://github.com/mag123c/meeting-context-hub/commit/85a091899181f2eda50c7937c4c355b1ce2c054f))
 
+# [2.20.0](https://github.com/mag123c/meeting-context-hub/compare/v2.19.0...v2.20.0) (2026-02-05)
+
+
+### Features
+
+* **adapters:** add local Whisper transcription with VAD ([85a0918](https://github.com/mag123c/meeting-context-hub/commit/85a091899181f2eda50c7937c4c355b1ce2c054f))
+
 # [2.19.0](https://github.com/mag123c/meeting-context-hub/compare/v2.18.0...v2.19.0) (2026-01-30)
 
 
