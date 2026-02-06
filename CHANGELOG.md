@@ -42,6 +42,21 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.20.0](https://github.com/mag123c/meeting-context-hub/compare/v2.19.0...v2.20.0) (2026-02-06)
+
+
+### Features
+
+* **adapters:** add local Whisper transcription with VAD ([85a0918](https://github.com/mag123c/meeting-context-hub/commit/85a091899181f2eda50c7937c4c355b1ce2c054f))
+
+
+### Bug Fixes
+
+* **ci:** merge release into CI workflow to prevent duplicate runs ([3c9517f](https://github.com/mag123c/meeting-context-hub/commit/3c9517f79efc486b7dcdc201498bc0de69e29dc2))
+* **ci:** prevent duplicate release runs ([9bf5a41](https://github.com/mag123c/meeting-context-hub/commit/9bf5a41b8fa7b610c65fd5e09745fe21df89899e))
+* **ci:** trigger release-please initial run ([560b2b4](https://github.com/mag123c/meeting-context-hub/commit/560b2b4d61f35a631301df69830488245c201983))
+* **ci:** use pr--number output for auto-merge step ([3978336](https://github.com/mag123c/meeting-context-hub/commit/3978336498b716b339e89e9a89bb0b85cd8113b2))
+
 ## [2.17.1](https://github.com/mag123c/meeting-context-hub/compare/v2.17.0...v2.17.1) (2026-01-28)
 
 
