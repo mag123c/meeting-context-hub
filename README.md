@@ -11,9 +11,18 @@ When working on multiple parallel workstreams (squads, teams, personal projects)
 ## Features
 
 - **AI Extraction**: Automatically extract decisions, action items, and policies from meeting notes
+- **Local Whisper**: Free, offline speech-to-text using local Whisper model
 - **Semantic Search**: Find related contexts using embedding-based similarity
 - **Context Chaining**: Automatically link related discussions
 - **Project Organization**: Group contexts by squad, team, or project
+
+## Requirements
+
+| Requirement | macOS/Linux | Windows |
+|-------------|-------------|---------|
+| Node.js 20+ | ✅ | ✅ |
+| sox | ✅ | ✅ |
+| GNU Make | ❌ | ✅ [Download](https://gnuwin32.sourceforge.net/packages/make.htm) |
 
 ## Status
 
@@ -26,10 +35,13 @@ See [ROADMAP](./docs/ROADMAP.md) for implementation plan.
 ```bash
 # Set API keys
 export ANTHROPIC_API_KEY=sk-ant-xxx
-export OPENAI_API_KEY=sk-xxx
+export OPENAI_API_KEY=sk-xxx  # Optional: fallback for Whisper API
 
 # Install dependencies
 pnpm install
+
+# Download Whisper model (first time only, ~142MB for base)
+npx whisper-node download
 
 # Run (TUI)
 pnpm dev
@@ -50,18 +62,27 @@ pnpm dev
 ANTHROPIC_API_KEY=sk-ant-xxx   # Claude API (context extraction)
 
 # Optional
-OPENAI_API_KEY=sk-xxx          # OpenAI - enables recording (Whisper) & semantic search (Embedding)
+OPENAI_API_KEY=sk-xxx          # OpenAI - Whisper API fallback & semantic search (Embedding)
 MCH_DB_PATH=~/.mch/data.db     # Database location
 MCH_LANGUAGE=en                # UI language: 'ko' or 'en' (default: 'en')
+MCH_TRANSCRIPTION_MODE=auto    # 'local' | 'api' | 'auto' (default: 'auto')
 ```
 
-> **Note**: Without OpenAI API key, recording and semantic search features are disabled.
-> The app will show a guidance message when accessing these features.
+### Transcription Modes
+
+| Mode | Description |
+|------|-------------|
+| `local` | Local Whisper only (free, offline) |
+| `api` | OpenAI Whisper API only |
+| `auto` | Local first, fallback to API on failure (default) |
+
+> **Note**: Local Whisper is used by default. OpenAI API key is only required for semantic search and API fallback.
 
 ## Tech Stack
 
 - **UI**: React + Ink (TUI)
 - **AI**: Claude (extraction), OpenAI (embedding)
+- **Speech-to-Text**: Local Whisper (whisper-node) / OpenAI Whisper API (fallback)
 - **Storage**: SQLite
 - **Language**: TypeScript
 
