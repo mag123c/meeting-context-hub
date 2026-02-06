@@ -31,3 +31,19 @@
   - auto 모드는 local 우선, 실패 시 API fallback
   - 모델 저장: `~/.mch/models/whisper/ggml-{model}.bin`
 
+## 2026-02-06: release-please-migration
+
+- **결정**: semantic-release → Release Please (PR 기반 릴리즈)
+- **이유**:
+  - semantic-release가 직접 push하여 중복 release 커밋 발생 (v2.20.0 × 8회)
+  - CHANGELOG 오염, CI 재트리거 악순환
+  - Release Please는 PR 기반이라 merge 전 리뷰 가능, 중복 없음
+- **대안**:
+  - semantic-release + `[skip ci]` 강화 → 근본 해결 아님, push 방식 한계
+  - GitHub Actions 자체 release workflow → 버전 계산/CHANGELOG 수동 관리 필요
+- **구현 노트**:
+  - 전환 시 v2.20.0 태그 SHA가 main에 없어 전체 히스토리 스캔 → 태그 re-anchor로 해결
+  - squash merge 내 BREAKING CHANGE 텍스트로 v3.0.0 오판 → v2.21.0 수동 릴리즈로 bootstrap
+  - auto-merge는 branch protection 설정 필요 (현재 미설정, 수동 merge)
+  - `paths-ignore`: CHANGELOG.md, .release-please-manifest.json, package.json
+
