@@ -3,6 +3,19 @@
 
 ### Bug Fixes
 
+* **ci:** merge release into CI workflow to prevent duplicate runs ([3c9517f](https://github.com/mag123c/meeting-context-hub/commit/3c9517f79efc486b7dcdc201498bc0de69e29dc2))
+* **ci:** prevent duplicate release runs ([9bf5a41](https://github.com/mag123c/meeting-context-hub/commit/9bf5a41b8fa7b610c65fd5e09745fe21df89899e))
+
+
+### Features
+
+* **adapters:** add local Whisper transcription with VAD ([85a0918](https://github.com/mag123c/meeting-context-hub/commit/85a091899181f2eda50c7937c4c355b1ce2c054f))
+
+# [2.20.0](https://github.com/mag123c/meeting-context-hub/compare/v2.19.0...v2.20.0) (2026-02-06)
+
+
+### Bug Fixes
+
 * **ci:** prevent duplicate release runs ([9bf5a41](https://github.com/mag123c/meeting-context-hub/commit/9bf5a41b8fa7b610c65fd5e09745fe21df89899e))
 
 
