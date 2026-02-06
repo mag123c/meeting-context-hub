@@ -42,6 +42,20 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.21.0](https://github.com/mag123c/meeting-context-hub/compare/v2.20.0...v2.21.0) (2026-02-06)
+
+
+### Features
+
+* **ci:** add Release Please PR-based release workflow ([2ff994b](https://github.com/mag123c/meeting-context-hub/commit/2ff994b60d8f533d2dec1d0c6e400060e573c274))
+
+
+### Bug Fixes
+
+* **ci:** re-anchor v2.20.0 tag to main branch history ([642ab05](https://github.com/mag123c/meeting-context-hub/commit/642ab0517667eef76b39845bceb55ab8b1464a11))
+* **ci:** trigger release-please initial run ([560b2b4](https://github.com/mag123c/meeting-context-hub/commit/560b2b4d61f35a631301df69830488245c201983))
+* **ci:** use pr--number output for auto-merge step ([3978336](https://github.com/mag123c/meeting-context-hub/commit/3978336498b716b339e89e9a89bb0b85cd8113b2))
+
 ## [2.20.0](https://github.com/mag123c/meeting-context-hub/compare/v2.19.0...v2.20.0) (2026-02-06)
 
 
