@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.22.0](https://github.com/mag123c/meeting-context-hub/compare/v2.21.0...v2.22.0) (2026-02-06)
+
+
+### Features
+
+* **ci:** verify release-please end-to-end workflow ([612d5cd](https://github.com/mag123c/meeting-context-hub/commit/612d5cd1a8d9f66504581c0a0025a0e3a5476846))
+
 ## [2.21.0](https://github.com/mag123c/meeting-context-hub/compare/v2.20.0...v2.21.0) (2026-02-06)
 
 
