@@ -1,5 +1,6 @@
 import updateNotifier from 'update-notifier';
 import { execSync } from 'child_process';
+import { homedir } from 'os';
 import { VERSION, PACKAGE_NAME } from '../version.js';
 
 // Construct pkg object for update-notifier
@@ -77,60 +78,57 @@ interface UpdateResult {
 
 type ProgressCallback = (step: string) => void;
 
+const EXEC_OPTS = { stdio: 'pipe' as const, cwd: homedir() };
+
 /**
  * Perform update with automatic retry on ENOTEMPTY error
  * 1. Try npm install -g directly
  * 2. If failed, clean cache + uninstall + remove directory + reinstall
  * 3. Return result with error message if both attempts fail
+ *
+ * All execSync calls use homedir() as CWD to avoid ENOENT: uv_cwd crash
+ * when npm replaces itself during global install.
  */
 export function performUpdate(onProgress?: ProgressCallback): UpdateResult {
   const pkg = 'meeting-context-hub';
 
   try {
-    // First attempt: direct install
     onProgress?.('Installing...');
-    execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
+    execSync(`npm install -g ${pkg}@latest`, EXEC_OPTS);
     return { success: true };
   } catch {
-    // Second attempt: aggressive cleanup
     try {
-      // Get npm global prefix
-      const prefix = execSync('npm prefix -g', { stdio: 'pipe' }).toString().trim();
+      const prefix = execSync('npm prefix -g', EXEC_OPTS).toString().trim();
       const pkgDir = `${prefix}/lib/node_modules/${pkg}`;
 
-      // Clean npm cache
       onProgress?.('Cleaning cache...');
       try {
-        execSync('npm cache clean --force', { stdio: 'pipe' });
+        execSync('npm cache clean --force', EXEC_OPTS);
       } catch {
         // Ignore cache clean errors
       }
 
-      // Uninstall
       onProgress?.('Uninstalling...');
       try {
-        execSync(`npm uninstall -g ${pkg}`, { stdio: 'pipe' });
+        execSync(`npm uninstall -g ${pkg}`, EXEC_OPTS);
       } catch {
         // Ignore uninstall errors
       }
 
-      // Force remove directory if exists
       onProgress?.('Removing files...');
       try {
-        execSync(`rm -rf "${pkgDir}"`, { stdio: 'pipe' });
+        execSync(`rm -rf "${pkgDir}"`, EXEC_OPTS);
       } catch {
         // Ignore rm errors
       }
 
-      // Fresh install
       onProgress?.('Reinstalling...');
-      execSync(`npm install -g ${pkg}@latest`, { stdio: 'pipe' });
+      execSync(`npm install -g ${pkg}@latest`, EXEC_OPTS);
       return { success: true };
     } catch {
-      const prefix = execSync('npm prefix -g', { stdio: 'pipe' }).toString().trim();
       return {
         success: false,
-        error: `rm -rf ${prefix}/lib/node_modules/${pkg} && npm i -g ${pkg}@latest`,
+        error: `npm install -g ${pkg}@latest`,
       };
     }
   }
