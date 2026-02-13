@@ -92,11 +92,16 @@ const EXEC_OPTS = { stdio: 'pipe' as const, cwd: homedir() };
 export function performUpdate(onProgress?: ProgressCallback): UpdateResult {
   const pkg = 'meeting-context-hub';
 
+  // Ensure parent process CWD is valid before spawning children.
+  // npm install -g may replace the package directory, invalidating CWD.
+  try { process.chdir(homedir()); } catch { /* ignore */ }
+
   try {
     onProgress?.('Installing...');
     execSync(`npm install -g ${pkg}@latest`, EXEC_OPTS);
     return { success: true };
   } catch {
+    try { process.chdir(homedir()); } catch { /* ignore */ }
     try {
       const prefix = execSync('npm prefix -g', EXEC_OPTS).toString().trim();
       const pkgDir = `${prefix}/lib/node_modules/${pkg}`;

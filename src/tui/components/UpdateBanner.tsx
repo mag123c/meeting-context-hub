@@ -51,11 +51,15 @@ export function UpdateBanner({
     if (updating && progress === 'Installing...') {
       // Run update in next tick to allow UI to render
       const timer = setTimeout(() => {
-        const result = performUpdate((step) => setProgress(step));
-        if (result.success) {
-          setUpdated(true);
-        } else {
-          setError(result.error || 'Update failed');
+        try {
+          const result = performUpdate((step) => setProgress(step));
+          if (result.success) {
+            setUpdated(true);
+          } else {
+            setError(result.error || 'Update failed');
+          }
+        } catch {
+          setError('npm install -g meeting-context-hub@latest');
         }
         setUpdating(false);
         setProgress('');
