@@ -8,8 +8,8 @@ import { withRetry } from '../../core/services/retry.service.js';
 // Zod schema for validation
 const ActionItemSchema = z.object({
   task: z.string(),
-  assignee: z.string().optional(),
-  dueDate: z.string().optional(),
+  assignee: z.string().nullable().optional().transform(v => v ?? undefined),
+  dueDate: z.string().nullable().optional().transform(v => v ?? undefined),
 });
 
 const ExtractedContextSchema = z.object({

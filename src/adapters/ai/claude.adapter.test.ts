@@ -55,6 +55,42 @@ describe('ClaudeAdapter', () => {
       expect(result.tags).toEqual(['testing', 'tdd']);
     });
 
+    it('should handle null assignee and dueDate from AI response', async () => {
+      const mockResponse = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              title: 'Sprint Planning',
+              summary: 'Planned next sprint tasks',
+              decisions: ['Prioritize auth module'],
+              actionItems: [
+                { task: 'Implement login', assignee: null, dueDate: null },
+                { task: 'Write tests', assignee: 'Alice', dueDate: null },
+                { task: 'Deploy staging', assignee: null, dueDate: '2024-03-01' },
+              ],
+              policies: [],
+              openQuestions: [],
+              tags: ['sprint', 'planning'],
+            }),
+          },
+        ],
+      };
+
+      mockCreate.mockResolvedValue(mockResponse);
+
+      const result = await adapter.extract('Sprint planning notes');
+
+      expect(result.actionItems).toHaveLength(3);
+      expect(result.actionItems[0]).toEqual({ task: 'Implement login' });
+      expect(result.actionItems[0].assignee).toBeUndefined();
+      expect(result.actionItems[0].dueDate).toBeUndefined();
+      expect(result.actionItems[1]).toEqual({ task: 'Write tests', assignee: 'Alice' });
+      expect(result.actionItems[1].dueDate).toBeUndefined();
+      expect(result.actionItems[2]).toEqual({ task: 'Deploy staging', dueDate: '2024-03-01' });
+      expect(result.actionItems[2].assignee).toBeUndefined();
+    });
+
     it('should pass language option to prompt', async () => {
       const mockResponse = {
         content: [
