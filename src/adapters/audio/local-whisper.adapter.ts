@@ -8,7 +8,6 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
-import whisper from 'whisper-node';
 import type { TranscriptionProvider, WhisperModel } from './whisper.types.js';
 import {
   ModelManager,
@@ -188,7 +187,8 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
         }),
       };
 
-      // Run whisper
+      // Run whisper (lazy-load to avoid eager whisper.cpp compilation at startup)
+      const { default: whisper } = await import('whisper-node');
       const result = await whisper(tempPath, {
         modelPath,
         whisperOptions: whisperOpts,
