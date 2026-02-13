@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.21.2](https://github.com/mag123c/meeting-context-hub/compare/v2.21.1...v2.21.2) (2026-02-13)
+
+
+### Bug Fixes
+
+* **ai:** handle null assignee and dueDate in ActionItem validation ([32513d9](https://github.com/mag123c/meeting-context-hub/commit/32513d9fcc08ca4b59f72cf1693e4ca92513a75c))
+
 ## [2.21.1](https://github.com/mag123c/meeting-context-hub/compare/v2.21.0...v2.21.1) (2026-02-09)
 
 
