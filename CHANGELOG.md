@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.21.1](https://github.com/mag123c/meeting-context-hub/compare/v2.21.0...v2.21.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* **update:** prevent CWD crash during self-update ([a588167](https://github.com/mag123c/meeting-context-hub/commit/a588167b993e327f9beae116d0430dc03eb649c7))
+
 ## [2.21.0](https://github.com/mag123c/meeting-context-hub/compare/v2.20.0...v2.21.0) (2026-02-06)
 
 
