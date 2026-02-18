@@ -42,7 +42,7 @@
     "verify:core": "! grep -r \"from 'ink'\\|from 'react'\\|from \\\"ink\\\"\\|from \\\"react\\\"\" src/core/ --include='*.ts' --include='*.tsx' || echo 'Core is clean'"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.74.0",
+    "@anthropic-ai/sdk": "^0.76.0",
     "better-sqlite3": "^12.6.2",
     "dotenv": "^17.2.3",
     "ink": "^6.6.0",
