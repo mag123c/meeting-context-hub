@@ -68,16 +68,7 @@ export class ClaudeAdapter implements AIProvider {
       }
 
       // Parse JSON from response
-      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new AIError(
-          'No JSON found in Claude response',
-          ErrorCode.AI_EXTRACTION_FAILED,
-          true
-        );
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = this.parseJsonResponse(textBlock.text);
       const validated = ExtractedContextSchema.parse(parsed);
 
       return {
@@ -104,6 +95,15 @@ export class ClaudeAdapter implements AIProvider {
         );
       }
 
+      if (error instanceof SyntaxError) {
+        throw new AIError(
+          'AI 응답의 JSON 파싱에 실패했습니다.',
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true,
+          error
+        );
+      }
+
       const originalError = error instanceof Error ? error : undefined;
       const errorCode = detectErrorCode(error);
 
@@ -114,6 +114,51 @@ export class ClaudeAdapter implements AIProvider {
         originalError
       );
     }
+  }
+
+  private parseJsonResponse(text: string): unknown {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch {
+        const repaired = this.repairJson(jsonMatch[0]);
+        return JSON.parse(repaired);
+      }
+    }
+
+    // Fallback: truncated JSON without closing brace
+    const openBraceIdx = text.indexOf('{');
+    if (openBraceIdx === -1) {
+      throw new AIError(
+        'No JSON found in Claude response',
+        ErrorCode.AI_EXTRACTION_FAILED,
+        true
+      );
+    }
+
+    const partial = text.slice(openBraceIdx);
+    const repaired = this.repairJson(partial);
+    return JSON.parse(repaired);
+  }
+
+  private repairJson(json: string): string {
+    let repaired = json;
+    // trailing comma: ,] → ]  ,} → }
+    repaired = repaired.replace(/,\s*]/g, ']');
+    repaired = repaired.replace(/,\s*}/g, '}');
+    // unclosed brackets/braces
+    let openBrackets = 0;
+    let openBraces = 0;
+    for (const ch of repaired) {
+      if (ch === '[') openBrackets++;
+      else if (ch === ']') openBrackets--;
+      else if (ch === '{') openBraces++;
+      else if (ch === '}') openBraces--;
+    }
+    for (let i = 0; i < openBrackets; i++) repaired += ']';
+    for (let i = 0; i < openBraces; i++) repaired += '}';
+    return repaired;
   }
 
   private buildExtractionPrompt(input: string, options?: ExtractOptions): string {
@@ -213,16 +258,7 @@ Respond with ONLY the JSON object, no additional text.`;
       }
 
       // Parse JSON from response
-      const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new AIError(
-          'No JSON found in Claude response',
-          ErrorCode.AI_EXTRACTION_FAILED,
-          true
-        );
-      }
-
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = this.parseJsonResponse(textBlock.text);
       const validated = ExtractedContextSchema.parse(parsed);
 
       return {
@@ -243,6 +279,15 @@ Respond with ONLY the JSON object, no additional text.`;
       if (error instanceof z.ZodError) {
         throw new AIError(
           `Invalid translation result: ${error.message}`,
+          ErrorCode.AI_EXTRACTION_FAILED,
+          true,
+          error
+        );
+      }
+
+      if (error instanceof SyntaxError) {
+        throw new AIError(
+          'AI 응답의 JSON 파싱에 실패했습니다.',
           ErrorCode.AI_EXTRACTION_FAILED,
           true,
           error

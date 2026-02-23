@@ -75,3 +75,17 @@
   - `splitWavBuffer`, `splitWavBufferWithVad`, `splitByVad` 3개 진입점 모두 비-PCM 검증
   - `splitWavBufferWithVad` → `splitByVad` 경로에서 `parseWavMetadata` 이중 호출 (defense-in-depth, 성능 영향 무시 가능)
 
+## 2026-02-23: ai-json-parse-resilience
+
+- **결정**: Claude API 응답의 malformed JSON에 대한 repair 로직 추가 + SyntaxError → AI_EXTRACTION_FAILED 에러코드 분류
+- **이유**:
+  - 긴 transcript STT 후 Claude API가 trailing comma, unclosed bracket 등 malformed JSON 반환 시 복구 없이 즉시 실패
+  - SyntaxError가 `detectErrorCode` fallback으로 `NETWORK_ERROR`로 오분류 → 사용자에게 잘못된 복구 안내
+- **대안**:
+  - `jsonrepair` npm 패키지 사용 → 추가 의존성 불필요, 실제 발생 패턴이 trailing comma/unclosed bracket 한정
+  - Zod `.safeParse` + 기본값 fallback → 파싱 자체 실패이므로 Zod 도달 전 문제
+- **구현 노트**:
+  - `parseJsonResponse`: 정상 파싱 → repair 시도 → truncated fallback (closing brace 없는 경우) 3단계
+  - `repairJson`: trailing comma 제거 + unclosed bracket/brace 자동 닫기 (문자열 내부 bracket은 미처리, 실제 AI 응답에서 발생 가능성 극히 낮음)
+  - `extract`/`translate` 양쪽 catch 블록에 SyntaxError 분기 추가
+

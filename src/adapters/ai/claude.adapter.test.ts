@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ClaudeAdapter } from './claude.adapter.js';
+import { ErrorCode, AIError } from '../../types/errors.js';
 import type { ExtractedContext } from '../../types/index.js';
 
 // Mock the Anthropic SDK module
@@ -269,6 +270,117 @@ describe('ClaudeAdapter', () => {
       await expect(adapter.translate(mockContext, { targetLanguage: 'ko' })).rejects.toThrow(
         'No text response from Claude'
       );
+    });
+  });
+
+  describe('malformed JSON repair', () => {
+    it('should repair trailing commas in extract response', async () => {
+      const malformedJson = `{
+        "title": "Test Meeting",
+        "summary": "Discussion",
+        "decisions": ["Use vitest",],
+        "actionItems": [],
+        "policies": [],
+        "openQuestions": [],
+        "tags": ["testing", "tdd",]
+      }`;
+
+      mockCreate.mockResolvedValue({
+        content: [{ type: 'text', text: malformedJson }],
+      });
+
+      const result = await adapter.extract('Meeting notes');
+
+      expect(result.title).toBe('Test Meeting');
+      expect(result.tags).toEqual(['testing', 'tdd']);
+    });
+
+    it('should repair unclosed array in extract response', async () => {
+      // Truncated JSON with unclosed array and brace
+      const truncatedJson = `{
+        "title": "Test Meeting",
+        "summary": "Discussion",
+        "decisions": [],
+        "actionItems": [],
+        "policies": [],
+        "openQuestions": [],
+        "tags": ["testing", "tdd"`;
+
+      mockCreate.mockResolvedValue({
+        content: [{ type: 'text', text: truncatedJson }],
+      });
+
+      const result = await adapter.extract('Meeting notes');
+
+      expect(result.title).toBe('Test Meeting');
+      expect(result.tags).toEqual(['testing', 'tdd']);
+    });
+
+    it('should throw AI_EXTRACTION_FAILED for unrepairable JSON in extract', async () => {
+      const unreparableJson = `{ totally broken {{{{ json }`;
+
+      mockCreate.mockResolvedValue({
+        content: [{ type: 'text', text: unreparableJson }],
+      });
+
+      await expect(adapter.extract('Meeting notes')).rejects.toSatisfy((error: AIError) => {
+        return error instanceof AIError && error.code === ErrorCode.AI_EXTRACTION_FAILED;
+      });
+    });
+
+    it('should repair trailing commas in translate response', async () => {
+      const malformedJson = `{
+        "title": "API 설계 미팅",
+        "summary": "REST API 설계 패턴에 대해 논의함",
+        "decisions": ["OpenAPI 스펙 사용",],
+        "actionItems": [],
+        "policies": [],
+        "openQuestions": [],
+        "tags": ["api",]
+      }`;
+
+      const context: ExtractedContext = {
+        title: 'API Design Meeting',
+        summary: 'Discussed REST API design patterns',
+        decisions: ['Use OpenAPI spec'],
+        actionItems: [],
+        policies: [],
+        openQuestions: [],
+        tags: ['api'],
+      };
+
+      mockCreate.mockResolvedValue({
+        content: [{ type: 'text', text: malformedJson }],
+      });
+
+      const result = await adapter.translate(context, { targetLanguage: 'ko' });
+
+      expect(result.title).toBe('API 설계 미팅');
+      expect(result.tags).toEqual(['api']);
+    });
+
+    it('should throw AI_EXTRACTION_FAILED for unrepairable JSON in translate', async () => {
+      const unreparableJson = `{ totally broken {{{{ json }`;
+
+      const context: ExtractedContext = {
+        title: 'Test',
+        summary: 'Test',
+        decisions: [],
+        actionItems: [],
+        policies: [],
+        openQuestions: [],
+        tags: [],
+      };
+
+      mockCreate.mockResolvedValue({
+        content: [{ type: 'text', text: unreparableJson }],
+      });
+
+      await expect(
+        adapter.translate(context, { targetLanguage: 'ko' })
+      ).rejects.toSatisfy((error: AIError) => {
+        return error instanceof AIError && error.code === ErrorCode.AI_EXTRACTION_FAILED;
+      });
     });
   });
 });
