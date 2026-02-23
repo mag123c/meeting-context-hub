@@ -47,3 +47,17 @@
   - auto-merge는 branch protection 설정 필요 (현재 미설정, 수동 merge)
   - `paths-ignore`: CHANGELOG.md, .release-please-manifest.json, package.json
 
+## 2026-02-23: openai-whisper-large-wav-fix
+
+- **결정**: `transcribeSingleBuffer`에서 수동 `Blob/File` 생성 → OpenAI SDK `toFile()` 유틸리티 사용
+- **이유**:
+  - 20MB 초과 WAV 파일 transcription 시 "400 Invalid file format" 에러 발생
+  - Node.js 환경에서 `Blob/File` 생성 방식이 OpenAI SDK와 호환되지 않음
+  - OpenAI SDK의 `toFile()`이 Node.js 환경에서 buffer 업로드의 표준 방식
+- **대안**:
+  - `fs.writeFileSync`로 임시 파일 작성 후 `createReadStream` → 불필요한 I/O 오버헤드
+  - `FormData` 직접 구성 → SDK가 이미 추상화 제공
+- **추가 수정**:
+  - `parseWavMetadata`: RIFF 스펙 홀수 청크 패딩 바이트 처리 추가
+  - 청크 처리 실패 에러 메시지 한국어화 (사용자 대상 안내 개선)
+

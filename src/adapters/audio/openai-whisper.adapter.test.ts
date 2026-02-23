@@ -4,6 +4,7 @@ import * as fs from 'fs';
 
 // Mock OpenAI
 const mockCreate = vi.fn();
+const mockToFile = vi.fn();
 vi.mock('openai', () => {
   return {
     default: class MockOpenAI {
@@ -13,6 +14,7 @@ vi.mock('openai', () => {
         },
       };
     },
+    toFile: (...args: unknown[]) => mockToFile(...args),
   };
 });
 
@@ -37,6 +39,12 @@ describe('WhisperAdapter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockCreate.mockReset();
+    mockToFile.mockReset();
+    mockToFile.mockImplementation(async (buffer: Buffer, filename: string) => ({
+      name: filename,
+      type: 'audio/wav',
+      _buffer: buffer,
+    }));
     adapter = new WhisperAdapter('test-api-key');
   });
 
@@ -155,6 +163,24 @@ describe('WhisperAdapter', () => {
         .mockRejectedValueOnce(new Error('API error'));
 
       await expect(adapter.transcribeBuffer(largeBuffer)).rejects.toThrow(TranscriptionError);
+    });
+
+    it('should use toFile from openai SDK for buffer transcription', async () => {
+      const smallBuffer = createMockWavBuffer(1 * 1024 * 1024);
+      mockCreate.mockResolvedValue({ text: 'Test' });
+
+      await adapter.transcribeBuffer(smallBuffer, 'test.wav');
+
+      expect(mockToFile).toHaveBeenCalledWith(smallBuffer, 'test.wav', { type: 'audio/wav' });
+    });
+
+    it('should show improved error message on chunk processing failure', async () => {
+      const largeBuffer = createMockWavBuffer(25 * 1024 * 1024);
+      mockCreate.mockRejectedValue(new Error('Invalid file format'));
+
+      await expect(adapter.transcribeBuffer(largeBuffer)).rejects.toThrow(
+        /오디오 파일 분할 처리 중 실패했습니다/
+      );
     });
   });
 });

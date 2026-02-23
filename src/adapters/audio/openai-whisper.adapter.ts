@@ -4,7 +4,7 @@
  * Uses OpenAI's Whisper API for audio transcription
  */
 
-import OpenAI from 'openai';
+import OpenAI, { toFile } from 'openai';
 import { createReadStream, existsSync, readFileSync, statSync } from 'fs';
 import {
   TranscriptionError,
@@ -187,14 +187,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     buffer: Buffer,
     filename = 'audio.wav'
   ): Promise<string> {
-    // Create a Blob from buffer (cast to handle ArrayBufferLike vs ArrayBuffer)
-    const arrayBuffer = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    ) as ArrayBuffer;
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const blob = new Blob([uint8Array], { type: 'audio/wav' });
-    const file = new File([blob], filename, { type: 'audio/wav' });
+    const file = await toFile(buffer, filename, { type: 'audio/wav' });
 
     const response = await withRetry(
       () =>
@@ -261,7 +254,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
 
       const originalError = error instanceof Error ? error : undefined;
       throw new TranscriptionError(
-        `Transcription failed during chunk processing: ${originalError?.message ?? 'Unknown error'}`,
+        `오디오 파일 분할 처리 중 실패했습니다. 파일 형식을 확인하거나 MP3로 변환 후 다시 시도해주세요. (${originalError?.message ?? 'Unknown error'})`,
         ErrorCode.TRANSCRIPTION_FAILED,
         true,
         originalError

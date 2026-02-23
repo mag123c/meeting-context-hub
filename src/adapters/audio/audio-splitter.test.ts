@@ -50,6 +50,52 @@ describe('AudioSplitter', () => {
 
       expect(() => parseWavMetadata(smallBuffer)).toThrow('Invalid WAV file: buffer too small');
     });
+
+    it('should handle odd-sized chunks with RIFF padding byte', () => {
+      // RIFF spec: odd-sized chunks have 1 byte padding after data
+      // Create a WAV with an odd-sized non-standard chunk before the data chunk
+      const oddChunkSize = 17; // odd number
+      const dataSize = 1000;
+
+      // Calculate total buffer size:
+      // 12 (RIFF+WAVE) + 8+16 (fmt chunk) + 8+oddChunkSize+1(padding) + 8+dataSize
+      const totalSize = 12 + 24 + 8 + oddChunkSize + 1 + 8 + dataSize;
+      const buffer = Buffer.alloc(totalSize);
+
+      // RIFF header
+      buffer.write('RIFF', 0);
+      buffer.writeUInt32LE(totalSize - 8, 4);
+      buffer.write('WAVE', 8);
+
+      // fmt chunk (standard 16 bytes)
+      let offset = 12;
+      buffer.write('fmt ', offset);
+      buffer.writeUInt32LE(16, offset + 4);
+      buffer.writeUInt16LE(1, offset + 8);   // PCM
+      buffer.writeUInt16LE(1, offset + 10);  // mono
+      buffer.writeUInt32LE(16000, offset + 12); // sample rate
+      buffer.writeUInt32LE(32000, offset + 16); // byte rate
+      buffer.writeUInt16LE(2, offset + 20);  // block align
+      buffer.writeUInt16LE(16, offset + 22); // bits per sample
+      offset += 24;
+
+      // Custom odd-sized chunk (e.g., "LIST" chunk with 17 bytes)
+      buffer.write('LIST', offset);
+      buffer.writeUInt32LE(oddChunkSize, offset + 4);
+      offset += 8 + oddChunkSize + 1; // +1 for padding byte
+
+      // data chunk
+      buffer.write('data', offset);
+      buffer.writeUInt32LE(dataSize, offset + 4);
+
+      const metadata = parseWavMetadata(buffer);
+
+      expect(metadata.sampleRate).toBe(16000);
+      expect(metadata.channels).toBe(1);
+      expect(metadata.bitsPerSample).toBe(16);
+      expect(metadata.dataSize).toBe(dataSize);
+      expect(metadata.headerSize).toBe(offset + 8);
+    });
   });
 
   describe('needsSplit', () => {

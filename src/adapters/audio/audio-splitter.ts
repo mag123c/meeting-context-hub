@@ -67,7 +67,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
       };
     }
 
-    offset += 8 + chunkSize;
+    offset += 8 + chunkSize + (chunkSize % 2 === 1 ? 1 : 0);
   }
 
   // Fallback for standard 44-byte header
