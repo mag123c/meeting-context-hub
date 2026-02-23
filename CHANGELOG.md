@@ -42,6 +42,14 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.21.4](https://github.com/mag123c/meeting-context-hub/compare/v2.21.3...v2.21.4) (2026-02-23)
+
+
+### Bug Fixes
+
+* **audio:** lazy-load whisper-node to avoid startup compilation delay ([c976681](https://github.com/mag123c/meeting-context-hub/commit/c9766814b76539b6c869a8d91c753afcaedfe045))
+* **audio:** update large whisper model URL to ggml-large-v3 ([71403d1](https://github.com/mag123c/meeting-context-hub/commit/71403d1a91bcf03b08220223bfb9136e3ae84d80))
+
 ## [2.21.3](https://github.com/mag123c/meeting-context-hub/compare/v2.21.2...v2.21.3) (2026-02-13)
 
 
