@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.23.1](https://github.com/mag123c/meeting-context-hub/compare/v2.23.0...v2.23.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* **audio:** use OpenAI SDK toFile() for large WAV transcription ([328d028](https://github.com/mag123c/meeting-context-hub/commit/328d028b52b2fd451f3843d301817fa8bb8bf4d7))
+
 ## [2.23.0](https://github.com/mag123c/meeting-context-hub/compare/v2.22.0...v2.23.0) (2026-02-23)
 
 
