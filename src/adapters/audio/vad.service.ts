@@ -8,6 +8,7 @@
 import type { VadConfig, VadSegment } from './whisper.types.js';
 import { DEFAULT_VAD_CONFIG } from './whisper.types.js';
 import { parseWavMetadata, type WavMetadata } from './audio-splitter.js';
+import { TranscriptionError, ErrorCode } from '../../types/errors.js';
 
 /**
  * Calculate Root Mean Square (RMS) of audio samples
@@ -199,6 +200,15 @@ function createWavHeader(metadata: WavMetadata, chunkDataSize: number): Buffer {
  */
 export function splitByVad(buffer: Buffer, config: VadConfig): Buffer[] {
   const metadata = parseWavMetadata(buffer);
+
+  if (metadata.audioFormat !== 1) {
+    throw new TranscriptionError(
+      '지원하지 않는 WAV 형식입니다. 16-bit PCM WAV 또는 MP3로 변환 후 다시 시도해주세요.',
+      ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT,
+      false
+    );
+  }
+
   const audioData = buffer.slice(metadata.headerSize);
 
   const silences = detectSilenceRegions(audioData, metadata, config);

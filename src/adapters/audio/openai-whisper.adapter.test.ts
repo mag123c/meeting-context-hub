@@ -178,9 +178,10 @@ describe('WhisperAdapter', () => {
       const largeBuffer = createMockWavBuffer(25 * 1024 * 1024);
       mockCreate.mockRejectedValue(new Error('Invalid file format'));
 
-      await expect(adapter.transcribeBuffer(largeBuffer)).rejects.toThrow(
-        /오디오 파일 분할 처리 중 실패했습니다/
-      );
+      await expect(adapter.transcribeBuffer(largeBuffer)).rejects.toMatchObject({
+        code: ErrorCode.TRANSCRIPTION_SPLIT_FAILED,
+        message: '오디오 파일 분할 변환에 실패했습니다. MP3로 변환 후 다시 시도해주세요.',
+      });
     });
   });
 });

@@ -8,6 +8,7 @@ import {
   splitWavBufferWithVad,
   MAX_CHUNK_SIZE,
 } from './audio-splitter.js';
+import { ErrorCode } from '../../types/errors.js';
 
 describe('AudioSplitter', () => {
   describe('parseWavMetadata', () => {
@@ -23,6 +24,7 @@ describe('AudioSplitter', () => {
       const metadata = parseWavMetadata(header);
 
       expect(metadata).toEqual({
+        audioFormat: 1,
         sampleRate: 16000,
         channels: 1,
         bitsPerSample: 16,
@@ -49,6 +51,21 @@ describe('AudioSplitter', () => {
       const smallBuffer = Buffer.alloc(10);
 
       expect(() => parseWavMetadata(smallBuffer)).toThrow('Invalid WAV file: buffer too small');
+    });
+
+    it('should parse audioFormat from fmt chunk', () => {
+      // audioFormat=3 means IEEE float
+      const header = createValidWavHeader({
+        sampleRate: 44100,
+        channels: 2,
+        bitsPerSample: 32,
+        dataSize: 1000,
+        audioFormat: 3,
+      });
+
+      const metadata = parseWavMetadata(header);
+
+      expect(metadata.audioFormat).toBe(3);
     });
 
     it('should handle odd-sized chunks with RIFF padding byte', () => {
@@ -178,6 +195,25 @@ describe('AudioSplitter', () => {
       });
     });
 
+    it('should throw TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT for non-PCM WAV', () => {
+      const dataSize = 25 * 1024 * 1024;
+      const header = createValidWavHeader({
+        sampleRate: 44100,
+        channels: 2,
+        bitsPerSample: 32,
+        dataSize,
+        audioFormat: 3, // IEEE float
+      });
+      const data = Buffer.alloc(dataSize);
+      const wavBuffer = Buffer.concat([header, data]);
+
+      expect(() => splitWavBuffer(wavBuffer)).toThrow(
+        expect.objectContaining({
+          code: ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT,
+        })
+      );
+    });
+
     it('should preserve audio format in all chunks', () => {
       const dataSize = 22 * 1024 * 1024;
       const header = createValidWavHeader({
@@ -283,6 +319,25 @@ describe('AudioSplitter', () => {
   });
 
   describe('splitWavBufferWithVad', () => {
+    it('should throw TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT for non-PCM WAV', () => {
+      const dataSize = 1000;
+      const header = createValidWavHeader({
+        sampleRate: 44100,
+        channels: 2,
+        bitsPerSample: 32,
+        dataSize,
+        audioFormat: 3,
+      });
+      const data = Buffer.alloc(dataSize);
+      const wavBuffer = Buffer.concat([header, data]);
+
+      expect(() => splitWavBufferWithVad(wavBuffer)).toThrow(
+        expect.objectContaining({
+          code: ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT,
+        })
+      );
+    });
+
     it('should use VAD-based splitting', () => {
       // Create audio with speech-silence-speech pattern
       const sampleRate = 16000;
@@ -380,8 +435,9 @@ function createValidWavHeader(options: {
   channels: number;
   bitsPerSample: number;
   dataSize: number;
+  audioFormat?: number;
 }): Buffer {
-  const { sampleRate, channels, bitsPerSample, dataSize } = options;
+  const { sampleRate, channels, bitsPerSample, dataSize, audioFormat = 1 } = options;
   const header = Buffer.alloc(44);
 
   const byteRate = sampleRate * channels * (bitsPerSample / 8);
@@ -396,7 +452,7 @@ function createValidWavHeader(options: {
   // fmt chunk
   header.write('fmt ', 12);
   header.writeUInt32LE(16, 16); // Subchunk1Size for PCM
-  header.writeUInt16LE(1, 20); // AudioFormat: PCM = 1
+  header.writeUInt16LE(audioFormat, 20); // AudioFormat
   header.writeUInt16LE(channels, 22);
   header.writeUInt32LE(sampleRate, 24);
   header.writeUInt32LE(byteRate, 28);

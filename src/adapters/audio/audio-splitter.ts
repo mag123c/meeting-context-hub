@@ -7,6 +7,7 @@
 
 import { splitByVad } from './vad.service.js';
 import { DEFAULT_VAD_CONFIG, type VadConfig } from './whisper.types.js';
+import { TranscriptionError, ErrorCode } from '../../types/errors.js';
 
 export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB (safe margin under 25MB limit)
 
@@ -14,6 +15,7 @@ export const MAX_CHUNK_SIZE = 20 * 1024 * 1024; // 20MB (safe margin under 25MB 
  * WAV file metadata
  */
 export interface WavMetadata {
+  audioFormat: number;
   sampleRate: number;
   channels: number;
   bitsPerSample: number;
@@ -42,6 +44,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
   // Find fmt chunk (usually at byte 12, but can vary)
   let offset = 12;
   let fmtChunkFound = false;
+  let audioFormat = 0;
   let channels = 0;
   let sampleRate = 0;
   let bitsPerSample = 0;
@@ -52,6 +55,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
 
     if (chunkId === 'fmt ') {
       fmtChunkFound = true;
+      audioFormat = buffer.readUInt16LE(offset + 8);
       channels = buffer.readUInt16LE(offset + 10);
       sampleRate = buffer.readUInt32LE(offset + 12);
       bitsPerSample = buffer.readUInt16LE(offset + 22);
@@ -59,6 +63,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
 
     if (chunkId === 'data') {
       return {
+        audioFormat,
         sampleRate,
         channels,
         bitsPerSample,
@@ -72,6 +77,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
 
   // Fallback for standard 44-byte header
   if (!fmtChunkFound) {
+    audioFormat = buffer.readUInt16LE(20);
     channels = buffer.readUInt16LE(22);
     sampleRate = buffer.readUInt32LE(24);
     bitsPerSample = buffer.readUInt16LE(34);
@@ -80,6 +86,7 @@ export function parseWavMetadata(buffer: Buffer): WavMetadata {
   const dataSize = buffer.readUInt32LE(40);
 
   return {
+    audioFormat,
     sampleRate,
     channels,
     bitsPerSample,
@@ -136,6 +143,14 @@ function createWavHeader(
  */
 export function splitWavBuffer(buffer: Buffer): Buffer[] {
   const metadata = parseWavMetadata(buffer);
+
+  if (metadata.audioFormat !== 1) {
+    throw new TranscriptionError(
+      '지원하지 않는 WAV 형식입니다. 16-bit PCM WAV 또는 MP3로 변환 후 다시 시도해주세요.',
+      ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT,
+      false
+    );
+  }
 
   // If file is small enough, return as-is
   if (!needsSplit(buffer.length)) {
@@ -257,6 +272,16 @@ export function splitWavBufferWithVad(
   buffer: Buffer,
   vadConfig: Partial<VadConfig> = {}
 ): Buffer[] {
+  const metadata = parseWavMetadata(buffer);
+
+  if (metadata.audioFormat !== 1) {
+    throw new TranscriptionError(
+      '지원하지 않는 WAV 형식입니다. 16-bit PCM WAV 또는 MP3로 변환 후 다시 시도해주세요.',
+      ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT,
+      false
+    );
+  }
+
   const config = { ...DEFAULT_VAD_CONFIG, ...vadConfig };
 
   // First try VAD-based splitting

@@ -254,8 +254,8 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
 
       const originalError = error instanceof Error ? error : undefined;
       throw new TranscriptionError(
-        `오디오 파일 분할 처리 중 실패했습니다. 파일 형식을 확인하거나 MP3로 변환 후 다시 시도해주세요. (${originalError?.message ?? 'Unknown error'})`,
-        ErrorCode.TRANSCRIPTION_FAILED,
+        '오디오 파일 분할 변환에 실패했습니다. MP3로 변환 후 다시 시도해주세요.',
+        ErrorCode.TRANSCRIPTION_SPLIT_FAILED,
         true,
         originalError
       );

@@ -61,3 +61,17 @@
   - `parseWavMetadata`: RIFF 스펙 홀수 청크 패딩 바이트 처리 추가
   - 청크 처리 실패 에러 메시지 한국어화 (사용자 대상 안내 개선)
 
+## 2026-02-23: transcription-split-error-structuring
+
+- **결정**: 대용량 WAV 분할 변환 에러를 구조화된 에러 코드로 세분화 + 비-PCM WAV 조기 차단
+- **이유**:
+  - raw OpenAI API 에러가 사용자에게 그대로 노출 → worklog-hub에서 문자열 패턴 매칭 필요
+  - 구조화된 에러 코드(`TRANSCRIPTION_SPLIT_FAILED`, `TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT`)로 앱 측 안정적 연계
+  - 비-PCM WAV(IEEE float 등)는 PCM 기반 splitter/VAD에서 무의미한 처리 → 진입부에서 조기 차단
+- **대안**:
+  - 기존 `TRANSCRIPTION_FAILED` 하나로 통합 유지 → 앱 측에서 메시지 파싱 필요, 불안정
+  - OpenAI API 호출 시점에서만 검증 → 불필요한 API 호출 비용 발생
+- **구현 노트**:
+  - `splitWavBuffer`, `splitWavBufferWithVad`, `splitByVad` 3개 진입점 모두 비-PCM 검증
+  - `splitWavBufferWithVad` → `splitByVad` 경로에서 `parseWavMetadata` 이중 호출 (defense-in-depth, 성능 영향 무시 가능)
+

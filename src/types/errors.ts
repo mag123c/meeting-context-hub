@@ -23,6 +23,8 @@ export enum ErrorCode {
 
   // Transcription
   TRANSCRIPTION_FAILED = 'TRANSCRIPTION_FAILED',
+  TRANSCRIPTION_SPLIT_FAILED = 'TRANSCRIPTION_SPLIT_FAILED',
+  TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT = 'TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT',
   TRANSCRIPTION_FILE_NOT_FOUND = 'TRANSCRIPTION_FILE_NOT_FOUND',
   TRANSCRIPTION_FILE_TOO_LARGE = 'TRANSCRIPTION_FILE_TOO_LARGE',
   TRANSCRIPTION_MODEL_NOT_FOUND = 'TRANSCRIPTION_MODEL_NOT_FOUND',
@@ -94,6 +96,14 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
   [ErrorCode.TRANSCRIPTION_FAILED]: {
     ko: '음성 인식에 실패했습니다. 오디오 품질을 확인해주세요.',
     en: 'Transcription failed. Please check your audio quality.',
+  },
+  [ErrorCode.TRANSCRIPTION_SPLIT_FAILED]: {
+    ko: '오디오 파일 분할 변환에 실패했습니다. MP3로 변환 후 다시 시도해주세요.',
+    en: 'Failed to transcribe split audio. Please convert to MP3 and try again.',
+  },
+  [ErrorCode.TRANSCRIPTION_UNSUPPORTED_WAV_FORMAT]: {
+    ko: '지원하지 않는 WAV 형식입니다. 16-bit PCM WAV 또는 MP3로 변환 후 다시 시도해주세요.',
+    en: 'Unsupported WAV format. Please convert to 16-bit PCM WAV or MP3 and try again.',
   },
   [ErrorCode.TRANSCRIPTION_FILE_NOT_FOUND]: {
     ko: '오디오 파일을 찾을 수 없습니다.',
