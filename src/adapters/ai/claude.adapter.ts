@@ -39,7 +39,7 @@ export class ClaudeAdapter implements AIProvider {
       const response = await withRetry(
         () =>
           this.client.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            model: 'claude-sonnet-4-6',
             max_tokens: 2048,
             messages: [
               {
@@ -184,7 +184,7 @@ Respond with ONLY the JSON object, no additional text.`;
       const response = await withRetry(
         () =>
           this.client.messages.create({
-            model: 'claude-sonnet-4-20250514',
+            model: 'claude-sonnet-4-6',
             max_tokens: 4096,
             messages: [
               {
