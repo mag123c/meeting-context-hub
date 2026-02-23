@@ -9,6 +9,7 @@ import type {
   TranscriptionProvider,
   TranscriptionConfig,
   TranscriptionMode,
+  TranscriptionOptions,
 } from './whisper.types.js';
 import { DEFAULT_TRANSCRIPTION_CONFIG } from './whisper.types.js';
 import { LocalWhisperAdapter } from './local-whisper.adapter.js';
@@ -51,25 +52,25 @@ class AutoFallbackAdapter implements TranscriptionProvider {
     this.apiAdapter = apiAdapter;
   }
 
-  async transcribeFile(filePath: string): Promise<string> {
+  async transcribeFile(filePath: string, options?: TranscriptionOptions): Promise<string> {
     try {
-      return await this.localAdapter.transcribeFile(filePath);
+      return await this.localAdapter.transcribeFile(filePath, options);
     } catch (error) {
       if (this.apiAdapter) {
         console.warn('[Transcription] Local failed, falling back to API');
-        return this.apiAdapter.transcribeFile(filePath);
+        return this.apiAdapter.transcribeFile(filePath, options);
       }
       throw error;
     }
   }
 
-  async transcribeBuffer(buffer: Buffer, filename?: string): Promise<string> {
+  async transcribeBuffer(buffer: Buffer, filename?: string, options?: TranscriptionOptions): Promise<string> {
     try {
-      return await this.localAdapter.transcribeBuffer(buffer, filename);
+      return await this.localAdapter.transcribeBuffer(buffer, filename, options);
     } catch (error) {
       if (this.apiAdapter) {
         console.warn('[Transcription] Local failed, falling back to API');
-        return this.apiAdapter.transcribeBuffer(buffer, filename);
+        return this.apiAdapter.transcribeBuffer(buffer, filename, options);
       }
       throw error;
     }

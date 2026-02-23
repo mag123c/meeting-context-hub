@@ -8,7 +8,7 @@ import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
-import type { TranscriptionProvider, WhisperModel } from './whisper.types.js';
+import type { TranscriptionProvider, WhisperModel, TranscriptionOptions, TranscriptionProgressCallback } from './whisper.types.js';
 import {
   ModelManager,
   getModelManager,
@@ -119,7 +119,7 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
   /**
    * Transcribe an audio file
    */
-  async transcribeFile(filePath: string): Promise<string> {
+  async transcribeFile(filePath: string, options?: TranscriptionOptions): Promise<string> {
     // Check file exists
     if (!existsSync(filePath)) {
       throw new TranscriptionError(
@@ -134,7 +134,7 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
 
     // Read file and transcribe
     const buffer = readFileSync(filePath);
-    return this.transcribeBuffer(buffer, filePath);
+    return this.transcribeBuffer(buffer, filePath, options);
   }
 
   /**
@@ -142,7 +142,8 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
    */
   async transcribeBuffer(
     buffer: Buffer,
-    filename = 'audio.wav'
+    filename = 'audio.wav',
+    options?: TranscriptionOptions,
   ): Promise<string> {
     // Ensure model is ready
     if (!this.isModelReady() && !this.config.autoDownload) {
@@ -157,10 +158,14 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
 
     // Check if splitting is needed
     if (needsSplit(buffer.length)) {
-      return this.transcribeWithSplit(buffer);
+      return this.transcribeWithSplit(buffer, options?.onProgress);
     }
 
-    return this.transcribeSingleBuffer(buffer, filename);
+    // Single file: report 0 → process → 100
+    options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 0 });
+    const result = await this.transcribeSingleBuffer(buffer, filename);
+    options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 100 });
+    return result;
   }
 
   /**
@@ -222,10 +227,15 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
   /**
    * Split buffer into chunks and transcribe each
    */
-  private async transcribeWithSplit(buffer: Buffer): Promise<string> {
+  private async transcribeWithSplit(
+    buffer: Buffer,
+    onProgress?: TranscriptionProgressCallback,
+  ): Promise<string> {
     // Use VAD-based splitting
     const chunks = splitWavBufferWithVad(buffer);
     const transcriptions: string[] = [];
+
+    onProgress?.({ currentChunk: 0, totalChunks: chunks.length, percent: 0 });
 
     try {
       for (let i = 0; i < chunks.length; i++) {
@@ -235,6 +245,11 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
           `chunk-${i + 1}.wav`
         );
         transcriptions.push(text);
+        onProgress?.({
+          currentChunk: i + 1,
+          totalChunks: chunks.length,
+          percent: Math.round(((i + 1) / chunks.length) * 100),
+        });
       }
 
       // Use overlap-aware merging

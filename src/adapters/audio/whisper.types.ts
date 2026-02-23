@@ -5,18 +5,39 @@
  */
 
 /**
+ * Progress information during chunk-based transcription
+ */
+export interface TranscriptionProgress {
+  currentChunk: number;
+  totalChunks: number;
+  percent: number; // 0-100
+}
+
+/**
+ * Callback for transcription progress updates
+ */
+export type TranscriptionProgressCallback = (progress: TranscriptionProgress) => void;
+
+/**
+ * Options for transcription methods
+ */
+export interface TranscriptionOptions {
+  onProgress?: TranscriptionProgressCallback;
+}
+
+/**
  * Transcription provider interface
  */
 export interface TranscriptionProvider {
   /**
    * Transcribe audio file to text
    */
-  transcribeFile(filePath: string): Promise<string>;
+  transcribeFile(filePath: string, options?: TranscriptionOptions): Promise<string>;
 
   /**
    * Transcribe audio buffer to text
    */
-  transcribeBuffer(buffer: Buffer, filename?: string): Promise<string>;
+  transcribeBuffer(buffer: Buffer, filename?: string, options?: TranscriptionOptions): Promise<string>;
 }
 
 /**

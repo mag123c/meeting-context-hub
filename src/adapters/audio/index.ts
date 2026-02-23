@@ -4,6 +4,9 @@ export type {
   TranscriptionMode,
   WhisperModel,
   TranscriptionConfig,
+  TranscriptionProgress,
+  TranscriptionProgressCallback,
+  TranscriptionOptions,
   VadConfig,
   VadSegment,
 } from './whisper.types.js';

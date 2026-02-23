@@ -12,7 +12,7 @@ import {
   detectErrorCode,
 } from '../../types/errors.js';
 import { withRetry } from '../../core/services/retry.service.js';
-import type { TranscriptionProvider } from './whisper.types.js';
+import type { TranscriptionProvider, TranscriptionOptions, TranscriptionProgressCallback } from './whisper.types.js';
 import {
   needsSplit,
   splitWavBufferWithVad,
@@ -76,7 +76,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     return [...this.vocabulary];
   }
 
-  async transcribeFile(filePath: string): Promise<string> {
+  async transcribeFile(filePath: string, options?: TranscriptionOptions): Promise<string> {
     // Verify file exists
     if (!existsSync(filePath)) {
       throw new TranscriptionError(
@@ -90,10 +90,11 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     const fileStats = statSync(filePath);
     if (needsSplit(fileStats.size)) {
       const buffer = readFileSync(filePath);
-      return this.transcribeWithSplit(buffer);
+      return this.transcribeWithSplit(buffer, options?.onProgress);
     }
 
     try {
+      options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 0 });
       const response = await withRetry(
         () =>
           this.client.audio.transcriptions.create({
@@ -115,6 +116,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
         }
       );
 
+      options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 100 });
       return response.text;
     } catch (error) {
       // Don't wrap TranscriptionError
@@ -128,7 +130,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
       // Retry with split on 413 error
       if (errorCode === ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE) {
         const buffer = readFileSync(filePath);
-        return this.transcribeWithSplit(buffer);
+        return this.transcribeWithSplit(buffer, options?.onProgress);
       }
 
       throw new TranscriptionError(
@@ -142,15 +144,19 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
 
   async transcribeBuffer(
     buffer: Buffer,
-    filename = 'audio.wav'
+    filename = 'audio.wav',
+    options?: TranscriptionOptions,
   ): Promise<string> {
     // Check buffer size and split if needed
     if (needsSplit(buffer.length)) {
-      return this.transcribeWithSplit(buffer);
+      return this.transcribeWithSplit(buffer, options?.onProgress);
     }
 
     try {
-      return await this.transcribeSingleBuffer(buffer, filename);
+      options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 0 });
+      const result = await this.transcribeSingleBuffer(buffer, filename);
+      options?.onProgress?.({ currentChunk: 1, totalChunks: 1, percent: 100 });
+      return result;
     } catch (error) {
       // Don't wrap TranscriptionError
       if (error instanceof TranscriptionError) {
@@ -162,7 +168,7 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
 
       // Retry with split on 413 error
       if (errorCode === ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE) {
-        return this.transcribeWithSplit(buffer);
+        return this.transcribeWithSplit(buffer, options?.onProgress);
       }
 
       throw new TranscriptionError(
@@ -215,13 +221,18 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
   /**
    * Split buffer into chunks and transcribe each
    */
-  private async transcribeWithSplit(buffer: Buffer): Promise<string> {
+  private async transcribeWithSplit(
+    buffer: Buffer,
+    onProgress?: TranscriptionProgressCallback,
+  ): Promise<string> {
     // Use VAD-based splitting if enabled
     const chunks = this.useVad
       ? splitWavBufferWithVad(buffer)
       : (await import('./audio-splitter.js')).splitWavBuffer(buffer);
 
     const transcriptions: string[] = [];
+
+    onProgress?.({ currentChunk: 0, totalChunks: chunks.length, percent: 0 });
 
     try {
       for (let i = 0; i < chunks.length; i++) {
@@ -231,6 +242,11 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
           `chunk-${i + 1}.wav`
         );
         transcriptions.push(text);
+        onProgress?.({
+          currentChunk: i + 1,
+          totalChunks: chunks.length,
+          percent: Math.round(((i + 1) / chunks.length) * 100),
+        });
       }
 
       // Use overlap-aware merging for VAD-split chunks
