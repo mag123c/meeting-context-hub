@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.23.0](https://github.com/mag123c/meeting-context-hub/compare/v2.22.0...v2.23.0) (2026-02-23)
+
+
+### Features
+
+* **ai:** upgrade Claude model to sonnet 4.6 ([42fde79](https://github.com/mag123c/meeting-context-hub/commit/42fde79f1404ea18038fb03f4eb05ee278037473))
+
 ## [2.22.0](https://github.com/mag123c/meeting-context-hub/compare/v2.21.4...v2.22.0) (2026-02-23)
 
 
