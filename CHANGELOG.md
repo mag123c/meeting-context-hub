@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.25.0](https://github.com/mag123c/meeting-context-hub/compare/v2.24.0...v2.25.0) (2026-02-23)
+
+
+### Features
+
+* **ai:** add JSON parse repair for malformed Claude API responses ([ba54370](https://github.com/mag123c/meeting-context-hub/commit/ba54370b6787070b72791d71beab6065e2ed332e))
+
 ## [2.24.0](https://github.com/mag123c/meeting-context-hub/compare/v2.23.1...v2.24.0) (2026-02-23)
 
 
