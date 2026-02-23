@@ -44,9 +44,9 @@ const MODEL_URLS: Record<WhisperModel, ModelInfo> = {
     sizeBytes: 1_500_000_000, // ~1.5GB
   },
   large: {
-    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large.bin',
-    filename: 'ggml-large.bin',
-    sizeBytes: 2_900_000_000, // ~2.9GB
+    url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin',
+    filename: 'ggml-large-v3.bin',
+    sizeBytes: 3_100_000_000, // ~3.1GB
   },
 };
 
