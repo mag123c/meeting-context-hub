@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.25.1](https://github.com/mag123c/meeting-context-hub/compare/v2.25.0...v2.25.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* **ai:** default missing array fields in ExtractedContextSchema to empty arrays ([18f65d3](https://github.com/mag123c/meeting-context-hub/commit/18f65d32b4e2ba91e163fee6e338b3d5bfd73bb2))
+
 ## [2.25.0](https://github.com/mag123c/meeting-context-hub/compare/v2.24.0...v2.25.0) (2026-02-23)
 
 
