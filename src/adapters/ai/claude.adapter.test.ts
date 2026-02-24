@@ -92,6 +92,32 @@ describe('ClaudeAdapter', () => {
       expect(result.actionItems[2].assignee).toBeUndefined();
     });
 
+    it('should default missing array fields to empty arrays', async () => {
+      const mockResponse = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              title: 'Minimal Meeting',
+              summary: 'Only required fields provided',
+            }),
+          },
+        ],
+      };
+
+      mockCreate.mockResolvedValue(mockResponse);
+
+      const result = await adapter.extract('Sparse meeting notes');
+
+      expect(result.title).toBe('Minimal Meeting');
+      expect(result.summary).toBe('Only required fields provided');
+      expect(result.decisions).toEqual([]);
+      expect(result.actionItems).toEqual([]);
+      expect(result.policies).toEqual([]);
+      expect(result.openQuestions).toEqual([]);
+      expect(result.tags).toEqual([]);
+    });
+
     it('should pass language option to prompt', async () => {
       const mockResponse = {
         content: [
@@ -206,6 +232,42 @@ describe('ClaudeAdapter', () => {
       expect(result.title).toBe('API Design Meeting');
       expect(result.summary).toBe('Discussed REST API design patterns');
       expect(result.actionItems[0].assignee).toBe('김철수'); // Assignee preserved
+    });
+
+    it('should default missing array fields to empty arrays', async () => {
+      const minimalContext: ExtractedContext = {
+        title: 'Minimal Meeting',
+        summary: 'Only required fields',
+        decisions: [],
+        actionItems: [],
+        policies: [],
+        openQuestions: [],
+        tags: [],
+      };
+
+      const mockResponse = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              title: 'API 설계 미팅',
+              summary: 'REST API 설계 패턴에 대해 논의함',
+            }),
+          },
+        ],
+      };
+
+      mockCreate.mockResolvedValue(mockResponse);
+
+      const result = await adapter.translate(minimalContext, { targetLanguage: 'ko' });
+
+      expect(result.title).toBe('API 설계 미팅');
+      expect(result.summary).toBe('REST API 설계 패턴에 대해 논의함');
+      expect(result.decisions).toEqual([]);
+      expect(result.actionItems).toEqual([]);
+      expect(result.policies).toEqual([]);
+      expect(result.openQuestions).toEqual([]);
+      expect(result.tags).toEqual([]);
     });
 
     it('should preserve technical terms in translation', async () => {

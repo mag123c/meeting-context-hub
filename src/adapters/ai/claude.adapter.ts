@@ -15,11 +15,11 @@ const ActionItemSchema = z.object({
 const ExtractedContextSchema = z.object({
   title: z.string(),
   summary: z.string(),
-  decisions: z.array(z.string()),
-  actionItems: z.array(ActionItemSchema),
-  policies: z.array(z.string()),
-  openQuestions: z.array(z.string()),
-  tags: z.array(z.string()),
+  decisions: z.array(z.string()).default([]),
+  actionItems: z.array(ActionItemSchema).default([]),
+  policies: z.array(z.string()).default([]),
+  openQuestions: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
 });
 
 /**

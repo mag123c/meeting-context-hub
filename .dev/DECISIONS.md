@@ -89,3 +89,13 @@
   - `repairJson`: trailing comma 제거 + unclosed bracket/brace 자동 닫기 (문자열 내부 bracket은 미처리, 실제 AI 응답에서 발생 가능성 극히 낮음)
   - `extract`/`translate` 양쪽 catch 블록에 SyntaxError 분기 추가
 
+## 2026-02-24: zod-schema-array-default
+
+- **결정**: `ExtractedContextSchema` 5개 배열 필드(`decisions`, `actionItems`, `policies`, `openQuestions`, `tags`)에 `.default([])` 적용
+- **이유**:
+  - Claude API가 optional 배열 필드를 생략하면 Zod validation 실패 → `AI_EXTRACTION_FAILED`
+  - LLM은 프롬프트 지시에도 불구하고 빈 배열 필드를 생략할 수 있음 — 스키마에서 방어가 근본 해결
+- **대안**:
+  - 프롬프트에 "반드시 모든 필드 포함" 강조 → LLM 보장 불가, 근본 해결 아님
+  - `.optional()` 사용 후 수동 `?? []` → `.default([])`가 Zod 관용적이고 간결
+
