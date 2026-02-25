@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.26.0](https://github.com/mag123c/meeting-context-hub/compare/v2.25.1...v2.26.0) (2026-02-25)
+
+
+### Features
+
+* **core:** add independent Decision entity with table, CRUD, and context integration ([75923fe](https://github.com/mag123c/meeting-context-hub/commit/75923fe3edccf8542c802a3322ad864de06d5cdc))
+
 ## [2.25.1](https://github.com/mag123c/meeting-context-hub/compare/v2.25.0...v2.25.1) (2026-02-24)
 
 
