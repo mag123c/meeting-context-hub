@@ -75,6 +75,20 @@ export interface DictionaryEntry {
   updatedAt: Date;
 }
 
+// Decision entity
+export type DecisionStatus = 'active' | 'superseded' | 'pending';
+
+export interface Decision {
+  id: string;
+  contextId: string;
+  projectId: string | null;
+  content: string;
+  status: DecisionStatus;
+  supersededBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // PromptContext category types
 export type PromptContextCategory = 'domain' | 'policy' | 'terminology' | 'custom';
 

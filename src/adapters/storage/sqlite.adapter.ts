@@ -10,6 +10,8 @@ import type {
   DictionaryEntry,
   PromptContext,
   PromptContextCategory,
+  Decision,
+  DecisionStatus,
 } from '../../types/index.js';
 import { StorageError, ErrorCode } from '../../types/errors.js';
 
@@ -150,6 +152,39 @@ export class SQLiteAdapter implements StorageProvider {
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_category ON prompt_contexts(category);
       CREATE INDEX IF NOT EXISTS idx_prompt_contexts_project ON prompt_contexts(project_id);
     `);
+
+    // Decisions table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS decisions (
+        id            TEXT PRIMARY KEY,
+        context_id    TEXT NOT NULL,
+        project_id    TEXT,
+        content       TEXT NOT NULL,
+        status        TEXT NOT NULL DEFAULT 'active',
+        superseded_by TEXT,
+        created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at    TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(context_id, content)
+      )
+    `);
+
+    // Decisions indexes
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS idx_decisions_context ON decisions(context_id);
+      CREATE INDEX IF NOT EXISTS idx_decisions_project ON decisions(project_id);
+      CREATE INDEX IF NOT EXISTS idx_decisions_status  ON decisions(status);
+    `);
+
+    // Migrations tracking table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS _migrations (
+        name       TEXT PRIMARY KEY,
+        applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+
+    // Backfill existing ctx.decisions into decisions table
+    this.backfillDecisions();
   }
 
   /**
@@ -208,6 +243,79 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
+  /**
+   * Backfill existing ctx.decisions into the decisions table (one-time, idempotent)
+   */
+  private backfillDecisions(): void {
+    const db = this.getDb();
+
+    const done = db.prepare("SELECT 1 FROM _migrations WHERE name = 'decisions_backfill'").get();
+    if (done) return;
+
+    const backfill = db.transaction(() => {
+      db.exec(`
+        INSERT OR IGNORE INTO decisions (id, context_id, project_id, content, status, created_at, updated_at)
+          SELECT
+            lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' ||
+              substr(hex(randomblob(2)),2) || '-' ||
+              substr('89ab', abs(random()) % 4 + 1, 1) ||
+              substr(hex(randomblob(2)),2) || '-' || hex(randomblob(6))),
+            c.id,
+            c.project_id,
+            json_each.value,
+            'active',
+            c.created_at,
+            c.created_at
+          FROM contexts c, json_each(c.decisions)
+          WHERE c.decisions IS NOT NULL AND c.decisions != '[]' AND c.decisions != 'null'
+      `);
+      db.prepare("INSERT INTO _migrations (name) VALUES ('decisions_backfill')").run();
+    });
+    backfill();
+  }
+
+  /**
+   * Get active decision contents for a single context
+   */
+  private getActiveDecisionContents(contextId: string): string[] {
+    const db = this.getDb();
+    const rows = db.prepare(
+      "SELECT content FROM decisions WHERE context_id = ? AND status = 'active' ORDER BY created_at"
+    ).all(contextId) as Array<{ content: string }>;
+    return rows.map((r) => r.content);
+  }
+
+  /**
+   * Get active decision contents for multiple contexts (batch, N+1 prevention)
+   */
+  private getActiveDecisionContentsForContexts(contextIds: string[]): Map<string, string[]> {
+    if (contextIds.length === 0) return new Map();
+    const db = this.getDb();
+    const placeholders = contextIds.map(() => '?').join(',');
+    const rows = db.prepare(
+      `SELECT context_id, content FROM decisions WHERE context_id IN (${placeholders}) AND status = 'active' ORDER BY created_at`
+    ).all(...contextIds) as Array<{ context_id: string; content: string }>;
+    const map = new Map<string, string[]>();
+    for (const row of rows) {
+      const list = map.get(row.context_id) || [];
+      list.push(row.content);
+      map.set(row.context_id, list);
+    }
+    return map;
+  }
+
+  /**
+   * Apply derived decisions from decisions table to contexts
+   */
+  private applyDerivedDecisions(contexts: Context[]): Context[] {
+    if (contexts.length === 0) return contexts;
+    const decisionsMap = this.getActiveDecisionContentsForContexts(contexts.map((c) => c.id));
+    for (const ctx of contexts) {
+      ctx.decisions = decisionsMap.get(ctx.id) ?? [];
+    }
+    return contexts;
+  }
+
   // Context operations
 
   async saveContext(context: Context): Promise<void> {
@@ -257,7 +365,9 @@ export class SQLiteAdapter implements StorageProvider {
       const row = stmt.get(id) as ContextRow | undefined;
 
       if (!row) return null;
-      return this.rowToContext(row);
+      const context = this.rowToContext(row);
+      context.decisions = this.getActiveDecisionContents(id);
+      return context;
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
       if (originalError instanceof StorageError) {
@@ -310,7 +420,8 @@ export class SQLiteAdapter implements StorageProvider {
       const stmt = db.prepare(sql);
       const rows = stmt.all(...params) as ContextRow[];
 
-      return rows.map((row) => this.rowToContext(row));
+      const contexts = rows.map((row) => this.rowToContext(row));
+      return this.applyDerivedDecisions(contexts);
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
       if (originalError instanceof StorageError) {
@@ -393,6 +504,8 @@ export class SQLiteAdapter implements StorageProvider {
   async deleteContext(id: string): Promise<void> {
     try {
       const db = this.getDb();
+      // Delete related decisions first (no FK cascade)
+      db.prepare('DELETE FROM decisions WHERE context_id = ?').run(id);
       db.prepare('DELETE FROM contexts WHERE id = ?').run(id);
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
@@ -426,7 +539,8 @@ export class SQLiteAdapter implements StorageProvider {
       const stmt = db.prepare(sql);
       const rows = stmt.all(...params) as ContextRow[];
 
-      return rows.map((row) => this.rowToContext(row));
+      const contexts = rows.map((row) => this.rowToContext(row));
+      return this.applyDerivedDecisions(contexts);
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
       if (originalError instanceof StorageError) {
@@ -483,7 +597,8 @@ export class SQLiteAdapter implements StorageProvider {
       const stmt = db.prepare(sql);
       const rows = stmt.all(...params) as ContextRow[];
 
-      return rows.map((row) => this.rowToContext(row));
+      const contexts = rows.map((row) => this.rowToContext(row));
+      return this.applyDerivedDecisions(contexts);
     } catch (error) {
       const originalError = error instanceof Error ? error : undefined;
       if (originalError instanceof StorageError) {
@@ -1120,6 +1235,204 @@ export class SQLiteAdapter implements StorageProvider {
     }
   }
 
+  // Decision operations
+
+  async saveDecision(decision: Decision): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare(`
+        INSERT INTO decisions (id, context_id, project_id, content, status, superseded_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        decision.id,
+        decision.contextId,
+        decision.projectId,
+        decision.content,
+        decision.status,
+        decision.supersededBy,
+        decision.createdAt.toISOString(),
+        decision.updatedAt.toISOString()
+      );
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to save decision: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async getDecision(id: string): Promise<Decision | null> {
+    try {
+      const db = this.getDb();
+      const row = db.prepare('SELECT * FROM decisions WHERE id = ?').get(id) as DecisionRow | undefined;
+      if (!row) return null;
+      return this.rowToDecision(row);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to get decision: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async listDecisionsByProject(projectId: string, options?: { status?: DecisionStatus }): Promise<Decision[]> {
+    try {
+      const db = this.getDb();
+      let sql = 'SELECT * FROM decisions WHERE project_id = ?';
+      const params: unknown[] = [projectId];
+
+      if (options?.status) {
+        sql += ' AND status = ?';
+        params.push(options.status);
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      const rows = db.prepare(sql).all(...params) as DecisionRow[];
+      return rows.map((row) => this.rowToDecision(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list decisions by project: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async listDecisionsByContext(contextId: string): Promise<Decision[]> {
+    try {
+      const db = this.getDb();
+      const rows = db.prepare(
+        'SELECT * FROM decisions WHERE context_id = ? ORDER BY created_at DESC'
+      ).all(contextId) as DecisionRow[];
+      return rows.map((row) => this.rowToDecision(row));
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to list decisions by context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async updateDecision(id: string, updates: Partial<Pick<Decision, 'status' | 'supersededBy' | 'projectId'>>): Promise<void> {
+    try {
+      const db = this.getDb();
+      const setClauses: string[] = [];
+      const params: unknown[] = [];
+
+      if (updates.status !== undefined) {
+        setClauses.push('status = ?');
+        params.push(updates.status);
+      }
+      if (updates.supersededBy !== undefined) {
+        setClauses.push('superseded_by = ?');
+        params.push(updates.supersededBy);
+      }
+      if (updates.projectId !== undefined) {
+        setClauses.push('project_id = ?');
+        params.push(updates.projectId);
+      }
+
+      if (setClauses.length === 0) return;
+
+      setClauses.push("updated_at = datetime('now')");
+      params.push(id);
+
+      const sql = `UPDATE decisions SET ${setClauses.join(', ')} WHERE id = ?`;
+      db.prepare(sql).run(...params);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to update decision: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async deleteDecision(id: string): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare('DELETE FROM decisions WHERE id = ?').run(id);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete decision: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async deleteDecisionsByContext(contextId: string): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare('DELETE FROM decisions WHERE context_id = ?').run(contextId);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to delete decisions by context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
+  async updateDecisionProjectByContext(contextId: string, projectId: string | null): Promise<void> {
+    try {
+      const db = this.getDb();
+      db.prepare(
+        "UPDATE decisions SET project_id = ?, updated_at = datetime('now') WHERE context_id = ?"
+      ).run(projectId, contextId);
+    } catch (error) {
+      const originalError = error instanceof Error ? error : undefined;
+      if (originalError instanceof StorageError) {
+        throw originalError;
+      }
+      throw new StorageError(
+        `Failed to update decision project by context: ${originalError?.message ?? 'Unknown error'}`,
+        ErrorCode.DB_QUERY_FAILED,
+        true,
+        originalError
+      );
+    }
+  }
+
   // Helper methods
 
   private rowToContext(row: ContextRow): Context {
@@ -1184,6 +1497,19 @@ export class SQLiteAdapter implements StorageProvider {
       updatedAt: new Date(row.updated_at),
     };
   }
+
+  private rowToDecision(row: DecisionRow): Decision {
+    return {
+      id: row.id,
+      contextId: row.context_id,
+      projectId: row.project_id,
+      content: row.content,
+      status: row.status as DecisionStatus,
+      supersededBy: row.superseded_by,
+      createdAt: new Date(row.created_at),
+      updatedAt: new Date(row.updated_at),
+    };
+  }
 }
 
 // Type definitions for database rows
@@ -1226,6 +1552,17 @@ interface PromptContextRow {
   title: string;
   content: string;
   enabled: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface DecisionRow {
+  id: string;
+  context_id: string;
+  project_id: string | null;
+  content: string;
+  status: string;
+  superseded_by: string | null;
   created_at: string;
   updated_at: string;
 }

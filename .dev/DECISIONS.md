@@ -89,6 +89,25 @@
   - `repairJson`: trailing comma 제거 + unclosed bracket/brace 자동 닫기 (문자열 내부 bracket은 미처리, 실제 AI 응답에서 발생 가능성 극히 낮음)
   - `extract`/`translate` 양쪽 catch 블록에 SyntaxError 분기 추가
 
+## 2026-02-25: decision-entity
+
+- **결정**: `ctx.decisions: string[]`을 독립 Decision 엔티티로 확장, Decision 테이블을 source of truth로 설정
+- **이유**:
+  - Decision 간 관계(supersede), 상태(active/superseded/pending) 관리 불가
+  - 프로젝트 레벨 독립 조회 불가 (Context를 거쳐야 함)
+- **대안**:
+  - Tagged JSON 컬럼 (기존 decisions TEXT에 구조화 JSON) → 크로스-컨텍스트 조회 불가
+  - 독립 운영 (eventual consistency) → 장기적 데이터 불일치
+  - Write-through 동기화 → 결합도 높고 취약
+- **구현 노트**:
+  - `ctx.decisions: string[]` 타입 유지 (하위호환), decisions 테이블에서 active content 파생
+  - `getContext`: 단일 추가 쿼리, list 메서드: batch IN 쿼리 (N+1 방지)
+  - 백필: `_migrations` 플래그 + `INSERT OR IGNORE` + 트랜잭션 (멱등)
+  - `deleteContext`에서 decisions 먼저 삭제 (FK ON 없이 명시적 DELETE)
+  - `applyDerivedDecisions`는 항상 테이블 기준 (`?? []`), JSON 컬럼 fallback 없음
+  - Decision 생성 실패 시 메인 파이프라인 보호 (try/catch)
+- **참조**: .dev/specs/decision-entity/PLAN.md
+
 ## 2026-02-24: zod-schema-array-default
 
 - **결정**: `ExtractedContextSchema` 5개 배열 필드(`decisions`, `actionItems`, `policies`, `openQuestions`, `tags`)에 `.default([])` 적용

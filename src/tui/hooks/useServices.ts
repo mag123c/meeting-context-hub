@@ -13,6 +13,7 @@ import {
   SearchContextUseCase,
   RecordContextUseCase,
   TranslateContextUseCase,
+  ManageDecisionUseCase,
 } from '../../core/usecases/index.js';
 
 interface Services {
@@ -26,6 +27,7 @@ interface Services {
   translateContext: TranslateContextUseCase;
   dictionary: DictionaryService;
   promptContext: PromptContextService;
+  manageDecision: ManageDecisionUseCase;
 }
 
 interface UseServicesResult {
@@ -103,6 +105,7 @@ async function initializeServices(): Promise<void> {
         translateContext: new TranslateContextUseCase(storage, ai, embeddingService),
         dictionary: new DictionaryService(storage),
         promptContext: new PromptContextService(storage),
+        manageDecision: new ManageDecisionUseCase(storage),
       };
     }
   } catch (err) {

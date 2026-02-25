@@ -9,6 +9,7 @@ import { ChainService } from '../services/chain.service.js';
 import { DictionaryService } from '../services/dictionary.service.js';
 import { PromptContextService } from '../services/prompt-context.service.js';
 import { createContext } from '../domain/context.js';
+import { createDecisionsFromContext } from './decision.helper.js';
 
 export interface RecordContextResult {
   context: Context;
@@ -141,6 +142,16 @@ export class RecordContextUseCase {
 
     // 5. Save to storage
     await this.storage.saveContext(context);
+
+    // 6. Create Decision entities from extracted decisions
+    try {
+      await createDecisionsFromContext(
+        this.storage, context.id, context.projectId,
+        context.decisions, context.createdAt
+      );
+    } catch {
+      // Decision creation failure should not break the main pipeline
+    }
 
     return { context, transcription, relatedContexts };
   }

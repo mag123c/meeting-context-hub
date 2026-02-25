@@ -9,6 +9,7 @@
 
 export { createContext, formatContextPreview } from './domain/index.js';
 export { createProject, validateProjectName } from './domain/index.js';
+export { createDecision } from './domain/index.js';
 
 // ============================================================================
 // Services Layer
@@ -46,3 +47,6 @@ export {
   RecordContextUseCase,
   type RecordContextResult,
 } from './usecases/index.js';
+
+export { ManageDecisionUseCase } from './usecases/index.js';
+export { createDecisionsFromContext } from './usecases/index.js';

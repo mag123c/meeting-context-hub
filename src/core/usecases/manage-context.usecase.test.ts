@@ -50,6 +50,27 @@ describe('ManageContextUseCase', () => {
       updateProject: vi.fn(),
       deleteProject: vi.fn(),
       getContextCount: vi.fn(),
+      saveDictionaryEntry: vi.fn(),
+      getDictionaryEntry: vi.fn(),
+      getDictionaryEntryBySource: vi.fn(),
+      listDictionaryEntries: vi.fn(),
+      updateDictionaryEntry: vi.fn(),
+      deleteDictionaryEntry: vi.fn(),
+      getAllDictionaryMappings: vi.fn(),
+      savePromptContext: vi.fn(),
+      getPromptContext: vi.fn(),
+      listPromptContexts: vi.fn(),
+      listEnabledPromptContexts: vi.fn(),
+      updatePromptContext: vi.fn(),
+      deletePromptContext: vi.fn(),
+      saveDecision: vi.fn(),
+      getDecision: vi.fn(),
+      listDecisionsByProject: vi.fn(),
+      listDecisionsByContext: vi.fn(),
+      updateDecision: vi.fn(),
+      deleteDecision: vi.fn(),
+      deleteDecisionsByContext: vi.fn(),
+      updateDecisionProjectByContext: vi.fn(),
     };
     mockEmbeddingService = {
       isAvailable: vi.fn().mockReturnValue(true),
@@ -93,6 +114,7 @@ describe('ManageContextUseCase', () => {
       expect(mockStorage.updateContext).toHaveBeenCalledWith('ctx-123', {
         projectId: 'proj-1',
       });
+      expect(mockStorage.updateDecisionProjectByContext).toHaveBeenCalledWith('ctx-123', 'proj-1');
     });
 
     it('should set group to null (uncategorized)', async () => {
@@ -106,6 +128,7 @@ describe('ManageContextUseCase', () => {
       });
       // Should not check project when setting to null
       expect(mockStorage.getProject).not.toHaveBeenCalled();
+      expect(mockStorage.updateDecisionProjectByContext).toHaveBeenCalledWith('ctx-123', null);
     });
 
     it('should throw error when context not found', async () => {

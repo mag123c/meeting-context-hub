@@ -1,4 +1,4 @@
-import type { Context, Project, ListOptions, DictionaryEntry, PromptContext } from '../../types/index.js';
+import type { Context, Project, ListOptions, DictionaryEntry, PromptContext, Decision, DecisionStatus } from '../../types/index.js';
 
 /**
  * Storage provider interface (Port)
@@ -46,4 +46,14 @@ export interface StorageProvider {
   listEnabledPromptContexts(projectId?: string): Promise<PromptContext[]>;
   updatePromptContext(id: string, updates: Partial<PromptContext>): Promise<void>;
   deletePromptContext(id: string): Promise<void>;
+
+  // Decision operations
+  saveDecision(decision: Decision): Promise<void>;
+  getDecision(id: string): Promise<Decision | null>;
+  listDecisionsByProject(projectId: string, options?: { status?: DecisionStatus }): Promise<Decision[]>;
+  listDecisionsByContext(contextId: string): Promise<Decision[]>;
+  updateDecision(id: string, updates: Partial<Pick<Decision, 'status' | 'supersededBy' | 'projectId'>>): Promise<void>;
+  deleteDecision(id: string): Promise<void>;
+  deleteDecisionsByContext(contextId: string): Promise<void>;
+  updateDecisionProjectByContext(contextId: string, projectId: string | null): Promise<void>;
 }

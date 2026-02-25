@@ -57,6 +57,9 @@ export class ManageContextUseCase {
     }
 
     await this.storage.updateContext(contextId, { projectId });
+
+    // Sync Decision project_id
+    await this.storage.updateDecisionProjectByContext(contextId, projectId);
   }
 
   /**

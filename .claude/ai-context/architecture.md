@@ -11,7 +11,7 @@ TUI[ink] → UseCases → Services → Adapters[AI/DB]
 | TUI | src/tui/ | App, screens/, components/, hooks/ |
 | UseCases | src/core/usecases/ | add-context, search, list, manage |
 | Services | src/core/services/ | extract, embedding, chain, config, retry |
-| Domain | src/core/domain/ | context, project |
+| Domain | src/core/domain/ | context, project, decision |
 | Adapters | src/adapters/ | ai/, audio/, storage/, config/ |
 | i18n | src/i18n/ | t(), ti(), ~100 strings |
 
