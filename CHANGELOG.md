@@ -42,6 +42,13 @@
 
 * **tui:** add ScrollableList for viewport tracking ([3387e79](https://github.com/mag123c/meeting-context-hub/commit/3387e7912749aa7e79e940aff747c884c4159a0f))
 
+## [2.27.0](https://github.com/mag123c/meeting-context-hub/compare/v2.26.0...v2.27.0) (2026-03-13)
+
+
+### Features
+
+* **audio:** 비-WAV 대용량 파일 STT 지원 (ffmpeg 변환) ([#52](https://github.com/mag123c/meeting-context-hub/issues/52)) ([eaa73df](https://github.com/mag123c/meeting-context-hub/commit/eaa73df031006340fe1c5f03ebb490df493d0f11))
+
 ## [2.26.0](https://github.com/mag123c/meeting-context-hub/compare/v2.25.1...v2.26.0) (2026-02-25)
 
 
