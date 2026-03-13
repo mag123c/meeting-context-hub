@@ -29,6 +29,7 @@ export enum ErrorCode {
   TRANSCRIPTION_FILE_TOO_LARGE = 'TRANSCRIPTION_FILE_TOO_LARGE',
   TRANSCRIPTION_MODEL_NOT_FOUND = 'TRANSCRIPTION_MODEL_NOT_FOUND',
   TRANSCRIPTION_MODEL_DOWNLOAD_FAILED = 'TRANSCRIPTION_MODEL_DOWNLOAD_FAILED',
+  TRANSCRIPTION_FFMPEG_NOT_FOUND = 'TRANSCRIPTION_FFMPEG_NOT_FOUND',
 
   // Recording
   RECORDING_FAILED = 'RECORDING_FAILED',
@@ -120,6 +121,10 @@ export const ERROR_RECOVERY: Record<ErrorCode, { ko: string; en: string }> = {
   [ErrorCode.TRANSCRIPTION_MODEL_DOWNLOAD_FAILED]: {
     ko: '모델 다운로드에 실패했습니다. 네트워크 연결을 확인해주세요.',
     en: 'Failed to download model. Please check your network connection.',
+  },
+  [ErrorCode.TRANSCRIPTION_FFMPEG_NOT_FOUND]: {
+    ko: 'ffmpeg이 설치되어 있지 않습니다. 대용량 비-WAV 파일 변환에 필요합니다.',
+    en: 'ffmpeg is not installed. Required for converting large non-WAV files.',
   },
 
   // Recording

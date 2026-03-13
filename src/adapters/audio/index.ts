@@ -67,5 +67,20 @@ export {
   type RecordingEvents,
 } from './recording.adapter.js';
 
+// Audio Format Detection
+export {
+  detectAudioFormat,
+  isWavFormat,
+  getMimeType,
+  getExtension,
+  type AudioFormat,
+} from './audio-format.js';
+
+// FFmpeg Converter
+export {
+  checkFfmpeg,
+  convertToWav,
+} from './ffmpeg-converter.js';
+
 // Re-export errors from types for backward compatibility
 export { TranscriptionError, RecordingError } from '../../types/errors.js';
