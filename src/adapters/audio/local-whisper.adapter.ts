@@ -23,6 +23,8 @@ import {
   splitWavBufferWithVad,
   mergeTranscriptionsWithOverlap,
 } from './audio-splitter.js';
+import { isWavFormat } from './audio-format.js';
+import { convertToWav } from './ffmpeg-converter.js';
 
 /**
  * Local Whisper adapter configuration
@@ -158,7 +160,11 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
 
     // Check if splitting is needed
     if (needsSplit(buffer.length)) {
-      return this.transcribeWithSplit(buffer, options?.onProgress);
+      if (isWavFormat(buffer)) {
+        return this.transcribeWithSplit(buffer, options?.onProgress);
+      }
+      // Non-WAV buffer needs ffmpeg conversion — write to temp, convert, split
+      return this.transcribeNonWavBufferWithConversion(buffer, options?.onProgress);
     }
 
     // Single file: report 0 → process → 100
@@ -266,6 +272,32 @@ export class LocalWhisperAdapter implements TranscriptionProvider {
         true,
         originalError
       );
+    }
+  }
+
+  /**
+   * Convert non-WAV buffer to WAV via ffmpeg, then split and transcribe
+   */
+  private async transcribeNonWavBufferWithConversion(
+    buffer: Buffer,
+    onProgress?: TranscriptionProgressCallback,
+  ): Promise<string> {
+    // Write non-WAV buffer to temp file for ffmpeg
+    const tempInput = join(tmpdir(), `mch-input-${randomUUID()}.bin`);
+    let wavPath: string | null = null;
+    try {
+      writeFileSync(tempInput, buffer);
+      onProgress?.({ currentChunk: 0, totalChunks: 1, percent: 0 });
+      wavPath = await convertToWav(tempInput);
+      const wavBuffer = readFileSync(wavPath);
+      return this.transcribeWithSplit(wavBuffer, onProgress);
+    } finally {
+      if (existsSync(tempInput)) {
+        try { unlinkSync(tempInput); } catch { /* ignore */ }
+      }
+      if (wavPath && existsSync(wavPath)) {
+        try { unlinkSync(wavPath); } catch { /* ignore */ }
+      }
     }
   }
 

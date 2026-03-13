@@ -5,7 +5,10 @@
  */
 
 import OpenAI, { toFile } from 'openai';
-import { createReadStream, existsSync, readFileSync, statSync } from 'fs';
+import { createReadStream, existsSync, readFileSync, writeFileSync, statSync, unlinkSync, openSync, readSync, closeSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { randomUUID } from 'crypto';
 import {
   TranscriptionError,
   ErrorCode,
@@ -18,6 +21,8 @@ import {
   splitWavBufferWithVad,
   mergeTranscriptionsWithOverlap,
 } from './audio-splitter.js';
+import { isWavFormat, detectAudioFormat, getMimeType } from './audio-format.js';
+import { convertToWav } from './ffmpeg-converter.js';
 
 /**
  * OpenAI Whisper adapter configuration
@@ -89,8 +94,20 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     // Check file size and split if needed
     const fileStats = statSync(filePath);
     if (needsSplit(fileStats.size)) {
-      const buffer = readFileSync(filePath);
-      return this.transcribeWithSplit(buffer, options?.onProgress);
+      // Read a small header to detect format
+      const headerBuf = Buffer.alloc(12);
+      const fd = openSync(filePath, 'r');
+      readSync(fd, headerBuf, 0, 12, 0);
+      closeSync(fd);
+
+      if (isWavFormat(headerBuf)) {
+        // WAV — use existing splitter directly
+        const buffer = readFileSync(filePath);
+        return this.transcribeWithSplit(buffer, options?.onProgress);
+      }
+
+      // Non-WAV — convert to WAV via ffmpeg, then split
+      return this.transcribeNonWavWithConversion(filePath, options?.onProgress);
     }
 
     try {
@@ -130,7 +147,11 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
       // Retry with split on 413 error
       if (errorCode === ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE) {
         const buffer = readFileSync(filePath);
-        return this.transcribeWithSplit(buffer, options?.onProgress);
+        const headerBuf = buffer.slice(0, 12);
+        if (isWavFormat(headerBuf)) {
+          return this.transcribeWithSplit(buffer, options?.onProgress);
+        }
+        return this.transcribeNonWavWithConversion(filePath, options?.onProgress);
       }
 
       throw new TranscriptionError(
@@ -149,7 +170,11 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
   ): Promise<string> {
     // Check buffer size and split if needed
     if (needsSplit(buffer.length)) {
-      return this.transcribeWithSplit(buffer, options?.onProgress);
+      if (isWavFormat(buffer)) {
+        return this.transcribeWithSplit(buffer, options?.onProgress);
+      }
+      // Non-WAV buffer — write to temp, convert via ffmpeg, split
+      return this.transcribeNonWavBufferWithConversion(buffer, options?.onProgress);
     }
 
     try {
@@ -168,7 +193,10 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
 
       // Retry with split on 413 error
       if (errorCode === ErrorCode.TRANSCRIPTION_FILE_TOO_LARGE) {
-        return this.transcribeWithSplit(buffer, options?.onProgress);
+        if (isWavFormat(buffer)) {
+          return this.transcribeWithSplit(buffer, options?.onProgress);
+        }
+        return this.transcribeNonWavBufferWithConversion(buffer, options?.onProgress);
       }
 
       throw new TranscriptionError(
@@ -187,7 +215,9 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     buffer: Buffer,
     filename = 'audio.wav'
   ): Promise<string> {
-    const file = await toFile(buffer, filename, { type: 'audio/wav' });
+    const format = detectAudioFormat(buffer);
+    const mimeType = getMimeType(format);
+    const file = await toFile(buffer, filename, { type: mimeType });
 
     const response = await withRetry(
       () =>
@@ -209,6 +239,51 @@ export class OpenAIWhisperAdapter implements TranscriptionProvider {
     );
 
     return response.text;
+  }
+
+  /**
+   * Convert non-WAV file to WAV via ffmpeg, then split and transcribe
+   */
+  private async transcribeNonWavWithConversion(
+    filePath: string,
+    onProgress?: TranscriptionProgressCallback,
+  ): Promise<string> {
+    let wavPath: string | null = null;
+    try {
+      onProgress?.({ currentChunk: 0, totalChunks: 1, percent: 0 });
+      wavPath = await convertToWav(filePath);
+      const wavBuffer = readFileSync(wavPath);
+      return this.transcribeWithSplit(wavBuffer, onProgress);
+    } finally {
+      if (wavPath && existsSync(wavPath)) {
+        try { unlinkSync(wavPath); } catch { /* ignore */ }
+      }
+    }
+  }
+
+  /**
+   * Convert non-WAV buffer to WAV via ffmpeg, then split and transcribe
+   */
+  private async transcribeNonWavBufferWithConversion(
+    buffer: Buffer,
+    onProgress?: TranscriptionProgressCallback,
+  ): Promise<string> {
+    const tempInput = join(tmpdir(), `mch-input-${randomUUID()}.bin`);
+    let wavPath: string | null = null;
+    try {
+      writeFileSync(tempInput, buffer);
+      onProgress?.({ currentChunk: 0, totalChunks: 1, percent: 0 });
+      wavPath = await convertToWav(tempInput);
+      const wavBuffer = readFileSync(wavPath);
+      return this.transcribeWithSplit(wavBuffer, onProgress);
+    } finally {
+      if (existsSync(tempInput)) {
+        try { unlinkSync(tempInput); } catch { /* ignore */ }
+      }
+      if (wavPath && existsSync(wavPath)) {
+        try { unlinkSync(wavPath); } catch { /* ignore */ }
+      }
+    }
   }
 
   /**

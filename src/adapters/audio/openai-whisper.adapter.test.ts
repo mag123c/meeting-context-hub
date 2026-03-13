@@ -18,6 +18,12 @@ vi.mock('openai', () => {
   };
 });
 
+// Mock ffmpeg-converter to prevent real ffmpeg calls
+vi.mock('./ffmpeg-converter.js', () => ({
+  checkFfmpeg: vi.fn().mockReturnValue(true),
+  convertToWav: vi.fn(),
+}));
+
 // Mock fs
 vi.mock('fs', async (importOriginal) => {
   const actual = await importOriginal<typeof fs>();
@@ -27,6 +33,16 @@ vi.mock('fs', async (importOriginal) => {
     readFileSync: vi.fn(),
     statSync: vi.fn(),
     createReadStream: vi.fn(),
+    unlinkSync: vi.fn(),
+    openSync: vi.fn().mockReturnValue(42),
+    readSync: vi.fn().mockImplementation((_fd: number, buf: Buffer) => {
+      // Write WAV RIFF header by default
+      buf.write('RIFF', 0);
+      buf.writeUInt32LE(100, 4);
+      buf.write('WAVE', 8);
+      return 12;
+    }),
+    closeSync: vi.fn(),
   };
 });
 

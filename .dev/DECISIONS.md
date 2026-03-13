@@ -108,6 +108,19 @@
   - Decision 생성 실패 시 메인 파이프라인 보호 (try/catch)
 - **참조**: .dev/specs/decision-entity/PLAN.md
 
+## 2026-03-13: non-wav-split-support
+
+- **결정**: 비-WAV 대용량 파일(m4a, mp3 등) 20MB 초과 시, ffmpeg로 PCM WAV 변환 후 기존 splitter 사용
+- **이유**:
+  - 기존 splitter(VAD + overlap merge)가 WAV 전용 — 비-WAV 파일에서 RIFF 헤더 검증 실패
+  - OpenAI API 25MB 제한으로 대용량 비-WAV 직접 전송도 불가
+  - ffmpeg 변환 → 기존 코드 재사용 극대화, splitter/VAD 수정 불필요
+- **대안**:
+  - ffmpeg으로 시간 기반 청크 분할 → 복잡도 높고 VAD/overlap merge 미활용
+  - fluent-ffmpeg npm → ffmpeg 바이너리 필요한 건 동일, 불필요한 래퍼
+  - 비-WAV는 split 없이 직접 전송 → 25MB 초과 해결 불가
+- **참조**: .dev/specs/non-wav-split-support/PLAN.md
+
 ## 2026-02-24: zod-schema-array-default
 
 - **결정**: `ExtractedContextSchema` 5개 배열 필드(`decisions`, `actionItems`, `policies`, `openQuestions`, `tags`)에 `.default([])` 적용
